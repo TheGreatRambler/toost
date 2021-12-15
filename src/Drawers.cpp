@@ -1,5 +1,111 @@
 #include "Drawers.hpp"
 
+void Drawers::Setup() {
+	// 4,4A 5 6 8 8A 21 22 23 23A 29 43 49 63 79 79A 92 99 100 100A
+	level.TileLoc[4][0]   = Point(1, 0);
+	level.TileLoc[4][1]   = Point(2, 43);
+	level.TileLoc[5][0]   = Point(2, 0);
+	level.TileLoc[6][0]   = Point(6, 0);
+	level.TileLoc[8][0]   = Point(7, 0);
+	level.TileLoc[8][1]   = Point(0, 17);
+	level.TileLoc[21][0]  = Point(0, 4);
+	level.TileLoc[22][0]  = Point(6, 6);
+	level.TileLoc[23][0]  = Point(4, 0);
+	level.TileLoc[23][1]  = Point(6, 5);
+	level.TileLoc[29][0]  = Point(3, 0);
+	level.TileLoc[43][0]  = Point(2, 4);
+	level.TileLoc[49][0]  = Point(15, 15);
+	level.TileLoc[63][0]  = Point(8, 7);
+	level.TileLoc[79][0]  = Point(1, 43);
+	level.TileLoc[79][1]  = Point(0, 43);
+	level.TileLoc[92][0]  = Point(0, 16);
+	level.TileLoc[99][0]  = Point(2, 23);
+	level.TileLoc[100][0] = Point(3, 22);
+	level.TileLoc[100][1] = Point(2, 21);
+
+	// pipe loc
+	// UDLRVH
+	// GRBO
+	level.PipeLoc[0][0] = Point(14, 0);
+	level.PipeLoc[0][1] = Point(14, 2);
+	level.PipeLoc[0][2] = Point(11, 0);
+	level.PipeLoc[0][3] = Point(13, 0);
+	level.PipeLoc[0][4] = Point(12, 0);
+	level.PipeLoc[0][5] = Point(14, 1);
+
+	level.PipeLoc[1][0] = Point(6, 37);
+	level.PipeLoc[1][1] = Point(12, 37);
+	level.PipeLoc[1][2] = Point(4, 24);
+	level.PipeLoc[1][3] = Point(6, 24);
+	level.PipeLoc[1][4] = Point(5, 24);
+	level.PipeLoc[1][5] = Point(6, 38);
+
+	level.PipeLoc[2][0] = Point(10, 37);
+	level.PipeLoc[2][1] = Point(12, 38);
+	level.PipeLoc[2][2] = Point(3, 37);
+	level.PipeLoc[2][3] = Point(5, 37);
+	level.PipeLoc[2][4] = Point(4, 37);
+	level.PipeLoc[2][5] = Point(10, 38);
+
+	level.PipeLoc[3][0] = Point(8, 37);
+	level.PipeLoc[3][1] = Point(14, 37);
+	level.PipeLoc[3][2] = Point(0, 37);
+	level.PipeLoc[3][3] = Point(2, 37);
+	level.PipeLoc[3][4] = Point(1, 37);
+	level.PipeLoc[3][5] = Point(8, 38);
+
+	uint8_t GS[] = { 0x0D, 0x4D, 0x1D, 0xAD, 0x3D, 0x9D, 0x2D, 0xCD, 0x6D, 0x5D, 0x8D, 0xED, 0x7D, 0xDD, 0xBD, 0xFD,
+		0x0D, 0x4D, 0x1D, 0x2F, 0x3D, 0x9D, 0x2D, 0x4E, 0x6D, 0x5D, 0x8D, 0x0E, 0x7D, 0xDD, 0xBD, 0x8E, 0x0D, 0x4D,
+		0x1D, 0xAD, 0x3D, 0x4F, 0x2D, 0x5E, 0x6D, 0x5D, 0x8D, 0xED, 0x7D, 0x1E, 0xBD, 0x9E, 0x0D, 0x4D, 0x1D, 0x2F,
+		0x3D, 0x4F, 0x2D, 0x3F, 0x6D, 0x5D, 0x8D, 0x0E, 0x7D, 0x1E, 0xBD, 0xCE, 0x0D, 0x4D, 0x1D, 0xAD, 0x3D, 0x9D,
+		0x2D, 0xCD, 0x6D, 0x5D, 0x8F, 0x2E, 0x7D, 0xDD, 0x6E, 0xAE, 0x0D, 0x4D, 0x1D, 0x2F, 0x3D, 0x9D, 0x2D, 0x4E,
+		0x6D, 0x5D, 0x8F, 0x5F, 0x7D, 0xDD, 0x6E, 0xEE, 0x0D, 0x4D, 0x1D, 0xAD, 0x3D, 0x4F, 0x2D, 0x5E, 0x6D, 0x5D,
+		0x8F, 0x2E, 0xAF, 0x1E, 0x6E, 0x1F, 0x0D, 0x4D, 0x1D, 0x2F, 0x3D, 0x4F, 0x2D, 0x3F, 0x6D, 0x5D, 0x8F, 0x5F,
+		0x7D, 0x1E, 0x6E, 0xBF, 0x0D, 0x4D, 0x1D, 0xAD, 0x3D, 0x9D, 0x2D, 0xCD, 0x6D, 0x5D, 0x8D, 0xED, 0xAF, 0x3E,
+		0x7E, 0xBE, 0x0D, 0x4D, 0x1D, 0x2F, 0x3D, 0x9D, 0x2D, 0x4E, 0x6D, 0x5D, 0x8D, 0x0E, 0x7D, 0x3E, 0x7E, 0x0F,
+		0x0D, 0x4D, 0x1D, 0xAD, 0x3D, 0x4F, 0x2D, 0x5E, 0x6D, 0x5D, 0x8D, 0xED, 0xAF, 0x7F, 0x7E, 0xFE, 0x0D, 0x4D,
+		0x1D, 0x2F, 0x3D, 0x4F, 0x2D, 0x3F, 0x6D, 0x5D, 0x8D, 0x0E, 0xAF, 0x7F, 0x7E, 0xCF, 0x0D, 0x4D, 0x1D, 0xAD,
+		0x3D, 0x9D, 0x2D, 0xCD, 0x6D, 0x5D, 0x8F, 0x2E, 0xAF, 0x3E, 0x9F, 0xDE, 0x0D, 0x4D, 0x1D, 0x2F, 0x3D, 0x9D,
+		0x2D, 0x4E, 0x6D, 0x5D, 0x8F, 0x5F, 0xAF, 0x3E, 0x9F, 0xDF, 0x0D, 0x4D, 0x1D, 0xAD, 0x3D, 0x4F, 0x2D, 0x5E,
+		0x6D, 0x5D, 0x8F, 0x2E, 0xAF, 0x7F, 0x9F, 0xEF, 0x0D, 0x4D, 0x1D, 0x2F, 0x3D, 0x4F, 0x2D, 0x3F, 0x6D, 0x5D,
+		0x8F, 0x5F, 0xAF, 0x7F, 0x9F, 0x6F };
+
+	for(int i = 0; i <= 255; i++) {
+		level.GrdLoc[i].X = GS[i] >> 4;
+		level.GrdLoc[i].Y = GS[i] & 0x0F;
+	}
+
+	using Point = LevelParser::Point;
+
+	level.TrackYPt[8][0]  = Point(4, 0);
+	level.TrackYPt[8][1]  = Point(0, 2);
+	level.TrackYPt[8][2]  = Point(4, 4);
+	level.TrackYPt[12][0] = Point(4, 0);
+	level.TrackYPt[12][1] = Point(0, 2);
+	level.TrackYPt[12][2] = Point(4, 4);
+
+	level.TrackYPt[9][0]  = Point(0, 0);
+	level.TrackYPt[9][1]  = Point(0, 4);
+	level.TrackYPt[9][2]  = Point(4, 2);
+	level.TrackYPt[13][0] = Point(0, 0);
+	level.TrackYPt[13][1] = Point(0, 4);
+	level.TrackYPt[13][2] = Point(4, 2);
+
+	level.TrackYPt[10][0] = Point(0, 0);
+	level.TrackYPt[10][1] = Point(4, 0);
+	level.TrackYPt[10][2] = Point(2, 4);
+	level.TrackYPt[14][0] = Point(0, 0);
+	level.TrackYPt[14][1] = Point(4, 0);
+	level.TrackYPt[14][2] = Point(2, 4);
+
+	level.TrackYPt[11][0] = Point(2, 0);
+	level.TrackYPt[11][1] = Point(0, 4);
+	level.TrackYPt[11][2] = Point(4, 4);
+	level.TrackYPt[15][0] = Point(2, 0);
+	level.TrackYPt[15][1] = Point(0, 4);
+	level.TrackYPt[15][2] = Point(4, 4);
+}
+
 void Drawers::SetGraphics(cairo_t* graphics) {
 	cr = graphics;
 }
@@ -56,6 +162,8 @@ void Drawers::DrawImage(std::string path, int x, int y, int targetWidth, int tar
 void Drawers::DrawImageOpacity(std::string path, double opacity, int x, int y, int targetWidth, int targetHeight) {
 	fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
+	y -= targetHeight / 2;
+
 	cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 	int imageWidth         = cairo_image_surface_get_width(image);
 	int imageHeight        = cairo_image_surface_get_height(image);
@@ -70,6 +178,8 @@ void Drawers::DrawImageOpacity(std::string path, double opacity, int x, int y, i
 
 void Drawers::DrawImageRotate(std::string path, double angle, int x, int y, int targetWidth, int targetHeight) {
 	fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
+
+	y -= targetHeight / 2;
 
 	cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 	int imageWidth         = cairo_image_surface_get_width(image);
@@ -88,6 +198,8 @@ void Drawers::DrawImageRotate(std::string path, double angle, int x, int y, int 
 void Drawers::DrawImageRotateOpacity(
 	std::string path, double angle, double opacity, int x, int y, int targetWidth, int targetHeight) {
 	fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
+
+	y -= targetHeight / 2;
 
 	cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 	int imageWidth         = cairo_image_surface_get_width(image);

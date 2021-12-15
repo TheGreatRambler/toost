@@ -22,6 +22,7 @@ public:
 		renderHeight = (level.MapHdr.BorT / 16) * Zm;
 	};
 
+	void Setup();
 	void SetGraphics(cairo_t* graphics);
 	void SetTilesheet(std::string tilesheet);
 	void SetZoom(int zoom);

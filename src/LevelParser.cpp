@@ -124,7 +124,7 @@ void LevelParser::LoadLvlData(const std::string& P, bool overworld) {
 	fmt::print("NAME: {}\n", LH.Name);
 	fmt::print("DESCRIPTION: {}\n", LH.Desc);
 
-	long long M = 0;
+	uint64_t M = 0;
 
 	fseek(levelPtr, Offset, SEEK_SET);
 	fread(&MapHdr.Theme, sizeof(MapHdr.Theme), 1, levelPtr);
@@ -147,6 +147,7 @@ void LevelParser::LoadLvlData(const std::string& P, bool overworld) {
 	fread(&MapHdr.CreeperCount, sizeof(MapHdr.CreeperCount), 1, levelPtr);
 	fread(&MapHdr.iBlkCount, sizeof(MapHdr.iBlkCount), 1, levelPtr);
 	fread(&MapHdr.TrackBlkCount, sizeof(MapHdr.TrackBlkCount), 1, levelPtr);
+	fseek(levelPtr, Offset + 0x3C, SEEK_SET);
 	fread(&MapHdr.GroundCount, sizeof(MapHdr.GroundCount), 1, levelPtr);
 	fread(&MapHdr.TrackCount, sizeof(MapHdr.TrackCount), 1, levelPtr);
 	fread(&MapHdr.IceCount, sizeof(MapHdr.IceCount), 1, levelPtr);

@@ -32,6 +32,7 @@
 void DrawMap(LevelParser& level, bool isOverworld) {
 	Drawers drawer(level);
 
+	drawer.Setup();
 	drawer.SetZoom(16);
 	drawer.SetIsOverworld(isOverworld);
 
