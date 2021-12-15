@@ -1,5 +1,7 @@
 #pragma once
 
+#include "LevelParser.hpp"
+
 #include <cairo/cairo.h>
 #include <cstdint>
 #include <filesystem>
@@ -7,8 +9,6 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
-
-#include "LevelParser.h"
 
 class Drawers {
 public:

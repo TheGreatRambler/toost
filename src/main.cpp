@@ -1,5 +1,6 @@
 #include "Drawers.hpp"
-#include "LevelParser.h"
+#include "Helpers.hpp"
+#include "LevelParser.hpp"
 
 #include <SDL.h>
 #include <cairo/cairo.h>
@@ -386,6 +387,10 @@ int main(int, char**) {
 #ifdef _WIN32
 					SetConsoleOutputCP(CP_UTF8);
 #endif
+
+					std::string assetsFolder = Helpers::GetExecutableDirectory().parent_path().parent_path().string();
+					fmt::print("Assets folder: {}", assetsFolder);
+					levelParser.SetAssetsFolder(assetsFolder);
 
 					DrawMap(levelParser, true);
 				}

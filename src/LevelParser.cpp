@@ -1,4 +1,4 @@
-﻿#include "LevelParser.h"
+﻿#include "LevelParser.hpp"
 
 LevelParser::LevelParser() {
 	TileLoc.resize(152);
@@ -53,6 +53,10 @@ std::string LevelParser::GetItemName(int n, int v) {
 		break;
 	}
 	return tempGetItemName;
+}
+
+void LevelParser::SetAssetsFolder(std::string path) {
+	PT = path;
 }
 
 bool LevelParser::DecryptLevelData(const std::string& input, const std::string& output) {
