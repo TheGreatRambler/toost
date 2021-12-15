@@ -393,7 +393,12 @@ int main(int, char**) {
 					fmt::print("Assets folder: {}", assetsFolder);
 					levelParser.SetAssetsFolder(assetsFolder);
 
+					auto start = std::chrono::high_resolution_clock::now();
 					DrawMap(levelParser, true);
+					auto stop = std::chrono::high_resolution_clock::now();
+
+					fmt::print("Rendering took {} milliseconds\n",
+						std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
 				}
 			}
 

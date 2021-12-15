@@ -17,7 +17,7 @@ CFLAGS := -std=gnu11
 # Single precision sets all defined floating point numbers to floats, saves on memory
 CXXFLAGS := -std=gnu++20 -I./src/include -I./src $(shell pkg-config --cflags sdl2 glew glfw3 zlib cairo)
 # C/C++ flags (no -pendantic)
-CPPFLAGS := -Wall -Wextra -Wno-missing-field-initializers -Wno-cast-function-type
+CPPFLAGS := -Wall -Wextra -Wno-missing-field-initializers -Wno-cast-function-type -Wno-deprecated-enum-enum-conversion
 
 ifeq ($(BUILD),release)
 	# "Release" build - optimization, and no debug symbols

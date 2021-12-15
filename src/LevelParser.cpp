@@ -124,7 +124,7 @@ void LevelParser::LoadLvlData(const std::string& P, bool overworld) {
 	fmt::print("NAME: {}\n", LH.Name);
 	fmt::print("DESCRIPTION: {}\n", LH.Desc);
 
-	uint64_t M = 0;
+	int32_t M = 0;
 
 	fseek(levelPtr, Offset, SEEK_SET);
 	fread(&MapHdr.Theme, sizeof(MapHdr.Theme), 1, levelPtr);
