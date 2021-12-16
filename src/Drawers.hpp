@@ -27,6 +27,7 @@ public:
 	void SetTilesheet(std::string tilesheet);
 	void SetZoom(int zoom);
 	void SetIsOverworld(bool isOverworld);
+	void SetLog(bool log);
 	int GetWidth();
 	int GetHeight();
 	void DrawTile(int tileX, int tileY, int tileW, int tileH, int x, int y, int targetWidth, int targetHeight);
@@ -68,4 +69,5 @@ private:
 	int NowIO   = 0;    // Overworld 0, subworld 1
 	cairo_t* cr = NULL; // Graphics instance
 	LevelParser& level; // Level instance
+	bool doLogging = false;
 };

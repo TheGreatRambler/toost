@@ -121,6 +121,10 @@ void Drawers::SetIsOverworld(bool isOverworld) {
 	NowIO = isOverworld;
 }
 
+void Drawers::SetLog(bool log) {
+	doLogging = log;
+}
+
 int Drawers::GetWidth() {
 	return renderWidth;
 }
@@ -130,7 +134,8 @@ int Drawers::GetHeight() {
 }
 
 void Drawers::DrawTile(int tileX, int tileY, int tileW, int tileH, int x, int y, int targetWidth, int targetHeight) {
-	fmt::print("Printing tile X:{} Y:{}\n", tileX, tileY);
+	if(doLogging)
+		fmt::print("Printing tile X:{} Y:{}\n", tileX, tileY);
 
 	cairo_save(cr);
 	cairo_translate(cr, (double)x, (double)y);
@@ -143,7 +148,8 @@ void Drawers::DrawTile(int tileX, int tileY, int tileW, int tileH, int x, int y,
 }
 
 void Drawers::DrawImage(std::string path, int x, int y, int targetWidth, int targetHeight) {
-	fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
+	if(doLogging)
+		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 
@@ -167,7 +173,8 @@ void Drawers::DrawImage(std::string path, int x, int y, int targetWidth, int tar
 }
 
 void Drawers::DrawImageOpacity(std::string path, double opacity, int x, int y, int targetWidth, int targetHeight) {
-	fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
+	if(doLogging)
+		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 
@@ -188,7 +195,8 @@ void Drawers::DrawImageOpacity(std::string path, double opacity, int x, int y, i
 }
 
 void Drawers::DrawImageRotate(std::string path, double angle, int x, int y, int targetWidth, int targetHeight) {
-	fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
+	if(doLogging)
+		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 
@@ -212,7 +220,8 @@ void Drawers::DrawImageRotate(std::string path, double angle, int x, int y, int 
 
 void Drawers::DrawImageRotateOpacity(
 	std::string path, double angle, double opacity, int x, int y, int targetWidth, int targetHeight) {
-	fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
+	if(doLogging)
+		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 
@@ -706,6 +715,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 	int LX         = 0;
 	int LY         = 0;
 	int KY         = 0;
+	double KX      = 0;
 	int PP         = 0;
 	std::string P  = level.PT;
 
@@ -719,7 +729,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 				} else {
 					KY = -3 * Zm;
 				}
-				level.ObjLinkType[level.MapObj[i].LID + 1] = 105;
+				level.ObjLinkType[level.MapObj[i].LID] = 105;
 
 				if((level.MapObj[i].Flag / 0x80) % 2 == 1) {
 					/*G->DrawImage(
@@ -727,12 +737,12 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						(float)(-1.5 + level.MapObj[i].X / 160) * Zm,
 						H * Zm - (float)(0.5 + level.MapObj[i].Y / 160) * Zm + KY, Zm * 3, Zm * 5);*/
 					DrawImage(fmt::format("{}/img/{}/obj/105A.PNG", P, level.LH.GameStyle),
-						(float)(-1.5 + level.MapObj[i].X / 160) * Zm,
-						H * Zm - (float)(0.5 + level.MapObj[i].Y / 160) * Zm + KY, Zm * 3, Zm * 5);
+						(float)(-1.0 + level.MapObj[i].X / 160) * Zm,
+						H * Zm - (float)(1.25 + level.MapObj[i].Y / 160) * Zm + KY, Zm * 3, Zm * 5);
 				} else {
 					DrawImage(fmt::format("{}/img/{}/obj/105.PNG", P, level.LH.GameStyle),
-						(float)(-1.5 + level.MapObj[i].X / 160) * Zm,
-						H * Zm - (float)(0.5 + level.MapObj[i].Y / 160) * Zm + KY, Zm * 3, Zm * 5);
+						(float)(-1.0 + level.MapObj[i].X / 160) * Zm,
+						H * Zm - (float)(1.25 + level.MapObj[i].Y / 160) * Zm + KY, Zm * 3, Zm * 5);
 				}
 				// CID
 				if(level.MapObj[i].CID != -1) {
@@ -750,9 +760,15 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 				}
 			} else {
 
-				switch(level.ObjLinkType[level.MapObj[i].LID + 1]) {
+				KX = 0;
+				switch(level.ObjLinkType[level.MapObj[i].LID]) {
 				case 9: //管道L
 					KY = ((std::min(level.MapObj[i].W, level.MapObj[i].H) - 1) / 2) * Zm;
+					if(level.MapObj[i].ID == 2) {
+						KX = level.MapObj[i].W == 1 ? -0.5 : 0;
+					} else {
+						KX = -level.MapObj[i].W / 2.0;
+					}
 					break;
 				case 105: //夹子L
 					KY = std::round(-Zm / 4.0);
@@ -924,17 +940,17 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 									DrawImage(
 										fmt::format("{}/img/{}/obj/{}D.PNG", P, level.LH.GameStyle, level.MapObj[i].ID),
 										(float)((j - level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
-										H * Zm - (float)((0.5 + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
+										H * Zm - (float)((1.0 + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
 								} else if(j == level.MapObj[i].W - 1) {
 									DrawImage(
 										fmt::format("{}/img/{}/obj/{}E.PNG", P, level.LH.GameStyle, level.MapObj[i].ID),
 										(float)((j - level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
-										H * Zm - (float)((0.5 + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
+										H * Zm - (float)((1.0 + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
 								} else {
 									DrawImage(
 										fmt::format("{}/img/{}/obj/{}C.PNG", P, level.LH.GameStyle, level.MapObj[i].ID),
 										(float)((j - level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
-										H * Zm - (float)((0.5 + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
+										H * Zm - (float)((1.0 + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
 								}
 							}
 						} else {
@@ -947,17 +963,17 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 									DrawImage(
 										fmt::format("{}/img/{}/obj/{}A.PNG", P, level.LH.GameStyle, level.MapObj[i].ID),
 										(float)((j - level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
-										H * Zm - (float)((0.5 + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
+										H * Zm - (float)((1.0 + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
 								} else if(j == level.MapObj[i].W - 1) {
 									DrawImage(
 										fmt::format("{}/img/{}/obj/{}B.PNG", P, level.LH.GameStyle, level.MapObj[i].ID),
 										(float)((j - level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
-										H * Zm - (float)((0.5 + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
+										H * Zm - (float)((1.0 + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
 								} else {
 									DrawImage(
 										fmt::format("{}/img/{}/obj/{}.PNG", P, level.LH.GameStyle, level.MapObj[i].ID),
 										(float)((j - level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
-										H * Zm - (float)((0.5 + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
+										H * Zm - (float)((1.0 + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
 								}
 							}
 						}
@@ -1044,13 +1060,13 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						for(j = 1; j <= tempVar8; j++) {
 							if(j == 1) {
 								DrawTile(13, 7, 1, 1, (float)(-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm,
-									H * Zm - (float)((j + std::round(level.MapObj[i].Y) / 160) * Zm), Zm, Zm);
+									H * Zm - (float)((j + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
 							} else if(j == level.MapObj[i].H) {
 								DrawTile(15, 7, 1, 1, (float)(-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm,
-									H * Zm - (float)((j + std::round(level.MapObj[i].Y) / 160) * Zm), Zm, Zm);
+									H * Zm - (float)((j + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
 							} else {
 								DrawTile(14, 7, 1, 1, (float)(-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm,
-									H * Zm - (float)((j + std::round(level.MapObj[i].Y) / 160) * Zm), Zm, Zm);
+									H * Zm - (float)((j + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
 							}
 						}
 						break;
@@ -1071,22 +1087,17 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						//音符  隐藏
 						//冰砖  P砖 开关 开关砖
 
-						double offset = 0;
 						if((level.MapObj[i].Flag / 0x4) % 2 == 1) {
 							PP = 1;
 						} else {
 							PP = 0;
 						}
 
-						if(level.MapObj[i].CFlag == 0x6000040 && level.MapObj[i].LID != -1) {
-							offset = -level.MapObj[i].W / 2.0;
-						}
-
 						// fmt::print("ID: {} LID: {} CFlag: {}\n", level.MapObj[i].ID, level.MapObj[i].LID,
 						//	level.MapObj[i].CFlag);
 
 						DrawTile(level.TileLoc[level.MapObj[i].ID][PP].X, level.TileLoc[level.MapObj[i].ID][PP].Y, 1, 1,
-							(float)((offset + level.MapObj[i].X / 160) * Zm),
+							(float)((KX + level.MapObj[i].X / 160) * Zm),
 							H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY,
 							Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
 						break;
@@ -1170,6 +1181,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							C1 = Point(13, 24);
 							C2 = Point(10, 22);
 						}
+
 						if((level.MapObj[i].Flag / 0x200000) % 0x2 == 0) {
 							//左斜
 
@@ -1330,7 +1342,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					}
 					case 9: {
 						//管道
-						level.ObjLinkType[level.MapObj[i].LID + 1] = 9;
+						level.ObjLinkType[level.MapObj[i].LID] = 9;
 						// 0绿 4红 8蓝 C橙
 						PP = ((level.MapObj[i].Flag / 0x10000) % 0x10) / 4;
 						// Select Case (MapObj(i).Flag \ &H10000) Mod &H10
@@ -1483,9 +1495,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					case 82: {
 						//齿轮 甜甜圈
 
-						LX = std::round((float)((-0.5 + level.MapObj[i].X / 160) * Zm));
-						LY = std::round((H - 1.5) * Zm - (float)((level.MapObj[i].Y / 160) * Zm) + KY);
-
 						DrawImageOpacity(fmt::format("{}/img/{}/obj/{}.PNG", P, level.LH.GameStyle, level.MapObj[i].ID),
 							0.7, (float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
 							H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY,
@@ -1537,22 +1546,25 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						//黑花 火球  风  红币 钥匙  地鼠 慢慢龟汽车 跳跳怪 跳跳鼠 蜜蜂 冲刺砖块 尖刺鱼 !方块
 						//奔奔  太阳 库巴七人 木箱 纸糊道具
 						//蚂蚁 斗斗 乌卡
-						double offset = 0;
 						if((level.MapObj[i].Flag / 0x4) % 2 == 1) {
 							PR = "A";
 						} else {
 							PR = "";
 						}
 
-						if(level.MapObj[i].CFlag == 0x6000040 && level.MapObj[i].LID != -1) {
-							offset = -level.MapObj[i].W / 2.0;
+						if(level.MapObj[i].ID == 80 || level.MapObj[i].ID == 72) {
+							KX = -1.0;
 						}
 
-						// fmt::print(
-						//	"ID: {} Ex: {} CID: {}\n", level.MapObj[i].ID, level.MapObj[i].Ex, level.MapObj[i].CID);
+						if(level.MapObj[i].W == 2) {
+							KX = -1.0;
+						}
+
+						// fmt::print("ID: {} KX: {} CID: {} LID: {} W: {}\n", level.MapObj[i].ID, KX,
+						// level.MapObj[i].CID, 	level.MapObj[i].LID, level.MapObj[i].W);
 
 						DrawImage(fmt::format("{}/img/{}/obj/{}{}.PNG", P, level.LH.GameStyle, level.MapObj[i].ID, PR),
-							(float)((offset + level.MapObj[i].X / 160) * Zm),
+							(float)((KX + level.MapObj[i].X / 160) * Zm),
 							H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY,
 							Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
 						break;
@@ -1564,13 +1576,9 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						} else {
 							PR = "";
 						}
-						LX = std::round(
-							(float)((-0.5 + (std::round(level.MapObj[i].W) / 2) / 2.0 + level.MapObj[i].X / 160) * Zm));
-						LY = std::round((H + (std::round(level.MapObj[i].H) / 2) / 2.0) * Zm
-										- (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY);
 
 						DrawImage(fmt::format("{}/img/{}/obj/{}{}.PNG", P, level.LH.GameStyle, level.MapObj[i].ID, PR),
-							(float)((-0.5 + level.MapObj[i].X / 160) * Zm),
+							(float)((KX + level.MapObj[i].X / 160) * Zm),
 							H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY,
 							Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
 
@@ -1587,11 +1595,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						} else {
 							PR = "";
 						}
-						LX = std::round((float)((-level.MapObj[i].W / 2 + (std::round(level.MapObj[i].W) / 2) / 2.0
-													+ level.MapObj[i].X / 160)
-												* Zm));
-						LY = std::round((H + (std::round(level.MapObj[i].H) / 2) / 2.0) * Zm
-										- (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY);
 
 						DrawImage(fmt::format("{}/img/{}/obj/{}{}.PNG", P, level.LH.GameStyle, level.MapObj[i].ID, PR),
 							(float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
@@ -1607,11 +1610,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						} else {
 							PR = "";
 						}
-						LX = std::round((float)((-level.MapObj[i].W / 2 + (std::round(level.MapObj[i].W) / 2) / 2.0
-													+ level.MapObj[i].X / 160)
-												* Zm));
-						LY = (H + level.MapObj[i].H - 2) * Zm
-							 - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY;
 
 						DrawImage(fmt::format("{}/img/{}/obj/{}{}.PNG", P, level.LH.GameStyle, level.MapObj[i].ID, PR),
 							(float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
@@ -1621,8 +1619,10 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 
 						break;
 					}
-					case 34: {
+					case 34:
+					case 44: {
 						//火花
+						//大蘑菇
 						if((level.MapObj[i].Flag / 0x4) % 2 == 1) {
 							if((level.MapObj[i].Flag / 0x40000) % 2 == 1) {
 								PR = "C";
@@ -1637,13 +1637,8 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							}
 						}
 
-						double offset = 0;
-						if(level.MapObj[i].CFlag == 0x6000040 && level.MapObj[i].LID != -1) {
-							offset = -0.5;
-						}
-
 						DrawImage(fmt::format("{}/img/{}/obj/{}{}.PNG", P, level.LH.GameStyle, level.MapObj[i].ID, PR),
-							(float)((offset + level.MapObj[i].X / 160) * Zm),
+							(float)((KX + level.MapObj[i].X / 160) * Zm),
 							H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY,
 							Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
 
@@ -1659,12 +1654,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							PR = "";
 						}
 
-						LX = std::round((float)((-level.MapObj[i].W / 2 + (std::round(level.MapObj[i].W) / 2) / 2.0
-													+ level.MapObj[i].X / 160)
-												* Zm));
-						LY = std::round((H + (std::round(level.MapObj[i].H) / 2) / 2.0) * Zm
-										- (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY);
-
 						DrawImage(fmt::format("{}/img/{}/obj/{}{}.PNG", P, level.LH.GameStyle, level.MapObj[i].ID, PR),
 							(float)((-0.5 + level.MapObj[i].X / 160) * Zm),
 							H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY,
@@ -1672,30 +1661,9 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 
 						break;
 					}
-					case 44: {
-						//大蘑菇
-
-						if((level.MapObj[i].Flag / 0x40000) % 2 == 1) {
-							PR = "A";
-						} else {
-							PR = "";
-						}
-
-						LX = std::round((float)((-level.MapObj[i].W / 2 + (std::round(level.MapObj[i].W) / 2) / 2.0
-													+ level.MapObj[i].X / 160)
-												* Zm));
-						LY = std::round((H + (std::round(level.MapObj[i].H) / 2) / 2.0) * Zm
-										- (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY);
-
-						DrawImage(fmt::format("{}/img/{}/obj/{}{}.PNG", P, level.LH.GameStyle, level.MapObj[i].ID, PR),
-							(float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
-							H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY,
-							Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
-
-						break;
-					}
 					case 12: {
 						//咚咚
+
 						LX = std::round((float)((-0.5 + level.MapObj[i].X / 160) * Zm));
 						LY = (H + level.MapObj[i].H / 2 - 0.5) * Zm
 							 - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY;
@@ -1734,8 +1702,10 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					}
 					case 41: {
 						//幽灵
+
 						LX = std::round((float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm));
 						LY = std::round(H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY);
+
 						switch(level.LH.GameStyle) {
 						case 22323:
 							if((level.MapObj[i].Flag / 0x4) % 2 == 1) {
@@ -1769,25 +1739,21 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					case 25:
 					case 18: {
 						//钢盔 刺龟 P
-						double offset = 0;
-						if(level.MapObj[i].CFlag == 0x6000040 && level.MapObj[i].LID != -1) {
-							offset = -level.MapObj[i].W / 2.0;
-						}
 
 						if((level.MapObj[i].Flag / 0x4) % 2 == 1) {
 							DrawImage(fmt::format("{}/img/{}/obj/{}A.PNG", P, level.LH.GameStyle, level.MapObj[i].ID),
-								(float)((offset + level.MapObj[i].X / 160) * Zm),
+								(float)((KX + level.MapObj[i].X / 160) * Zm),
 								H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY,
 								Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
 
 						} else if((level.MapObj[i].Flag / 0x1000000) % 8 == 0x6) {
 							DrawImage(fmt::format("{}/img/{}/obj/{}.PNG", P, level.LH.GameStyle, level.MapObj[i].ID),
-								(float)((offset + level.MapObj[i].X / 160) * Zm),
+								(float)((KX + level.MapObj[i].X / 160) * Zm),
 								H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY,
 								Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
 						} else {
 							DrawImage(fmt::format("{}/img/{}/obj/{}B.PNG", P, level.LH.GameStyle, level.MapObj[i].ID),
-								(float)((offset + level.MapObj[i].X / 160) * Zm),
+								(float)((KX + level.MapObj[i].X / 160) * Zm),
 								H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY,
 								Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
 						}
@@ -1795,9 +1761,11 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					}
 					case 40: {
 						//小刺龟
+
 						LX = std::round((float)((-level.MapObj[i].W / 2.0 + level.MapObj[i].X / 160) * Zm));
 						LY = (H + level.MapObj[i].W) * Zm
 							 - (float)((level.MapObj[i].H * 2 + level.MapObj[i].Y / 160) * Zm) + KY;
+
 						if((level.MapObj[i].Flag / 0x4) % 2 == 1) {
 							switch((level.MapObj[i].Flag / 0x1000000) % 8) {
 								//方向6上 4下 0左 2右
@@ -1839,11 +1807,13 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 								break;
 							}
 						}
+
 						LX = std::round((float)((-level.MapObj[i].W / 2 + (std::round(level.MapObj[i].W) / 2) / 2.0
 													+ level.MapObj[i].X / 160)
 												* Zm));
 						LY = std::round((H + (std::round(level.MapObj[i].H) / 2) / 2.0) * Zm
 										- (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY);
+
 						break;
 					}
 					case 2: {
@@ -1853,52 +1823,33 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						} else {
 							PR = "2A";
 						}
+
 						switch((level.MapObj[i].Flag / 0x1000000) % 0x8) {
 							//方向6上 4下 0左 2右
 						case 0x0: // L
-							LX = std::round((float)((level.MapObj[i].H / 2 - 1 + level.MapObj[i].X / 160) * Zm));
-							LY = (H + level.MapObj[i].W + (std::round(level.MapObj[i].W) / 2) / 2.0) * Zm
-								 - (float)((level.MapObj[i].H * 2 - 0.5 + level.MapObj[i].Y / 160) * Zm) + KY;
-
 							DrawImage(fmt::format("{}/img/{}/obj/{}0.PNG", P, level.LH.GameStyle, PR),
-								(float)((-level.MapObj[i].W * 3 / 2 + level.MapObj[i].X / 160) * Zm),
+								(float)((KX - level.MapObj[i].W * 3 / 2 + level.MapObj[i].X / 160) * Zm),
 								(H + level.MapObj[i].W) * Zm
 									- (float)((level.MapObj[i].H * 2 + level.MapObj[i].Y / 160) * Zm) + KY,
 								Zm * level.MapObj[i].W * 2, Zm * level.MapObj[i].H);
 							break;
 						case 0x2: // R
-							LX = std::round((float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm));
-							LY = (H + level.MapObj[i].W + (std::round(level.MapObj[i].W) / 2) / 2.0) * Zm
-								 - (float)((level.MapObj[i].H * 2 - 0.5 + level.MapObj[i].Y / 160) * Zm) + KY;
-
 							DrawImage(fmt::format("{}/img/{}/obj/{}2.PNG", P, level.LH.GameStyle, PR),
-								(float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
+								(float)((KX - level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
 								(H + level.MapObj[i].W) * Zm
 									- (float)((level.MapObj[i].H * 2 + level.MapObj[i].Y / 160) * Zm) + KY,
 								Zm * level.MapObj[i].W * 2, Zm * level.MapObj[i].H);
 							break;
 						case 0x4: // D
-							LX = std::round((float)((-level.MapObj[i].W / 2 + (std::round(level.MapObj[i].W) / 2) / 2.0
-														+ level.MapObj[i].X / 160)
-													* Zm));
-							LY = (H + level.MapObj[i].W) * Zm
-								 - (float)((level.MapObj[i].H * 2 - 0.5 + level.MapObj[i].Y / 160) * Zm) + KY;
-
 							DrawImage(fmt::format("{}/img/{}/obj/{}4.PNG", P, level.LH.GameStyle, PR),
-								(float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
+								(float)((KX - level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
 								(H + level.MapObj[i].W) * Zm
 									- (float)((level.MapObj[i].H * 2 + level.MapObj[i].Y / 160) * Zm) + KY,
 								Zm * level.MapObj[i].W, Zm * level.MapObj[i].H * 2);
 							break;
 						case 0x6: // U
-							LX = std::round((float)((-level.MapObj[i].W / 2 + (std::round(level.MapObj[i].W) / 2) / 2.0
-														+ level.MapObj[i].X / 160)
-													* Zm));
-							LY = (H + level.MapObj[i].H + (std::round(level.MapObj[i].W) / 2)) * Zm
-								 - (float)((level.MapObj[i].H * 2 - 0.5 + level.MapObj[i].Y / 160) * Zm) + KY;
-
 							DrawImage(fmt::format("{}/img/{}/obj/{}6.PNG", P, level.LH.GameStyle, PR),
-								(float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
+								(float)((KX - level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
 								H * Zm - (float)((level.MapObj[i].H * 2 + level.MapObj[i].Y / 160) * Zm) + KY,
 								Zm * level.MapObj[i].W, Zm * level.MapObj[i].H * 2);
 							break;
@@ -1996,6 +1947,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 												* Zm));
 						LY = std::round((H + (std::round(level.MapObj[i].H) / 2) / 2.0) * Zm
 										- (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY);
+
 						break;
 					}
 					case 30: {
@@ -2010,7 +1962,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					}
 					case 31: {
 						//裁判云
-						level.ObjLinkType[level.MapObj[i].LID + 1] = 31;
+						level.ObjLinkType[level.MapObj[i].LID] = 31;
 						LX = std::round((float)((-level.MapObj[i].W / 2 - 0.5 + level.MapObj[i].X / 160) * Zm));
 						LY = std::round(H * Zm - (float)((0.5 + level.MapObj[i].Y / 160) * Zm));
 
@@ -2049,13 +2001,10 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 												* Zm));
 						LY = std::round((H + (std::round(level.MapObj[i].H) / 2) / 2.0) * Zm
 										- (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY);
-
 						break;
 					}
 					case 62: {
 						//库巴
-						LX = std::round((float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm));
-						LY = std::round(H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY);
 						switch(level.LH.GameStyle) {
 						case 22323:
 							DrawImage(fmt::format("{}/img/{}/obj/{}A.PNG", P, level.LH.GameStyle, level.MapObj[i].ID),
@@ -2078,19 +2027,11 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						switch(level.LH.GameStyle) {
 						case 22323:
 							if((level.MapObj[i].Flag / 0x4) % 2 == 1) {
-								LX = std::round((float)((-level.MapObj[i].W / 2 + 0.5 + level.MapObj[i].X / 160) * Zm));
-								LY = std::round(H * Zm - (float)((1 + level.MapObj[i].Y / 160) * Zm) + KY);
-
 								DrawImage(fmt::format("{}/img/{}/obj/3B.PNG", P, level.LH.GameStyle),
 									(float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
 									(H)*Zm - (float)((1.5 + level.MapObj[i].Y / 160) * Zm) + KY, Zm * level.MapObj[i].W,
 									Zm * level.MapObj[i].H);
 							} else {
-								LX = std::round((float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm));
-								LY = std::round(H * Zm
-												- (float)((level.MapObj[i].H * 2 - 1.5 + level.MapObj[i].Y / 160) * Zm)
-												+ KY);
-
 								DrawImage(fmt::format("{}/img/{}/obj/3.PNG", P, level.LH.GameStyle),
 									(float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
 									(H + 2) * Zm - (float)((level.MapObj[i].H * 2 - 0.5 + level.MapObj[i].Y / 160) * Zm)
@@ -2100,19 +2041,11 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							break;
 						default:
 							if((level.MapObj[i].Flag / 0x4000) % 2 == 1) {
-								LX = std::round((float)((-level.MapObj[i].W / 2 + 0.5 + level.MapObj[i].X / 160) * Zm));
-								LY = std::round(H * Zm - (float)((1 + level.MapObj[i].Y / 160) * Zm) + KY);
-
 								DrawImage(fmt::format("{}/img/{}/obj/3A.PNG", P, level.LH.GameStyle),
 									(float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
 									H * Zm - (float)((1.5 + level.MapObj[i].Y / 160) * Zm) + KY, Zm * level.MapObj[i].W,
 									Zm * level.MapObj[i].H);
 							} else {
-								LX = std::round((float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm));
-								LY = std::round(H * Zm
-												- (float)((level.MapObj[i].H * 2 - 1.5 + level.MapObj[i].Y / 160) * Zm)
-												+ KY);
-
 								DrawImage(fmt::format("{}/img/{}/obj/3.PNG", P, level.LH.GameStyle),
 									(float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
 									H * Zm - (float)((level.MapObj[i].H * 2 - 0.5 + level.MapObj[i].Y / 160) * Zm) + KY,
@@ -2155,9 +2088,10 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					case 39: {
 						//魔法师
 						LX = std::round(
-							(float)((2 - level.MapObj[i].W / 2 - level.MapObj[i].W + level.MapObj[i].X / 160) * Zm));
+							(float)((2 - level.MapObj[i].W / 2 - level.MapObj[i].W + 1.0 + level.MapObj[i].X / 160)
+									* Zm));
 						LY = std::round(
-							(H + 1) * Zm - (float)((level.MapObj[i].H * 2 - 0.5 + level.MapObj[i].Y / 160) * Zm) + KY);
+							(H + 1) * Zm - (float)((level.MapObj[i].H * 2 - 1.0 + level.MapObj[i].Y / 160) * Zm) + KY);
 
 						DrawImage(fmt::format("{}/img/{}/obj/39.PNG", P, level.LH.GameStyle), LX - Zm - Zm,
 							LY - Zm + KY, 2 * Zm * level.MapObj[i].W + KY, 2 * Zm * level.MapObj[i].H);
@@ -2282,8 +2216,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					}
 					case 61: {
 						//汪汪
-						LX = std::round((float)((-0.5 + level.MapObj[i].X / 160) * Zm));
-						LY = std::round(H * Zm - (float)((0.5 + level.MapObj[i].Y / 160) * Zm) + KY);
 						if((level.MapObj[i].Flag / 0x4) % 2 == 0) {
 							DrawImage(fmt::format("{}/img/{}/obj/61A.PNG", P, level.LH.GameStyle),
 								(float)((-0.5 + level.MapObj[i].X / 160) * Zm),
@@ -2297,9 +2229,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					}
 					case 78: {
 						//仙人掌
-						LX = std::round((float)(-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm);
-						LY = std::round((H + 1) * Zm
-										- (float)((level.MapObj[i].H + std::round(level.MapObj[i].Y) / 160) * Zm) + KY);
 						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
 						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
 						// value of ModuleSMM.MapObj(i).H for every iteration:
@@ -2328,9 +2257,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						} else {
 							PR = "";
 						}
-						LX = std::round((float)((-level.MapObj[i].W + 0.5 + level.MapObj[i].X / 160) * Zm));
-						LY = std::round(
-							(H + 1) * Zm - (float)((level.MapObj[i].H * 2 - 0.5 + level.MapObj[i].Y / 160) * Zm) + KY);
 
 						DrawImage(fmt::format("{}/img/{}/obj/111{}.PNG", P, level.LH.GameStyle, PR),
 							(float)((-level.MapObj[i].W + level.MapObj[i].X / 160) * Zm),
@@ -2352,9 +2278,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							(float)((-level.MapObj[i].W / 2 + level.MapObj[i].X / 160) * Zm),
 							H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY,
 							Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
-
-						LX = std::round((float)((-level.MapObj[i].W / 2 + 0.5 + level.MapObj[i].X / 160) * Zm));
-						LY = std::round(H * Zm - (float)((level.MapObj[i].H - 1 + level.MapObj[i].Y / 160) * Zm) + KY);
 						break;
 					}
 					case 110: {
@@ -2380,9 +2303,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						} else {
 							PR = "";
 						}
-						LX = std::round((float)((-level.MapObj[i].W + 0.5 + level.MapObj[i].X / 160) * Zm));
-						LY = std::round(
-							(H + 1) * Zm - (float)((level.MapObj[i].H * 2 - 0.5 + level.MapObj[i].Y / 160) * Zm) + KY);
 
 						DrawImage(fmt::format("{}/img/{}/obj/98{}.PNG", P, level.LH.GameStyle, PR),
 							(float)((-level.MapObj[i].W + level.MapObj[i].X / 160) * Zm),
@@ -2392,13 +2312,12 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					}
 					case 103: {
 						//骨鱼
-						LX = std::round((float)((-level.MapObj[i].W + 0.5 + level.MapObj[i].X / 160) * Zm));
+
 						LY = std::round(H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY);
 
 						DrawImage(fmt::format("{}/img/{}/obj/103.PNG", P, level.LH.GameStyle),
-							(float)((-level.MapObj[i].W + level.MapObj[i].X / 160) * Zm) + KY, LY,
+							(float)((-level.MapObj[i].W + 0.5 + level.MapObj[i].X / 160) * Zm), LY,
 							2 * Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
-
 						break;
 					}
 					case 91: {
@@ -2432,9 +2351,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						DrawImage(fmt::format("{}/img/{}/obj/91C.PNG", P, level.LH.GameStyle),
 							(float)((-0.5 + level.MapObj[i].X / 160) * Zm),
 							H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm), Zm, Zm);
-
-						LX = std::round((float)((-0.5 + level.MapObj[i].X / 160) * Zm));
-						LY = std::round(H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm));
 						break;
 					}
 					case 36: {
@@ -2457,10 +2373,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 										* Zm),
 								H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY, Zm, Zm);
 						}
-						LX = std::round(
-							(float)((j - 1 - std::round(level.MapObj[i].W) / 2 + std::round(level.MapObj[i].X) / 160)
-									* Zm));
-						LY = std::round(H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160) * Zm) + KY);
 						break;
 					}
 					case 11: {
@@ -2526,8 +2438,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					}
 					case 54: {
 						//喷枪
-						LX = std::round((float)((-0.5 + level.MapObj[i].X / 160) * Zm));
-						LY = std::round(H * Zm - (float)((0.5 + level.MapObj[i].Y / 160) * Zm) + KY);
 						switch((level.MapObj[i].Flag) % 0x100) {
 						case 0x40:
 							DrawImage(fmt::format("{}/img/{}/obj/54.PNG", P, level.LH.GameStyle),
@@ -2615,11 +2525,11 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					case 105: {
 						//夹子
 						if((level.MapObj[i].Flag) % 0x400 >= 0x100) {
-							KY                                         = Zm * 3;
-							level.ObjLinkType[level.MapObj[i].LID + 1] = 105;
+							KY                                     = Zm * 3;
+							level.ObjLinkType[level.MapObj[i].LID] = 105;
 						} else {
-							KY                                         = 0;
-							level.ObjLinkType[level.MapObj[i].LID + 1] = 105;
+							KY                                     = 0;
+							level.ObjLinkType[level.MapObj[i].LID] = 105;
 						}
 						LX = std::round((float)(-1.5 + level.MapObj[i].X / 160) * Zm);
 						LY = std::round(H * Zm - (float)(3.5 + level.MapObj[i].Y / 160) * Zm + KY);
@@ -2647,7 +2557,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							fmt::format("{}/img/{}/CID/{}.PNG", P, level.LH.GameStyle, PR), LX, LY, Zm / 2, Zm / 2);
 					}
 
-					if(L && level.ObjLinkType[level.MapObj[i].LID + 1] == 59) {
+					if(L && level.ObjLinkType[level.MapObj[i].LID] == 59) {
 						PR = std::to_string(std::round((level.MapObj[i].Flag) % 0x400000) / 0x100000);
 						DrawImage(fmt::format("{}/img/CMN/D{}.PNG", P, PR), LX, LY, Zm, Zm);
 					}
@@ -3864,7 +3774,7 @@ void Drawers::DrawCID() {
 
 	for(i = 0; i < level.MapHdr.ObjCount; i++) {
 		LX = std::round((float)((level.MapObj[i].X / 160) * Zm));
-		LY = std::round(H * Zm - (float)((1.0 + level.MapObj[i].Y / 160) * Zm));
+		LY = std::round(H * Zm - (float)((level.MapObj[i].Y / 160) * Zm));
 		switch(level.MapObj[i].CID) {
 		case -1: //无
 
@@ -3892,7 +3802,7 @@ void Drawers::DrawCID() {
 				}
 			} else {
 				if((level.MapObj[i].CFlag / 0x40000) % 2 == 1) {
-					DrawImage(fmt::format("{}/img/{}/CID/{]B.PNG", P, level.LH.GameStyle, level.MapObj[i].CID), LX, LY,
+					DrawImage(fmt::format("{}/img/{}/CID/{}B.PNG", P, level.LH.GameStyle, level.MapObj[i].CID), LX, LY,
 						Zm, Zm);
 				} else {
 					DrawImage(fmt::format("{}/img/{}/CID/{}.PNG", P, level.LH.GameStyle, level.MapObj[i].CID), LX, LY,
@@ -3943,7 +3853,7 @@ void Drawers::DrawCID() {
 		default:
 			if((level.MapObj[i].CFlag / 0x4) % 2 == 1) {
 				DrawImage(
-					fmt::format("{}/img/{}/CID/{]A.PNG", P, level.LH.GameStyle, level.MapObj[i].CID), LX, LY, Zm, Zm);
+					fmt::format("{}/img/{}/CID/{}A.PNG", P, level.LH.GameStyle, level.MapObj[i].CID), LX, LY, Zm, Zm);
 			} else {
 				DrawImage(
 					fmt::format("{}/img/{}/CID/{}.PNG", P, level.LH.GameStyle, level.MapObj[i].CID), LX, LY, Zm, Zm);

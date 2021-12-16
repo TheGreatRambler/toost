@@ -2,7 +2,7 @@ UNAME := $(shell uname -o)
 
 # mingw-w64-x86_64-SDL2 in pacman
 # No extension for the executable
-TARGET_EXEC ?= levelviewer
+TARGET_EXEC ?= toost
 
 BUILD_DIR ?= ./bin
 SRC_DIRS ?= ./src
@@ -27,10 +27,7 @@ else
 	CPPFLAGS += -Og -g -ggdb -DDEBUG
 endif
 
-# Linker flags (-lpthread needed for threads)
-# Include Winsock for getting the IP address
-# Can't use normal pkg config output because we don't want -mswindows
-LDFLAGS := -lpthread -lopengl32 $(shell pkg-config --libs --static sdl2 glew glfw3 zlib cairo) -mconsole
+LDFLAGS := -lpthread -lopengl32 $(shell pkg-config --libs --static sdl2 glew glfw3 zlib cairo) -liconv -mconsole -fPIC -static -static-libgcc -static-libstdc++
 
 ifeq ($(UNAME),Msys)
 	# Needed for sockets on windows
@@ -51,8 +48,8 @@ CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
-	# Copy required DLLs to folder, not copying the ones that are custom
-	ldd $(BUILD_DIR)/$(TARGET_EXEC) | grep '\/mingw.*\.dll' -o | xargs -I{} cp -n "{}" $(BUILD_DIR)
+#Copy required DLLs to folder, not copying the ones that are custom
+#ldd $(BUILD_DIR)/$(TARGET_EXEC) | grep '\/mingw.*\.dll' -o | xargs -I{} cp -n "{}" $(BUILD_DIR)
 
 # assembly
 $(BUILD_DIR)/%.s.o: %.s
