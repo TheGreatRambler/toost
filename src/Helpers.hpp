@@ -1,6 +1,16 @@
 #pragma once
 
+#include <bit>
+#include <cairo.h>
 #include <filesystem>
+#include <fmt/core.h>
+#include <imgui/imgui_impl_opengl3.h>
+
+#if defined(IMGUI_IMPL_OPENGL_ES2) || defined(__EMSCRIPTEN__)
+#include <SDL_opengles2.h>
+#else
+#include <SDL_opengl.h>
+#endif
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -10,15 +20,6 @@
 #endif
 
 namespace Helpers {
-	std::filesystem::path GetExecutableDirectory() {
-#ifdef _WIN32
-		wchar_t path[MAX_PATH] = { 0 };
-		GetModuleFileNameW(NULL, path, MAX_PATH);
-		return path;
-#else
-		char result[PATH_MAX];
-		ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-		return std::string(result, (count > 0) ? count : 0);
-#endif
-	}
+	std::filesystem::path GetExecutableDirectory();
+	bool LoadTextureFromSurface(cairo_surface_t* surface, GLuint* out_texture, int* out_width, int* out_height);
 }

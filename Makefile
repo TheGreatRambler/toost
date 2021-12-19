@@ -1,43 +1,54 @@
 UNAME := $(shell uname -o)
 
-# mingw-w64-x86_64-SDL2 in pacman
-# No extension for the executable
 TARGET_EXEC ?= toost
 
 BUILD_DIR ?= ./bin
 SRC_DIRS ?= ./src
 
-# Set compilers to MinGW64 compilers
-CC := gcc
-CXX := c++
+ifeq ($(PLATFORM),web)
+	CC := emcc
+	CXX := em++
+else
+	CC := gcc
+	CXX := c++
+endif
 
-# C flags
 CFLAGS := -std=gnu11
-# C++ flags
-# Single precision sets all defined floating point numbers to floats, saves on memory
-CXXFLAGS := -std=gnu++20 -I./src/include -I./src $(shell pkg-config --cflags sdl2 glew glfw3 zlib cairo)
-# C/C++ flags (no -pendantic)
-CPPFLAGS := -Wall -Wextra -Wno-missing-field-initializers -Wno-cast-function-type -Wno-deprecated-enum-enum-conversion
+CXXFLAGS := -std=gnu++20 -I./src
+CPPFLAGS := -Wall -Wextra -Wno-missing-field-initializers -Wno-deprecated-enum-enum-conversion
 
 ifeq ($(BUILD),release)
 	# "Release" build - optimization, and no debug symbols
 	CPPFLAGS += -O3 -s -DNDEBUG
 else
 	# "Debug" build - no optimization, and debugging symbols
+	ifeq ($(PLATFORM),web)
+	CPPFLAGS += -O0 -g -DDEBUG
+	else
 	CPPFLAGS += -Og -g -ggdb -DDEBUG
+	endif
 endif
 
-LDFLAGS := -lpthread -lopengl32 $(shell pkg-config --libs --static sdl2 glew glfw3 zlib cairo) -liconv -mconsole -fPIC -static -static-libgcc -static-libstdc++
+ifeq ($(PLATFORM),web)
+	PRELOADED_FILES = --preload-file img@/img
 
-ifeq ($(UNAME),Msys)
-	# Needed for sockets on windows
-	LDFLAGS += -lmingw32 -lws2_32 -lwsock32
+	EMS += -s USE_SDL=2 -s USE_ZLIB=1 -s USE_FREETYPE=1 -s USE_LIBPNG=1 -s DISABLE_EXCEPTION_CATCHING=1
+	CPPFLAGS += -I./third_party/cairo-1.16.0/src -O2 $(EMS)
+	LDFLAGS += -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1 -s ASYNCIFY -s FORCE_FILESYSTEM=1 -o bin/index.html --shell-file shell_minimal.html $(PRELOADED_FILES) $(EMS) -L./third_party/cairo-1.16.0/src/.libs -lcairo -L./third_party/pixman-0.40.0/pixman/.libs -lpixman-1
 else
-	LDFLAGS += -ldl
+	CPPFLAGS += $(shell pkg-config --cflags sdl2 glew glfw3 zlib cairo) -Wno-cast-function-type
+	LDFLAGS := -lpthread -lopengl32 $(shell pkg-config --libs --static sdl2 glew glfw3 zlib cairo) -liconv -mconsole -fPIC -static -static-libgcc -static-libstdc++
+
+	ifeq ($(UNAME),Msys)
+		# Needed for sockets on windows
+		LDFLAGS += -lmingw32 -lws2_32 -lwsock32
+	else
+		LDFLAGS += -ldl
+	endif
 endif
 
-#SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.s)
-SRCS := ./src/main.cpp ./src/LevelParser.cpp ./src/Drawers.cpp ./src/imgui/imgui.cpp ./src/imgui/imgui_widgets.cpp ./src/imgui/imgui_tables.cpp ./src/imgui/imgui_impl_sdlrenderer.cpp ./src/imgui/imgui_impl_sdl.cpp ./src/imgui/imgui_impl_opengl3.cpp ./src/imgui/imgui_draw.cpp ./src/SMM2CourseDecryptor/aes.cpp ./src/SMM2CourseDecryptor/decrypt.cpp ./src/fmt/format.cpp ./src/fmt/os.cpp
+
+SRCS := ./src/main.cpp ./src/LevelParser.cpp ./src/Drawers.cpp ./src/Helpers.cpp ./src/imgui/imgui.cpp ./src/imgui/imgui_widgets.cpp ./src/imgui/imgui_tables.cpp ./src/imgui/imgui_impl_sdl.cpp ./src/imgui/imgui_impl_opengl3.cpp ./src/imgui/imgui_draw.cpp ./src/SMM2CourseDecryptor/aes.cpp ./src/SMM2CourseDecryptor/decrypt.cpp ./src/fmt/format.cpp ./src/fmt/os.cpp
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
@@ -48,8 +59,6 @@ CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
-#Copy required DLLs to folder, not copying the ones that are custom
-#ldd $(BUILD_DIR)/$(TARGET_EXEC) | grep '\/mingw.*\.dll' -o | xargs -I{} cp -n "{}" $(BUILD_DIR)
 
 # assembly
 $(BUILD_DIR)/%.s.o: %.s

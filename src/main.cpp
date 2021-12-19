@@ -3,7 +3,7 @@
 #include "LevelParser.hpp"
 
 #include <SDL.h>
-#include <cairo/cairo.h>
+#include <cairo.h>
 #include <chrono>
 #include <cstdio>
 #include <cxxopts.hpp>
@@ -15,7 +15,6 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_impl_sdl.h>
 #include <iterator>
-#include <portable-file-dialogs.h>
 #include <stdio.h>
 #include <thread>
 #include <vector>
@@ -24,11 +23,28 @@
 #include <Windows.h>
 #endif
 
-#if defined(IMGUI_IMPL_OPENGL_ES2)
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <emscripten/bind.h>
+using namespace emscripten;
+#else
+#include <portable-file-dialogs.h>
+#endif
+
+#if defined(IMGUI_IMPL_OPENGL_ES2) || defined(__EMSCRIPTEN__)
 #include <SDL_opengles2.h>
 #else
 #include <SDL_opengl.h>
 #endif
+
+SDL_Window* window       = nullptr;
+SDL_GLContext gl_context = nullptr;
+bool done                = false;
+ImVec4 clear_color       = ImVec4(0.69f, 0.54f, 0.41f, 1.00f);
+
+int level_render_width    = 0;
+int level_render_height   = 0;
+GLuint level_render_image = 0;
 
 void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destination) {
 	Drawers drawer(level);
@@ -49,7 +65,7 @@ void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destina
 
 	puts("Set graphics");
 
-	std::string tilesheet = fmt::format("{}/img/TILE/{}-{}{}.png", level.PT, level.LH.GameStyle, level.MapHdr.Theme,
+	std::string tilesheet = fmt::format("{}/img/tile/{}-{}{}.png", level.PT, level.LH.GameStyle, level.MapHdr.Theme,
 		(level.MapHdr.Flag == 2) ? "A" : "");
 	drawer.SetTilesheet(tilesheet);
 
@@ -186,6 +202,9 @@ void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destina
 	puts("Draw clear pipe");
 
 	cairo_surface_write_to_png(surface, destination.c_str());
+
+	Helpers::LoadTextureFromSurface(surface, &level_render_image, &level_render_width, &level_render_height);
+
 	cairo_destroy(cr);
 	cairo_surface_destroy(surface);
 }
@@ -237,8 +256,13 @@ void AttemptRender(std::string choice, bool log, std::string destination) {
 	SetConsoleOutputCP(CP_UTF8);
 #endif
 
+#ifdef __EMSCRIPTEN__
+	std::string assetsFolder = "";
+#else
 	std::string assetsFolder = Helpers::GetExecutableDirectory().parent_path().parent_path().string();
 	std::replace(assetsFolder.begin(), assetsFolder.end(), '\\', '/');
+#endif
+
 	fmt::print("Assets folder: {}\n", assetsFolder);
 	levelParser.SetAssetsFolder(assetsFolder);
 
@@ -248,6 +272,116 @@ void AttemptRender(std::string choice, bool log, std::string destination) {
 
 	fmt::print("Rendering took {} milliseconds\n",
 		std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
+}
+
+#ifdef __EMSCRIPTEN__
+EM_ASYNC_JS(char*, ReadFileFromUserJS, (), {
+	return new Promise(function(res, rej) {
+		var hiddenInput           = document.createElement("input");
+		hiddenInput.type          = "file";
+		hiddenInput.style.display = "none";
+		hiddenInput.title         = "Choose level to open";
+		document.body.appendChild(hiddenInput);
+
+		hiddenInput.addEventListener(
+			"change", function(e) {
+				if(hiddenInput.files.size == 0) {
+					rej(0);
+				} else {
+					var filename = hiddenInput.files[0].name;
+
+					var fr    = new FileReader();
+					fr.onload = function() {
+						var data = new Uint8Array(fr.result);
+						Module["FS_createDataFile"](".", filename, data, true, true, true);
+						document.body.removeChild(hiddenInput);
+
+						var lengthBytes      = lengthBytesUTF8(filename) + 1;
+						var stringOnWasmHeap = _malloc(lengthBytes);
+						stringToUTF8(filename, stringOnWasmHeap, lengthBytes);
+						res(stringOnWasmHeap);
+					};
+					fr.readAsArrayBuffer(hiddenInput.files[0]);
+				}
+			});
+
+		hiddenInput.click();
+
+		window.addEventListener("focus",
+			function(e) {
+				if(hiddenInput.files.size == 0) {
+					document.body.removeChild(hiddenInput);
+					rej(0);
+				}
+			},
+			{ once: true });
+	});
+});
+#endif
+
+static void main_loop() {
+	ImGuiIO& io = ImGui::GetIO();
+	SDL_Event event;
+	while(SDL_PollEvent(&event)) {
+		ImGui_ImplSDL2_ProcessEvent(&event);
+		if(event.type == SDL_QUIT)
+			done = true;
+		if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE
+			&& event.window.windowID == SDL_GetWindowID(window))
+			done = true;
+	}
+
+	{
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.50f, 0.33f, 0.22f, 1.0f));
+		ImGui::NewFrame();
+		ImGui::Begin("Toost");
+
+		ImGui::Text("Choose your file:");
+		if(ImGui::Button("File")) {
+#ifdef __EMSCRIPTEN__
+			char* fileString = ReadFileFromUserJS();
+			puts("File chosen");
+			std::string choice = "";
+			if(fileString != nullptr) {
+				choice = std::string(fileString);
+				free(fileString);
+			} else {
+				puts("No file chosen");
+			}
+#else
+			auto selection = pfd::open_file("Choose level to open", ".", { "All Files", "*" }, pfd::opt::none).result();
+			puts("File chosen");
+			std::string choice = "";
+			if(!selection.empty()) {
+				choice = selection[0];
+			} else {
+				puts("No file chosen");
+			}
+#endif
+			puts(choice.c_str());
+			AttemptRender(choice, true, "test.png");
+		}
+
+		if(level_render_image != 0) {
+			ImGui::Image((void*)(intptr_t)level_render_image, ImVec2(level_render_width, level_render_height));
+			ImGui::SetWindowSize(ImVec2((float)level_render_width, (float)level_render_height + 100.0));
+		}
+
+		ImGui::End();
+		ImGui::PopStyleColor(1);
+	}
+
+	// Rendering
+	ImGui::Render();
+	SDL_GL_MakeCurrent(window, gl_context);
+	glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+	glClearColor(
+		clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+	glClear(GL_COLOR_BUFFER_BIT);
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	SDL_GL_SwapWindow(window);
 }
 
 int main(int argc, char** argv) {
@@ -286,6 +420,8 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	puts("Starting toost GUI");
+
 	// Setup SDL
 	// (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows
 	// systems, depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL
@@ -296,7 +432,17 @@ int main(int argc, char** argv) {
 	}
 
 	// Decide GL+GLSL versions
-#if defined(IMGUI_IMPL_OPENGL_ES2)
+#if defined(__EMSCRIPTEN__)
+	// For the browser using Emscripten, we are going to use WebGL1 with GL ES2. See the Makefile. for requirement
+	// details. It is very likely the generated file won't work in many browsers. Firefox is the only sure bet, but I
+	// have successfully run this code on Chrome for Android for example.
+	const char* glsl_version = "#version 100";
+	// const char* glsl_version = "#version 300 es";
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#elif defined(IMGUI_IMPL_OPENGL_ES2)
 	// GL ES 2.0 + GLSL 100
 	const char* glsl_version = "#version 100";
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
@@ -323,21 +469,30 @@ int main(int argc, char** argv) {
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+	SDL_DisplayMode current;
+	SDL_GetCurrentDisplayMode(0, &current);
 	SDL_WindowFlags window_flags
 		= (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	SDL_Window* window       = SDL_CreateWindow("Toost | Super Mario Maker 2 Level Viewer", SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
-	SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+	window     = SDL_CreateWindow("Toost | Super Mario Maker 2 Level Viewer", SDL_WINDOWPOS_CENTERED,
+			SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+	gl_context = SDL_GL_CreateContext(window);
+
+	if(!gl_context) {
+		fprintf(stderr, "Failed to initialize OpenGL3 context!\n");
+		return 1;
+	}
+
 	SDL_GL_MakeCurrent(window, gl_context);
-	SDL_GL_SetSwapInterval(1); // Enable vsync
+	// SDL_GL_SetSwapInterval(1); // Enable vsync
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
+	ImGuiIO& io    = ImGui::GetIO();
+	io.IniFilename = NULL;
 	(void)io;
 	// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	// io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	// io.ConfigFlags != ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
 
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
@@ -346,52 +501,13 @@ int main(int argc, char** argv) {
 	// Setup Platform/Renderer backends
 	ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
 	ImGui_ImplOpenGL3_Init(glsl_version);
-	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop(main_loop, 0, true);
+#else
 	// Main loop
-	bool done = false;
 	while(!done) {
-		SDL_Event event;
-		while(SDL_PollEvent(&event)) {
-			ImGui_ImplSDL2_ProcessEvent(&event);
-			if(event.type == SDL_QUIT)
-				done = true;
-			if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE
-				&& event.window.windowID == SDL_GetWindowID(window))
-				done = true;
-		}
-
-		// Start the Dear ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::NewFrame();
-
-		{
-			ImGui::Begin("Toost");
-
-			ImGui::Text("Choose your file:");
-			if(ImGui::Button("File")) {
-				auto selection
-					= pfd::open_file("Choose level to open", ".", { "All Files", "*" }, pfd::opt::none).result();
-				puts("File chosen");
-				if(!selection.empty()) {
-					std::string choice = selection[0];
-					puts(choice.c_str());
-					AttemptRender(choice, true, "test.png");
-				}
-			}
-
-			ImGui::End();
-		}
-
-		// Rendering
-		ImGui::Render();
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		glClearColor(
-			clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-		glClear(GL_COLOR_BUFFER_BIT);
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		SDL_GL_SwapWindow(window);
+		main_loop();
 	}
 
 	// Cleanup
@@ -404,4 +520,5 @@ int main(int argc, char** argv) {
 	SDL_Quit();
 
 	return 0;
+#endif
 }
