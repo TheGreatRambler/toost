@@ -26,6 +26,7 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <emscripten/html5.h>
 using namespace emscripten;
 #else
 #include <portable-file-dialogs.h>
@@ -37,14 +38,21 @@ using namespace emscripten;
 #include <SDL_opengl.h>
 #endif
 
-SDL_Window* window       = nullptr;
-SDL_GLContext gl_context = nullptr;
-bool done                = false;
-ImVec4 clear_color       = ImVec4(0.69f, 0.54f, 0.41f, 1.00f);
+SDL_Window* window          = nullptr;
+SDL_GLContext gl_context    = nullptr;
+bool done                   = false;
+ImVec4 clear_color          = ImVec4(0.69f, 0.54f, 0.41f, 1.00f);
+uint64_t new_window_counter = 0;
 
-int level_render_width    = 0;
-int level_render_height   = 0;
-GLuint level_render_image = 0;
+struct LevelWindow {
+	int level_render_width  = 0;
+	int level_render_height = 0;
+	std::string filename;
+	uint64_t window_id;
+	GLuint level_render_image = 0;
+};
+
+std::vector<LevelWindow> opened_level_windows;
 
 void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destination) {
 	Drawers drawer(level);
@@ -203,7 +211,13 @@ void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destina
 
 	cairo_surface_write_to_png(surface, destination.c_str());
 
-	Helpers::LoadTextureFromSurface(surface, &level_render_image, &level_render_width, &level_render_height);
+	LevelWindow newLevelWindow;
+	Helpers::LoadTextureFromSurface(surface, &newLevelWindow.level_render_image, &newLevelWindow.level_render_width,
+		&newLevelWindow.level_render_height);
+	newLevelWindow.filename  = destination;
+	newLevelWindow.window_id = new_window_counter;
+	opened_level_windows.push_back(newLevelWindow);
+	new_window_counter++;
 
 	cairo_destroy(cr);
 	cairo_surface_destroy(surface);
@@ -293,7 +307,12 @@ EM_ASYNC_JS(char*, ReadFileFromUserJS, (), {
 					var fr    = new FileReader();
 					fr.onload = function() {
 						var data = new Uint8Array(fr.result);
-						Module["FS_createDataFile"](".", filename, data, true, true, true);
+
+						if(FS.analyzePath(filename).exists) {
+							FS.unlink(filename);
+						}
+
+						FS.createDataFile(".", filename, data, true, true, true);
 						document.body.removeChild(hiddenInput);
 
 						var lengthBytes      = lengthBytesUTF8(filename) + 1;
@@ -361,15 +380,32 @@ static void main_loop() {
 			}
 #endif
 			puts(choice.c_str());
-			AttemptRender(choice, true, "test.png");
+			AttemptRender(choice, true, std::filesystem::path(choice).filename().string() + ".png");
 		}
-
-		if(level_render_image != 0) {
-			ImGui::Image((void*)(intptr_t)level_render_image, ImVec2(level_render_width, level_render_height));
-			ImGui::SetWindowSize(ImVec2((float)level_render_width, (float)level_render_height + 100.0));
-		}
-
 		ImGui::End();
+		ImGui::PopStyleColor(1);
+
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 3.0f);
+		bool is_open;
+		auto iter = opened_level_windows.begin();
+		while(iter != opened_level_windows.end()) {
+			is_open = true;
+			ImGui::Begin(fmt::format("{}##{}", iter->filename, iter->window_id).c_str(), &is_open);
+			if(!is_open) {
+				fmt::print("Deleted window {}\n", iter->filename);
+				glDeleteTextures(1, &iter->level_render_image);
+				iter = opened_level_windows.erase(iter);
+			} else {
+				ImGui::Image((void*)(intptr_t)iter->level_render_image,
+					ImVec2(iter->level_render_width, iter->level_render_height));
+				ImGui::SetWindowSize(
+					ImVec2((float)iter->level_render_width + 20.0f, (float)iter->level_render_height + 50.0f));
+				++iter;
+			}
+			ImGui::End();
+		}
+		ImGui::PopStyleVar(1);
 		ImGui::PopStyleColor(1);
 	}
 
@@ -412,7 +448,7 @@ int main(int argc, char** argv) {
 				AttemptRender(path, result.count("debug"), output);
 				return 0;
 			}
-			AttemptRender(path, result.count("debug"), "test.png");
+			AttemptRender(path, result.count("debug"), std::filesystem::path(path).filename().string() + ".png");
 			return 0;
 		} else {
 			fmt::print("Path {} does not exist\n", path);
