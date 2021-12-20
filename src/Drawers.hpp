@@ -30,7 +30,7 @@ public:
 	void SetLog(bool log);
 	int GetWidth();
 	int GetHeight();
-	static int RoundCompat(double source);
+	void DrawGridlines();
 	void DrawTile(int tileX, int tileY, int tileW, int tileH, int x, int y, int targetWidth, int targetHeight);
 	void DrawImage(std::string path, int x, int y, int targetWidth, int targetHeight);
 	void DrawImageOpacity(std::string path, double opacity, int x, int y, int targetWidth, int targetHeight);

@@ -3,6 +3,7 @@
 #include "LevelParser.hpp"
 
 #include <SDL.h>
+#include <cairo-ft.h>
 #include <cairo.h>
 #include <chrono>
 #include <cstdio>
@@ -27,8 +28,10 @@
 #include <emscripten.h>
 #include <emscripten/bind.h>
 #include <emscripten/html5.h>
+#include <freetype.h>
 using namespace emscripten;
 #else
+#include <freetype/freetype.h>
 #include <portable-file-dialogs.h>
 #endif
 
@@ -43,6 +46,12 @@ SDL_GLContext gl_context    = nullptr;
 bool done                   = false;
 ImVec4 clear_color          = ImVec4(0.69f, 0.54f, 0.41f, 1.00f);
 uint64_t new_window_counter = 0;
+FT_Library freetype_library;
+FT_Face main_font;
+std::string assetsFolder;
+int focused_window_index        = -1;
+int cached_focused_window_index = -1;
+std::vector<std::string> cached_focused_window_info;
 
 struct LevelWindow {
 	int level_render_width  = 0;
@@ -50,6 +59,7 @@ struct LevelWindow {
 	std::string filename;
 	uint64_t window_id;
 	GLuint level_render_image = 0;
+	LevelParser level;
 };
 
 std::vector<LevelWindow> opened_level_windows;
@@ -67,6 +77,10 @@ void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destina
 	cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, drawer.GetWidth(), drawer.GetHeight());
 	cairo_t* cr              = cairo_create(surface);
 
+	cairo_font_face_t* font = cairo_ft_font_face_create_for_ft_face(main_font, 0);
+	cairo_set_font_face(cr, font);
+	cairo_font_face_destroy(font);
+
 	fmt::print("Width: {}\nHeight: {}\n", drawer.GetWidth(), drawer.GetHeight());
 
 	drawer.SetGraphics(cr);
@@ -78,6 +92,8 @@ void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destina
 	drawer.SetTilesheet(tilesheet);
 
 	fmt::print("Set tilesheet to {}\n", tilesheet);
+
+	drawer.DrawGridlines();
 
 	// 3D平台
 	//半碰撞
@@ -209,6 +225,9 @@ void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destina
 
 	puts("Draw clear pipe");
 
+	// Optional, draw pipes again
+	drawer.DrawItem({ 9 }, false);
+
 	cairo_surface_write_to_png(surface, destination.c_str());
 
 	LevelWindow newLevelWindow;
@@ -216,6 +235,7 @@ void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destina
 		&newLevelWindow.level_render_height);
 	newLevelWindow.filename  = destination;
 	newLevelWindow.window_id = new_window_counter;
+	newLevelWindow.level     = level;
 	opened_level_windows.push_back(newLevelWindow);
 	new_window_counter++;
 
@@ -264,17 +284,12 @@ void AttemptRender(std::string choice, bool log, std::string destination) {
 
 	bool isOverworld = true;
 
-	levelParser.LoadLvlData(choice, isOverworld);
+	puts("Loading level data");
+	levelParser.LoadLevelData(choice, isOverworld);
+	puts("Done loading level data");
 
 #ifdef _WIN32
 	SetConsoleOutputCP(CP_UTF8);
-#endif
-
-#ifdef __EMSCRIPTEN__
-	std::string assetsFolder = "";
-#else
-	std::string assetsFolder = Helpers::GetExecutableDirectory().parent_path().parent_path().string();
-	std::replace(assetsFolder.begin(), assetsFolder.end(), '\\', '/');
 #endif
 
 	fmt::print("Assets folder: {}\n", assetsFolder);
@@ -289,52 +304,49 @@ void AttemptRender(std::string choice, bool log, std::string destination) {
 }
 
 #ifdef __EMSCRIPTEN__
-EM_ASYNC_JS(char*, ReadFileFromUserJS, (), {
-	return new Promise(function(res, rej) {
-		var hiddenInput           = document.createElement("input");
-		hiddenInput.type          = "file";
-		hiddenInput.style.display = "none";
-		hiddenInput.title         = "Choose level to open";
-		document.body.appendChild(hiddenInput);
+EM_JS(void, ReadFileFromUserJS, (), {
+	var hiddenInput           = document.createElement("input");
+	hiddenInput.type          = "file";
+	hiddenInput.style.display = "none";
+	hiddenInput.title         = "Choose level to open";
+	document.body.appendChild(hiddenInput);
 
-		hiddenInput.addEventListener(
-			"change", function(e) {
-				if(hiddenInput.files.size == 0) {
-					rej(0);
-				} else {
-					var filename = hiddenInput.files[0].name;
+	hiddenInput.onchange = function() {
+		if(hiddenInput.files.size == 0) {
+			rej(0);
+		} else {
+			var filename = hiddenInput.files[0].name;
 
-					var fr    = new FileReader();
-					fr.onload = function() {
-						var data = new Uint8Array(fr.result);
+			var fr    = new FileReader();
+			fr.onload = function() {
+				var data = new Uint8Array(fr.result);
 
-						if(FS.analyzePath(filename).exists) {
-							FS.unlink(filename);
-						}
-
-						FS.createDataFile(".", filename, data, true, true, true);
-						document.body.removeChild(hiddenInput);
-
-						var lengthBytes      = lengthBytesUTF8(filename) + 1;
-						var stringOnWasmHeap = _malloc(lengthBytes);
-						stringToUTF8(filename, stringOnWasmHeap, lengthBytes);
-						res(stringOnWasmHeap);
-					};
-					fr.readAsArrayBuffer(hiddenInput.files[0]);
+				if(FS.analyzePath(filename).exists) {
+					FS.unlink(filename);
 				}
-			});
 
-		hiddenInput.click();
+				FS.createDataFile(".", filename, data, true, true, true);
+				document.body.removeChild(hiddenInput);
 
-		window.addEventListener("focus",
-			function(e) {
-				if(hiddenInput.files.size == 0) {
-					document.body.removeChild(hiddenInput);
-					rej(0);
-				}
-			},
-			{ once: true });
-	});
+				Module.fileInputFilename = filename;
+			};
+			fr.readAsArrayBuffer(hiddenInput.files[0]);
+		}
+	};
+
+	hiddenInput.click();
+});
+
+EM_JS(char*, CheckReadFileFromUserJS, (), {
+	if(Module.fileInputFilename) {
+		var lengthBytes      = lengthBytesUTF8(Module.fileInputFilename) + 1;
+		var stringOnWasmHeap = _malloc(lengthBytes);
+		stringToUTF8(Module.fileInputFilename, stringOnWasmHeap, lengthBytes);
+		Module.fileInputFilename = undefined;
+		return stringOnWasmHeap;
+	} else {
+		return 0;
+	}
 });
 #endif
 
@@ -350,64 +362,107 @@ static void main_loop() {
 			done = true;
 	}
 
-	{
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.50f, 0.33f, 0.22f, 1.0f));
-		ImGui::NewFrame();
-		ImGui::Begin("Toost");
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplSDL2_NewFrame();
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.50f, 0.33f, 0.22f, 1.0f));
+	ImGui::NewFrame();
 
-		ImGui::Text("Choose your file:");
-		if(ImGui::Button("File")) {
+	int h;
+	SDL_GetWindowSize(window, nullptr, &h);
+	ImGui::SetNextWindowSize(ImVec2(450, h));
+	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	ImGui::Begin("Toost", nullptr,
+		ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize
+			| ImGuiWindowFlags_NoMove);
+
+	std::string choice;
+	ImGui::Text("Choose your file:");
+
 #ifdef __EMSCRIPTEN__
-			char* fileString = ReadFileFromUserJS();
-			puts("File chosen");
-			std::string choice = "";
-			if(fileString != nullptr) {
-				choice = std::string(fileString);
-				free(fileString);
-			} else {
-				puts("No file chosen");
-			}
-#else
-			auto selection = pfd::open_file("Choose level to open", ".", { "All Files", "*" }, pfd::opt::none).result();
-			puts("File chosen");
-			std::string choice = "";
-			if(!selection.empty()) {
-				choice = selection[0];
-			} else {
-				puts("No file chosen");
-			}
+	char* fileString = CheckReadFileFromUserJS();
+	if(fileString != nullptr) {
+		puts("File chosen");
+		choice = std::string(fileString);
+		free(fileString);
+	}
 #endif
-			puts(choice.c_str());
-			AttemptRender(choice, true, std::filesystem::path(choice).filename().string() + ".png");
+
+	if(ImGui::Button("File")) {
+#ifdef __EMSCRIPTEN__
+		ReadFileFromUserJS();
+#else
+		auto selection = pfd::open_file("Choose level to open", ".", { "All Files", "*" }, pfd::opt::none).result();
+		if(!selection.empty()) {
+			puts("File chosen");
+			choice = selection[0];
+		} else {
+			puts("No file chosen");
+		}
+#endif
+	}
+
+	if(!choice.empty()) {
+		puts(choice.c_str());
+		AttemptRender(choice, true, std::filesystem::path(choice).filename().string() + ".png");
+	}
+
+	if(focused_window_index != -1) {
+		if(focused_window_index != cached_focused_window_index) {
+			auto& cwfi = cached_focused_window_info;
+
+			cwfi.clear();
+			cached_focused_window_index = focused_window_index;
+
+			fmt::print("Caching level data for {}\n", opened_level_windows[focused_window_index].filename);
+			LevelParser& level = opened_level_windows[focused_window_index].level;
+			cwfi.push_back(fmt::format("Name: {}", level.LH.Name));
+			cwfi.push_back(fmt::format("Description: {}", level.LH.Desc));
+			cwfi.push_back(fmt::format("Gamestyle: {}", LevelParserMappings::NumToGameStyle.at(level.LH.GameStyle)));
+			cwfi.push_back(
+				fmt::format("Clear Time: {}", LevelParserMappings::FormatMillisecondTime(level.LH.ClearTime)));
+			cwfi.push_back(fmt::format("Clear Attempts: {}", level.LH.ClearAttempts));
+			// cwfi.push_back(fmt::format("Uploaded: {:02}-{:02}-{} {}:{:02}", level.LH.DateDD, level.LH.DateMM,
+			//	level.LH.DateYY, level.LH.DateH, level.LH.DateM));
+		}
+
+		for(auto& info : cached_focused_window_info) {
+			ImGui::TextWrapped("%s", info.c_str());
+		}
+	}
+
+	ImGui::End();
+	ImGui::PopStyleColor(1);
+
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 3.0f);
+	bool is_open;
+	auto iter            = opened_level_windows.begin();
+	int i                = 0;
+	focused_window_index = -1;
+	while(iter != opened_level_windows.end()) {
+		is_open = true;
+		bool should_render = ImGui::Begin(fmt::format("{}##{}", iter->filename, iter->window_id).c_str(), &is_open);
+		if(!is_open) {
+			fmt::print("Deleted window {}\n", iter->filename);
+			glDeleteTextures(1, &iter->level_render_image);
+			iter = opened_level_windows.erase(iter);
+		} else {
+			if (should_render) {
+				ImGui::Image((void*)(intptr_t)iter->level_render_image, ImVec2(iter->level_render_width, iter->level_render_height));
+				ImGui::SetWindowSize(ImVec2((float)iter->level_render_width + 25.0f, (float)iter->level_render_height + 45.0f));
+			}
+
+			if(ImGui::IsWindowFocused()) {
+				focused_window_index = i;
+			}
+
+			++iter;
+			i++;
 		}
 		ImGui::End();
-		ImGui::PopStyleColor(1);
-
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 3.0f);
-		bool is_open;
-		auto iter = opened_level_windows.begin();
-		while(iter != opened_level_windows.end()) {
-			is_open = true;
-			ImGui::Begin(fmt::format("{}##{}", iter->filename, iter->window_id).c_str(), &is_open);
-			if(!is_open) {
-				fmt::print("Deleted window {}\n", iter->filename);
-				glDeleteTextures(1, &iter->level_render_image);
-				iter = opened_level_windows.erase(iter);
-			} else {
-				ImGui::Image((void*)(intptr_t)iter->level_render_image,
-					ImVec2(iter->level_render_width, iter->level_render_height));
-				ImGui::SetWindowSize(
-					ImVec2((float)iter->level_render_width + 20.0f, (float)iter->level_render_height + 50.0f));
-				++iter;
-			}
-			ImGui::End();
-		}
-		ImGui::PopStyleVar(1);
-		ImGui::PopStyleColor(1);
 	}
+	ImGui::PopStyleVar(1);
+	ImGui::PopStyleColor(1);
 
 	// Rendering
 	ImGui::Render();
@@ -439,6 +494,13 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
+#ifdef __EMSCRIPTEN__
+	assetsFolder = "";
+#else
+	assetsFolder = Helpers::GetExecutableDirectory().parent_path().parent_path().string();
+	std::replace(assetsFolder.begin(), assetsFolder.end(), '\\', '/');
+#endif
+
 	if(result.count("path")) {
 		std::string path = result["path"].as<std::string>();
 		if(std::filesystem::exists(path)) {
@@ -457,6 +519,10 @@ int main(int argc, char** argv) {
 	}
 
 	puts("Starting toost GUI");
+
+	std::string font_path = fmt::format("{}/fonts/unifont-14.0.01.ttf", assetsFolder);
+	FT_Init_FreeType(&freetype_library);
+	FT_New_Face(freetype_library, font_path.c_str(), 0, &main_font);
 
 	// Setup SDL
 	// (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows
@@ -524,7 +590,10 @@ int main(int argc, char** argv) {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io    = ImGui::GetIO();
+	ImGuiIO& io = ImGui::GetIO();
+	static ImWchar ranges[] = { 0x20, 0xFFFF, 0 };
+	static ImFontConfig cfg;
+	io.Fonts->AddFontFromFileTTF(font_path.c_str(), 18.0, &cfg, ranges);
 	io.IniFilename = NULL;
 	(void)io;
 	// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls

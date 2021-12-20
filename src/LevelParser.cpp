@@ -63,7 +63,7 @@ bool LevelParser::DecryptLevelData(const std::string& input, const std::string& 
 	return LevelDecryptor::decrypt(input.c_str(), output.c_str());
 }
 
-void LevelParser::LoadLvlData(const std::string& P, bool overworld) {
+void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 	int Offset;
 	Offset = overworld ? 0x200 : 0x2E0E0;
 
@@ -91,10 +91,9 @@ void LevelParser::LoadLvlData(const std::string& P, bool overworld) {
 	fseek(levelPtr, 0xF1, SEEK_SET);
 	fread(&LH.GameStyle, sizeof(LH.GameStyle), 1, levelPtr);
 
-	// VER TEST
-	// LH.GameStyle = 12621
+	puts("Parsed header");
 
-	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wstringConverter;
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> wstringConverter;
 
 	long long i    = 0;
 	long long j    = 0;
@@ -121,8 +120,7 @@ void LevelParser::LoadLvlData(const std::string& P, bool overworld) {
 	}
 	LH.Desc = wstringConverter.to_bytes(S);
 
-	fmt::print("NAME: {}\n", LH.Name);
-	fmt::print("DESCRIPTION: {}\n", LH.Desc);
+	fmt::print("Parsed name ({}) and description\n", LH.Name);
 
 	int32_t M = 0;
 
@@ -152,6 +150,8 @@ void LevelParser::LoadLvlData(const std::string& P, bool overworld) {
 	fread(&MapHdr.TrackCount, sizeof(MapHdr.TrackCount), 1, levelPtr);
 	fread(&MapHdr.IceCount, sizeof(MapHdr.IceCount), 1, levelPtr);
 
+	puts("Parsed map header");
+
 	MapObj.resize(MapHdr.ObjCount);
 	for(M = 0; M < MapHdr.ObjCount; M++) {
 		fseek(levelPtr, Offset + 0x48 + M * 0x20, SEEK_SET);
@@ -170,6 +170,8 @@ void LevelParser::LoadLvlData(const std::string& P, bool overworld) {
 		MapObj[M].LinkType = 0;
 	}
 
+	puts("Parsed map objects");
+
 	// 0x14584  0x4B0 (0x4 * 300)Sound Effect
 	//蛇砖块0x149F8  0x12D4 (0x3C4 * 5)Snake Block
 	MapSnk.resize(MapHdr.SnakeCount);
@@ -187,6 +189,8 @@ void LevelParser::LoadLvlData(const std::string& P, bool overworld) {
 			fread(&MapSnk[M].Node[i].Dir, sizeof(MapSnk[M].Node[i].Dir), 1, levelPtr);
 		}
 	}
+
+	puts("Parsed snake blocks");
 
 	MapCPipe.resize(MapHdr.ClearPipCount);
 	for(M = 0; M < MapHdr.ClearPipCount; M++) {
@@ -208,6 +212,8 @@ void LevelParser::LoadLvlData(const std::string& P, bool overworld) {
 			fread(&MapCPipe[M].Node[i].Dir, sizeof(MapCPipe[M].Node[i].Dir), 1, levelPtr);
 		}
 	}
+
+	puts("Parsed clear pipe");
 
 	MapCrp.resize(MapHdr.CreeperCount);
 	for(M = 0; M < MapHdr.CreeperCount; M++) {
@@ -256,6 +262,8 @@ void LevelParser::LoadLvlData(const std::string& P, bool overworld) {
 			fread(&MapTrackBlk[M].Node[i].p2, sizeof(MapTrackBlk[M].Node[i].p2), 1, levelPtr);
 		}
 	}
+
+	puts("Parsed tracks");
 
 	MapGrd.resize(MapHdr.GroundCount);
 
@@ -424,5 +432,14 @@ void LevelParser::LoadLvlData(const std::string& P, bool overworld) {
 		fread(&MapIce[M].ID, sizeof(MapIce[M].ID), 1, levelPtr);
 	}
 
+	puts("Done parsing");
+
 	fclose(levelPtr);
+}
+
+const std::string LevelParserMappings::FormatMillisecondTime(int milliseconds) {
+	int seconds  = (milliseconds / 1000) % 60;
+	int minutes  = (milliseconds / 1000) / 60;
+	milliseconds = milliseconds % 1000;
+	return fmt::format("{:02}:{:02}.{:03}", minutes, seconds, milliseconds);
 }

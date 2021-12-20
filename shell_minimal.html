@@ -65,7 +65,7 @@
 			console.log("onerror: " + event);
 		};
 
-		var canvasElement = document.getElementById('canvas');
+		var canvasElement = document.getElementById("canvas");
 		var originalCanvasGetContext = canvasElement.getContext;
 		canvasElement.getContext = function(contextType, contextAttributes) {
 			if (contextAttributes)

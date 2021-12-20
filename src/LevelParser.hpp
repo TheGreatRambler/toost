@@ -9,6 +9,7 @@
 #include <locale>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class LevelParser {
@@ -41,14 +42,14 @@ public:
 		int32_t ClearCRC      = 0;
 		int32_t GameVer       = 0;
 		int32_t MFlag         = 0;
-		int32_t ClearAttempts = 0;
-		int32_t ClearTime     = 0;
+		int32_t ClearAttempts = 0; //-
+		int32_t ClearTime     = 0; //-
 		uint32_t CreationID   = 0;
 		int64_t UploadID      = 0;
 		int32_t ClearVer      = 0;
-		int16_t GameStyle     = 0;
-		std::string Name;
-		std::string Desc;
+		int16_t GameStyle     = 0; //-
+		std::string Name;          //-
+		std::string Desc;          //-
 	};
 
 	struct MapObject {
@@ -181,7 +182,7 @@ public:
 	std::vector<MapCreeper> MapCrp;
 	std::vector<uint8_t> ObjLinkType = std::vector<uint8_t>(60000);
 	//地图文件头H48
-	std::vector<MapHeader> MH = std::vector<MapHeader>(3);
+	// std::vector<MapHeader> MH = std::vector<MapHeader>(3);
 	MapHeader MapHdr;
 	std::vector<MapObject> MapObj;
 	std::vector<MapGround> MapGrd;
@@ -372,5 +373,17 @@ public:
 	std::string GetItemName(int n, int v);
 	void SetAssetsFolder(std::string path);
 	bool DecryptLevelData(const std::string& input, const std::string& output);
-	void LoadLvlData(const std::string& P, bool overworld);
+	void LoadLevelData(const std::string& P, bool overworld);
 };
+
+namespace LevelParserMappings {
+	const std::unordered_map<int16_t, std::string> NumToGameStyle = {
+		{ 12621, "SMB1" },
+		{ 13133, "SMB3" },
+		{ 22349, "SMW" },
+		{ 21847, "NSMBU" },
+		{ 22323, "SM3DW" },
+	};
+
+	const std::string FormatMillisecondTime(int milliseconds);
+}
