@@ -130,6 +130,10 @@ void Drawers::SetLog(bool log) {
 	doLogging = log;
 }
 
+void Drawers::SetAssetFolder(std::string folder) {
+	assetFolder = folder;
+}
+
 int Drawers::GetWidth() {
 	return renderWidth;
 }
@@ -157,7 +161,7 @@ void Drawers::DrawGridlines() {
 		if((H - i) % 10 == 0) {
 			cairo_set_source_rgb(cr, 0, 0, 0);
 			cairo_move_to(cr, 3, (i - 0.25) * Zm);
-			cairo_show_text(cr, fmt::format("{}", H - i).c_str());
+			cairo_show_text(cr, std::to_string(H - i).c_str());
 		}
 	}
 
@@ -176,7 +180,7 @@ void Drawers::DrawGridlines() {
 		if(i % 10 == 9) {
 			cairo_set_source_rgb(cr, 0, 0, 0);
 			cairo_move_to(cr, i * Zm + 3, Zm * 0.75);
-			cairo_show_text(cr, fmt::format("{}", i + 1).c_str());
+			cairo_show_text(cr, std::to_string(i + 1).c_str());
 		}
 	}
 
@@ -346,69 +350,69 @@ void Drawers::DrawCrp(unsigned char EX, int X, int Y) {
 	// 1).NodeCount for every iteration:
 	int tempVar = level.MapCrp[EX - 1].NodeCount;
 	for(i = 0; i < tempVar; i++) {
-		DrawImage(fmt::format("{}/img/cmn/SS.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+		DrawImage(fmt::format("{}/img/cmn/SS.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 
 		// G.DrawString(MapCrp(EX - 1).Node(i), Me.Font, Brushes.Black, (XX) * Zm, (H - YY) * Zm)
 		switch(level.MapCrp[EX - 1].Node[i]) {
 		case 1: // L
-			DrawImage(fmt::format("{}/img/cmn/SL.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SL.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			XX -= 2;
 			break;
 		case 2: // R
-			DrawImage(fmt::format("{}/img/cmn/SR.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SR.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			XX += 2;
 			break;
 		case 3: // D
-			DrawImage(fmt::format("{}/img/cmn/SD.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SD.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			YY -= 2;
 			break;
 		case 4: // U
-			DrawImage(fmt::format("{}/img/cmn/SU.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SU.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			YY += 2;
 			break;
 		case 5: // LD
-			DrawImage(fmt::format("{}/img/cmn/SRD.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SRD.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			YY -= 2;
 			break;
 		case 6: // DL
-			DrawImage(fmt::format("{}/img/cmn/SUL.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SUL.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			XX -= 2;
 			break;
 		case 7: // LU
-			DrawImage(fmt::format("{}/img/cmn/SRU.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SRU.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			YY += 2;
 			break;
 		case 8: // UL
-			DrawImage(fmt::format("{}/img/cmn/SDL.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SDL.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			XX -= 2;
 			break;
 		case 9: // RD
-			DrawImage(fmt::format("{}/img/cmn/SLD.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SLD.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			YY -= 2;
 			break;
 		case 10: // DR
-			DrawImage(fmt::format("{}/img/cmn/SUR.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SUR.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			XX += 2;
 			break;
 		case 11: // RU
-			DrawImage(fmt::format("{}/img/cmn/SLU.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SLU.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			YY += 2;
 			break;
 		case 12: // UR
-			DrawImage(fmt::format("{}/img/cmn/SDR.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SDR.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			XX += 2;
 			break;
 		case 13: // RE
-			DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			break;
 		case 14: // LE
-			DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			break;
 		case 15: // UE
-			DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			break;
 		case 16: // DE
-			DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			break;
 		}
 	}
@@ -484,68 +488,68 @@ void Drawers::DrawSnake(unsigned char EX, int X, int Y, int SW, int SH) {
 	// 1).NodeCount for every iteration:
 	int tempVar = level.MapSnk[EX - 1].NodeCount;
 	for(i = 0; i < tempVar; i++) {
-		DrawImage(fmt::format("{}/img/cmn/SS.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+		DrawImage(fmt::format("{}/img/cmn/SS.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 		// G.Drastring(MapSnk(EX - 1).Node(i).Dir, Me.Font, Brushes.Black, (XX + 0.5) * Zm, (H - YY - 0.5) * Zm)
 		switch(level.MapSnk[EX - 1].Node[i].Dir) {
 		case 1: // L
-			DrawImage(fmt::format("{}/img/cmn/SL.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SL.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			XX -= 1;
 			break;
 		case 2: // R
-			DrawImage(fmt::format("{}/img/cmn/SR.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SR.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			XX += 1;
 			break;
 		case 3: // D
-			DrawImage(fmt::format("{}/img/cmn/SD.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SD.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			YY -= 1;
 			break;
 		case 4: // U
-			DrawImage(fmt::format("{}/img/cmn/SU.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SU.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			YY += 1;
 			break;
 		case 5: // LD
-			DrawImage(fmt::format("{}/img/cmn/SRD.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SRD.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			YY -= 1;
 			break;
 		case 6: // DL
-			DrawImage(fmt::format("{}/img/cmn/SUL.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SUL.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			XX -= 1;
 			break;
 		case 7: // LU
-			DrawImage(fmt::format("{}/img/cmn/SRU.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SRU.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			YY += 1;
 			break;
 		case 8: // UL
-			DrawImage(fmt::format("{}/img/cmn/SDL.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SDL.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			XX -= 1;
 			break;
 		case 9: // RD
-			DrawImage(fmt::format("{}/img/cmn/SLD.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SLD.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			YY -= 1;
 			break;
 		case 10: // DR
-			DrawImage(fmt::format("{}/img/cmn/SUR.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SUR.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			XX += 1;
 			break;
 		case 11: // RU
-			DrawImage(fmt::format("{}/img/cmn/SLU.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SLU.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			YY += 1;
 			break;
 		case 12: // UR
-			DrawImage(fmt::format("{}/img/cmn/SDR.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SDR.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			XX += 1;
 			break;
 		case 13: // RE
-			DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			break;
 		case 14: // LE
-			DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			break;
 		case 15: // UE
-			DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			break;
 		case 16: // DE
-			DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm, Zm);
+			DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
 			break;
 		}
 	}
@@ -596,69 +600,69 @@ void Drawers::DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y) {
 		// - 1).NodeCount for every iteration:
 		int tempVar = level.MapTrackBlk[EX - 1].NodeCount;
 		for(i = 0; i < tempVar; i++) {
-			DrawImage(fmt::format("{}/img/cmn/SS.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SS.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 
 			// G.Drastring(MapTrackBlk(EX - 1).Node(i).p1, Me.Font, Brushes.Black, (XX) * Zm, (H - YY) * Zm)
 			switch(level.MapTrackBlk[EX - 1].Node[i].p1) {
 			case 1: // L
-				DrawImage(fmt::format("{}/img/cmn/SL.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SL.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX -= 2;
 				break;
 			case 2: // R
-				DrawImage(fmt::format("{}/img/cmn/SR.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SR.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX += 2;
 				break;
 			case 3: // D
-				DrawImage(fmt::format("{}/img/cmn/SD.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SD.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY -= 2;
 				break;
 			case 4: // U
-				DrawImage(fmt::format("{}/img/cmn/SU.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SU.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY += 2;
 				break;
 			case 5: // LD
-				DrawImage(fmt::format("{}/img/cmn/SRD.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SRD.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY -= 2;
 				break;
 			case 6: // DL
-				DrawImage(fmt::format("{}/img/cmn/SUL.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SUL.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX -= 2;
 				break;
 			case 7: // LU
-				DrawImage(fmt::format("{}/img/cmn/SRU.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SRU.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY += 2;
 				break;
 			case 8: // UL
-				DrawImage(fmt::format("{}/img/cmn/SDL.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SDL.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX -= 2;
 				break;
 			case 9: // RD
-				DrawImage(fmt::format("{}/img/cmn/SLD.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SLD.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY -= 2;
 				break;
 			case 10: // DR
-				DrawImage(fmt::format("{}/img/cmn/SUR.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SUR.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX += 2;
 				break;
 			case 11: // RU
-				DrawImage(fmt::format("{}/img/cmn/SLU.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SLU.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY += 2;
 				break;
 			case 12: // UR
-				DrawImage(fmt::format("{}/img/cmn/SDR.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SDR.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX += 2;
 				break;
 			case 13: // RE
-				DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			case 14: // LE
-				DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			case 15: // UE
-				DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			case 16: // DE
-				DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			}
 		}
@@ -697,69 +701,69 @@ void Drawers::DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y) {
 		// 1).NodeCount for every iteration:
 		int tempVar2 = level.MapMoveBlk[EX - 1].NodeCount;
 		for(i = 0; i < tempVar2; i++) {
-			DrawImage(fmt::format("{}/img/cmn/SS.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+			DrawImage(fmt::format("{}/img/cmn/SS.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 
 			// G.Drastring(MapMoveBlk(EX - 1).Node(i).p1, Me.Font, Brushes.Black, (XX) * Zm, (H - YY) * Zm)
 			switch(level.MapMoveBlk[EX - 1].Node[i].p1) {
 			case 1: // L
-				DrawImage(fmt::format("{}/img/cmn/SL.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SL.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX -= 2;
 				break;
 			case 2: // R
-				DrawImage(fmt::format("{}/img/cmn/SR.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SR.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX += 2;
 				break;
 			case 3: // D
-				DrawImage(fmt::format("{}/img/cmn/SD.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SD.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY -= 2;
 				break;
 			case 4: // U
-				DrawImage(fmt::format("{}/img/cmn/SU.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SU.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY += 2;
 				break;
 			case 5: // LD
-				DrawImage(fmt::format("{}/img/cmn/SRD.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SRD.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY -= 2;
 				break;
 			case 6: // DL
-				DrawImage(fmt::format("{}/img/cmn/SUL.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SUL.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX -= 2;
 				break;
 			case 7: // LU
-				DrawImage(fmt::format("{}/img/cmn/SRU.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SRU.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY += 2;
 				break;
 			case 8: // UL
-				DrawImage(fmt::format("{}/img/cmn/SDL.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SDL.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX -= 2;
 				break;
 			case 9: // RD
-				DrawImage(fmt::format("{}/img/cmn/SLD.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SLD.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY -= 2;
 				break;
 			case 10: // DR
-				DrawImage(fmt::format("{}/img/cmn/SUR.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SUR.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX += 2;
 				break;
 			case 11: // RU
-				DrawImage(fmt::format("{}/img/cmn/SLU.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SLU.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY += 2;
 				break;
 			case 12: // UR
-				DrawImage(fmt::format("{}/img/cmn/SDR.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SDR.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX += 2;
 				break;
 			case 13: // RE
-				DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			case 14: // LE
-				DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			case 15: // UE
-				DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			case 16: // DE
-				DrawImage(fmt::format("{}/img/cmn/SE.png", level.PT), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
+				DrawImage(fmt::format("{}/img/cmn/SE.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			}
 		}
@@ -778,7 +782,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 	int LY         = 0;
 	int KY         = 0;
 	int PP         = 0;
-	std::string P  = level.PT;
+	std::string P  = assetFolder;
 
 	for(i = 0; i < level.MapHdr.ObjCount; i++) {
 		PR = "";
@@ -852,7 +856,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 												* Zm));
 						LY = std::round((H + (std::round(level.MapObj[i].H) / 2) / 2.0) * Zm
 										- (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm) + KY);
-						DrawImage(fmt::format("{}/img/cmr/1.png", level.PT),
+						DrawImage(fmt::format("{}/img/cmr/1.png", assetFolder),
 							(float)((-level.MapObj[i].W / 2.0 + level.MapObj[i].X / 160.0) * Zm),
 							H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm) + KY,
 							Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
@@ -871,14 +875,17 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						int tempVar = level.MapObj[i].W;
 						for(j = 0; j < tempVar; j++) {
 							if(j == 0) {
-								DrawTile(3, j2, 1, 1, (float)((j + level.MapObj[i].X / 160.0) * Zm),
-									H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm);
+								DrawTile(3, j2, 1, 1, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+									H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm), Zm,
+									Zm);
 							} else if(j == level.MapObj[i].W - 1) {
-								DrawTile(5, j2, 1, 1, (float)((j + level.MapObj[i].X / 160.0) * Zm),
-									H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm);
+								DrawTile(5, j2, 1, 1, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+									H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm), Zm,
+									Zm);
 							} else {
-								DrawTile(4, j2, 1, 1, (float)((j + level.MapObj[i].X / 160.0) * Zm),
-									H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm);
+								DrawTile(4, j2, 1, 1, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+									H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm), Zm,
+									Zm);
 							}
 						}
 						break;
@@ -898,14 +905,17 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						int tempVar2 = level.MapObj[i].W;
 						for(j = 0; j < tempVar2; j++) {
 							if(j == 0) {
-								DrawTile(j2, 3, 1, 1, (float)((j + level.MapObj[i].X / 160.0) * Zm),
-									H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm);
+								DrawTile(j2, 3, 1, 1, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+									H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm), Zm,
+									Zm);
 							} else if(j == level.MapObj[i].W - 1) {
-								DrawTile(j2 + 1, 3, 1, 1, (float)((j + level.MapObj[i].X / 160.0) * Zm),
-									H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm);
+								DrawTile(j2 + 1, 3, 1, 1, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+									H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm), Zm,
+									Zm);
 							} else {
-								DrawTile(j2 + 1, 3, 1, 1, (float)((j + level.MapObj[i].X / 160.0) * Zm),
-									H * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm);
+								DrawTile(j2 + 1, 3, 1, 1, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+									H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm), Zm,
+									Zm);
 							}
 						}
 						break;
@@ -975,14 +985,14 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						int tempVar5 = level.MapObj[i].W;
 						for(j = 0; j < tempVar5; j++) {
 							if(j == 0) {
-								DrawTile(0, 2, 1, 2, (float)((j + level.MapObj[i].X / 160.0) * Zm),
-									H * Zm - (float)((1.5 + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm * 2);
+								DrawTile(0, 2, 1, 2, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+									H * Zm - (float)((1.0 + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm * 2);
 							} else if(j == level.MapObj[i].W - 1) {
-								DrawTile(2, 2, 1, 2, (float)((j + level.MapObj[i].X / 160.0) * Zm),
-									H * Zm - (float)((1.5 + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm * 2);
+								DrawTile(2, 2, 1, 2, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+									H * Zm - (float)((1.0 + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm * 2);
 							} else {
-								DrawTile(1, 2, 1, 2, (float)((j + level.MapObj[i].X / 160.0) * Zm),
-									H * Zm - (float)((1.5 + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm * 2);
+								DrawTile(1, 2, 1, 2, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+									H * Zm - (float)((1.0 + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm * 2);
 							}
 						}
 						break;
@@ -2800,7 +2810,6 @@ void Drawers::ReGrdCode() {
 	// 10  11  12缓大左上 13缓大右上 14缓大左下 15缓大右下  16缓小左上 17缓小右上 18缓小左下 19缓小右下
 	// 20端左上 21端右上 22端左下 23端右下 24    25    26
 	for(i = 0; i < level.MapHdr.ObjCount; i++) {
-		fmt::print("Object ID: {}\n", level.MapObj[i].ID);
 		switch(level.MapObj[i].ID) {
 		case 87:
 			//缓坡
@@ -3091,7 +3100,7 @@ void Drawers::DrawGrd() {
 		switch(level.LH.GameStyle) {
 		case 12621: // 1
 			if(level.MapHdr.Theme == 2) {
-				DrawImage(fmt::format("{}/img/{}/obj/27A.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/27A.png", assetFolder, level.LH.GameStyle),
 					(float)((level.LH.GoalX / 10.0 - 0.5) * Zm), (level.MapHdr.BorT / 16 - level.LH.GoalY - 4) * Zm,
 					Zm * 2, Zm * 4);
 
@@ -3100,14 +3109,14 @@ void Drawers::DrawGrd() {
 						(level.MapHdr.BorT / 16 - level.LH.GoalY) * Zm, Zm, Zm);
 				}
 			} else {
-				DrawImage(fmt::format("{}/img/{}/obj/27.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/27.png", assetFolder, level.LH.GameStyle),
 					(float)((level.LH.GoalX / 10.0 - 0.5) * Zm), (level.MapHdr.BorT / 16 - level.LH.GoalY - 11) * Zm,
 					Zm, Zm * 11);
 			}
 			break;
 		case 13133: // 3
 			if(level.MapHdr.Theme == 2) {
-				DrawImage(fmt::format("{}/img/{}/obj/27A.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/27A.png", assetFolder, level.LH.GameStyle),
 					(float)((level.LH.GoalX / 10.0 - 0.5) * Zm), (level.MapHdr.BorT / 16 - level.LH.GoalY - 4) * Zm,
 					Zm * 2, Zm * 4);
 
@@ -3116,14 +3125,14 @@ void Drawers::DrawGrd() {
 						(level.MapHdr.BorT / 16 - level.LH.GoalY) * Zm, Zm, Zm);
 				}
 			} else {
-				DrawImage(fmt::format("{}/img/{}/obj/27.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/27.png", assetFolder, level.LH.GameStyle),
 					(float)((level.LH.GoalX / 10.0 - 0.5) * Zm),
 					(level.MapHdr.BorT / 16 - level.LH.GoalY - 5 - 0.5) * Zm, Zm * 2, Zm * 2);
 			}
 			break;
 		case 22349: // W
 			if(level.MapHdr.Theme == 2) {
-				DrawImage(fmt::format("{}/img/{}/obj/27A.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/27A.png", assetFolder, level.LH.GameStyle),
 					(float)((level.LH.GoalX / 10.0 - 0.5) * Zm), (level.MapHdr.BorT / 16 - level.LH.GoalY - 4) * Zm,
 					Zm * 2, Zm * 4);
 
@@ -3141,20 +3150,20 @@ void Drawers::DrawGrd() {
 				// G.DrawImage(Image.FromFile(PT & "\img\" & LH.GameStyle.ToString & "\obj\27D.png"), CSng((LH.GoalX /
 				// 10 + 1.5) * Zm), (MapHdr.BorT \ 16 - LH.GoalY - 9) * Zm, Zm, Zm)
 
-				DrawImage(fmt::format("{}/img/{}/obj/27F.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/27F.png", assetFolder, level.LH.GameStyle),
 					(float)((level.LH.GoalX / 10.0 - 0.5) * Zm),
 					(float)(level.MapHdr.BorT / 16 - level.LH.GoalY - 8.5) * Zm, Zm, Zm * 9);
-				DrawImage(fmt::format("{}/img/{}/obj/27.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/27.png", assetFolder, level.LH.GameStyle),
 					(float)((level.LH.GoalX / 10.0) * Zm), (float)(level.MapHdr.BorT / 16 - level.LH.GoalY - 8) * Zm,
 					Zm * 2, Zm);
-				DrawImage(fmt::format("{}/img/{}/obj/27G.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/27G.png", assetFolder, level.LH.GameStyle),
 					(float)((level.LH.GoalX / 10.0 + 1.5) * Zm),
 					(float)(level.MapHdr.BorT / 16 - level.LH.GoalY - 8.5) * Zm, Zm, Zm * 9);
 			}
 			break;
 		case 21847: // U
 			if(level.MapHdr.Theme == 2) {
-				DrawImage(fmt::format("{}/img/{}/obj/27A.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/27A.png", assetFolder, level.LH.GameStyle),
 					(float)((level.LH.GoalX / 10.0 - 0.5) * Zm), (level.MapHdr.BorT / 16 - level.LH.GoalY - 4) * Zm,
 					Zm * 2, Zm * 4);
 
@@ -3163,13 +3172,13 @@ void Drawers::DrawGrd() {
 						(level.MapHdr.BorT / 16 - level.LH.GoalY) * Zm, Zm, Zm);
 				}
 			} else {
-				DrawImage(fmt::format("{}/img/{}/obj/27.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/27.png", assetFolder, level.LH.GameStyle),
 					(float)((level.LH.GoalX / 10.0 - 0.5) * Zm), (level.MapHdr.BorT / 16 - level.LH.GoalY - 11) * Zm,
 					Zm, Zm * 11);
 			}
 			break;
 		case 22323: // 3D
-			DrawImage(fmt::format("{}/img/{}/obj/27.png", level.PT, level.LH.GameStyle),
+			DrawImage(fmt::format("{}/img/{}/obj/27.png", assetFolder, level.LH.GameStyle),
 				(float)((level.LH.GoalX / 10.0 - 0.5) * Zm), (level.MapHdr.BorT / 16 - level.LH.GoalY - 11) * Zm, Zm,
 				Zm * 11);
 			break;
@@ -3192,7 +3201,7 @@ void Drawers::DrawGrd() {
 		//		Next
 		//	Next
 
-		DrawImage(fmt::format("{}/img/{}/obj/38.png", level.PT, level.LH.GameStyle), 1 * Zm,
+		DrawImage(fmt::format("{}/img/{}/obj/38.png", assetFolder, level.LH.GameStyle), 1 * Zm,
 			(level.MapHdr.BorT / 16 - level.LH.StartY - 3) * Zm, Zm * 3, Zm * 3);
 	}
 
@@ -3894,27 +3903,27 @@ void Drawers::DrawTrack() {
 		// LID+1?
 		level.ObjLinkType[level.MapTrk[i].LID] = 59;
 		if(level.MapTrk[i].Type < 8) {
-			DrawImage(fmt::format("{}/img/{}/obj/T{}.png", level.PT, level.LH.GameStyle, (int)level.MapTrk[i].Type),
+			DrawImage(fmt::format("{}/img/{}/obj/T{}.png", assetFolder, level.LH.GameStyle, (int)level.MapTrk[i].Type),
 				level.MapTrk[i].X * Zm - Zm, (H - 2) * Zm - level.MapTrk[i].Y * Zm, Zm * 3, Zm * 3);
 			switch(level.MapTrk[i].Type) {
 			case 0:
 				if(level.TrackNode[level.MapTrk[i].X + 1 + 1][level.MapTrk[i].Y + 1] == 1 && level.MapTrk[i].F0 == 0) {
-					DrawImage(fmt::format("{}/img/{}/obj/T.png", level.PT, level.LH.GameStyle),
+					DrawImage(fmt::format("{}/img/{}/obj/T.png", assetFolder, level.LH.GameStyle),
 						level.MapTrk[i].X * Zm + Zm, (H - 1) * Zm - level.MapTrk[i].Y * Zm, Zm, Zm);
 				}
 				if(level.TrackNode[level.MapTrk[i].X + 1 - 1][level.MapTrk[i].Y + 1] == 1 && level.MapTrk[i].F1 == 0) {
-					DrawImage(fmt::format("{}/img/{}/obj/T.png", level.PT, level.LH.GameStyle),
+					DrawImage(fmt::format("{}/img/{}/obj/T.png", assetFolder, level.LH.GameStyle),
 						level.MapTrk[i].X * Zm - Zm, (H - 1) * Zm - level.MapTrk[i].Y * Zm, Zm, Zm);
 				}
 				break;
 			case 1:
 				if(level.TrackNode[level.MapTrk[i].X + 1][level.MapTrk[i].Y + 1 + 1] == 1 && level.MapTrk[i].F0 == 0) {
-					DrawImage(fmt::format("{}/img/{}/obj/T.png", level.PT, level.LH.GameStyle), level.MapTrk[i].X * Zm,
-						(H - 2) * Zm - level.MapTrk[i].Y * Zm, Zm, Zm);
+					DrawImage(fmt::format("{}/img/{}/obj/T.png", assetFolder, level.LH.GameStyle),
+						level.MapTrk[i].X * Zm, (H - 2) * Zm - level.MapTrk[i].Y * Zm, Zm, Zm);
 				}
 				if(level.TrackNode[level.MapTrk[i].X + 1][level.MapTrk[i].Y + 1 - 1] == 1 && level.MapTrk[i].F1 == 0) {
-					DrawImage(fmt::format("{}/img/{}/obj/T.png", level.PT, level.LH.GameStyle), level.MapTrk[i].X * Zm,
-						H * Zm - level.MapTrk[i].Y * Zm, Zm, Zm);
+					DrawImage(fmt::format("{}/img/{}/obj/T.png", assetFolder, level.LH.GameStyle),
+						level.MapTrk[i].X * Zm, H * Zm - level.MapTrk[i].Y * Zm, Zm, Zm);
 				}
 				break;
 			case 2:
@@ -3922,12 +3931,12 @@ void Drawers::DrawTrack() {
 			case 5:
 				if(level.TrackNode[level.MapTrk[i].X + 1 + 1][level.MapTrk[i].Y + 1 - 1] == 1
 					&& level.MapTrk[i].F0 == 0) {
-					DrawImage(fmt::format("{}/img/{}/obj/T.png", level.PT, level.LH.GameStyle),
+					DrawImage(fmt::format("{}/img/{}/obj/T.png", assetFolder, level.LH.GameStyle),
 						level.MapTrk[i].X * Zm + Zm, H * Zm - level.MapTrk[i].Y * Zm, Zm, Zm);
 				}
 				if(level.TrackNode[level.MapTrk[i].X + 1 - 1][level.MapTrk[i].Y + 1 + 1] == 1
 					&& level.MapTrk[i].F1 == 0) {
-					DrawImage(fmt::format("{}/img/{}/obj/T.png", level.PT, level.LH.GameStyle),
+					DrawImage(fmt::format("{}/img/{}/obj/T.png", assetFolder, level.LH.GameStyle),
 						level.MapTrk[i].X * Zm - Zm, (H - 2) * Zm - level.MapTrk[i].Y * Zm, Zm, Zm);
 				}
 				break;
@@ -3936,19 +3945,19 @@ void Drawers::DrawTrack() {
 			case 7:
 				if(level.TrackNode[level.MapTrk[i].X + 1 + 1][level.MapTrk[i].Y + 1 + 1] == 1
 					&& level.MapTrk[i].F0 == 0) {
-					DrawImage(fmt::format("{}/img/{}/obj/T.png", level.PT, level.LH.GameStyle),
+					DrawImage(fmt::format("{}/img/{}/obj/T.png", assetFolder, level.LH.GameStyle),
 						level.MapTrk[i].X * Zm + Zm, (H - 2) * Zm - level.MapTrk[i].Y * Zm, Zm, Zm);
 				}
 				if(level.TrackNode[level.MapTrk[i].X + 1 - 1][level.MapTrk[i].Y + 1 - 1] == 1
 					&& level.MapTrk[i].F1 == 0) {
-					DrawImage(fmt::format("{}/img/{}/obj/T.png", level.PT, level.LH.GameStyle),
+					DrawImage(fmt::format("{}/img/{}/obj/T.png", assetFolder, level.LH.GameStyle),
 						level.MapTrk[i].X * Zm - Zm, H * Zm - level.MapTrk[i].Y * Zm, Zm, Zm);
 				}
 				break;
 			}
 		} else // Y轨道
 		{
-			DrawImage(fmt::format("{}/img/{}/obj/T{}.png", level.PT, level.LH.GameStyle, (int)level.MapTrk[i].Type),
+			DrawImage(fmt::format("{}/img/{}/obj/T{}.png", assetFolder, level.LH.GameStyle, (int)level.MapTrk[i].Type),
 				level.MapTrk[i].X * Zm - Zm, (H - 4) * Zm - level.MapTrk[i].Y * Zm, Zm * 5, Zm * 5);
 			// G.DrawImage(Image.FromFile(PT & "\img\" & LH.GameStyle.ToString & "\obj\T.png"), (MapTrk(i).X - 1 +
 			// TrackYPt(MapTrk(i).Type, 0).X) * Zm, H * Zm - (MapTrk(i).Y + TrackYPt(MapTrk(i).Type, 0).Y) * Zm, Zm, Zm)
@@ -3961,7 +3970,7 @@ void Drawers::DrawTrack() {
 							  [level.MapTrk[i].Y + level.TrackYPt[level.MapTrk[i].Type][0].Y]
 					== 1
 				&& level.MapTrk[i].F0 == 0) {
-				DrawImage(fmt::format("{}/img/{}/obj/T.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/T.png", assetFolder, level.LH.GameStyle),
 					(level.MapTrk[i].X - 1 + level.TrackYPt[level.MapTrk[i].Type][0].X) * Zm,
 					(H - 4) * Zm - (level.MapTrk[i].Y - level.TrackYPt[level.MapTrk[i].Type][0].Y) * Zm, Zm, Zm);
 			}
@@ -3969,7 +3978,7 @@ void Drawers::DrawTrack() {
 							  [level.MapTrk[i].Y + level.TrackYPt[level.MapTrk[i].Type][1].Y]
 					== 1
 				&& level.MapTrk[i].F1 == 0) {
-				DrawImage(fmt::format("{}/img/{}/obj/T.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/T.png", assetFolder, level.LH.GameStyle),
 					(level.MapTrk[i].X - 1 + level.TrackYPt[level.MapTrk[i].Type][1].X) * Zm,
 					(H - 4) * Zm - (level.MapTrk[i].Y - level.TrackYPt[level.MapTrk[i].Type][1].Y) * Zm, Zm, Zm);
 			}
@@ -3977,7 +3986,7 @@ void Drawers::DrawTrack() {
 							  [level.MapTrk[i].Y + level.TrackYPt[level.MapTrk[i].Type][2].Y]
 					== 1
 				&& level.MapTrk[i].F2 == 0) {
-				DrawImage(fmt::format("{}/img/{}/obj/T.png", level.PT, level.LH.GameStyle),
+				DrawImage(fmt::format("{}/img/{}/obj/T.png", assetFolder, level.LH.GameStyle),
 					(level.MapTrk[i].X - 1 + level.TrackYPt[level.MapTrk[i].Type][2].X) * Zm,
 					(H - 4) * Zm - (level.MapTrk[i].Y - level.TrackYPt[level.MapTrk[i].Type][2].Y) * Zm, Zm, Zm);
 			}
@@ -3991,7 +4000,7 @@ void Drawers::DrawCID() {
 	int LX         = 0;
 	int LY         = 0;
 
-	std::string P = level.PT;
+	std::string P = assetFolder;
 
 	for(i = 0; i < level.MapHdr.ObjCount; i++) {
 		LX = std::round((float)((-0.5 + level.MapObj[i].X / 160.0) * Zm));
@@ -4091,7 +4100,7 @@ void Drawers::DrawFireBar() {
 	int j         = 0;
 	int LX        = 0;
 	int LY        = 0;
-	std::string P = level.PT;
+	std::string P = assetFolder;
 	float FR      = 0;
 	//'火棍
 	//'长度&H40 0000，角度EX/&H38E 38E0
@@ -4122,7 +4131,7 @@ void Drawers::DrawFireBar() {
 
 void Drawers::DrawFire() {
 	int i         = 0;
-	std::string P = level.PT;
+	std::string P = assetFolder;
 
 	for(i = 0; i < level.MapHdr.ObjCount; i++) {
 		if(level.MapObj[i].ID == 54) {
@@ -4243,7 +4252,7 @@ void Drawers::DrawCPipe() {
 						} else {
 							CP = "D";
 						}
-						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", level.PT, level.LH.GameStyle, CP),
+						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", assetFolder, level.LH.GameStyle, CP),
 							(level.MapCPipe[i].Node[J].X + K) * Zm, (H - 1 - level.MapCPipe[i].Node[J].Y) * Zm, Zm,
 							2 * Zm);
 						break;
@@ -4255,7 +4264,7 @@ void Drawers::DrawCPipe() {
 						} else {
 							CP = "D";
 						}
-						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", level.PT, level.LH.GameStyle, CP),
+						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", assetFolder, level.LH.GameStyle, CP),
 							(level.MapCPipe[i].Node[J].X - K) * Zm, (H - 1 - level.MapCPipe[i].Node[J].Y - 1) * Zm, Zm,
 							2 * Zm);
 						break;
@@ -4267,7 +4276,7 @@ void Drawers::DrawCPipe() {
 						} else {
 							CP = "A";
 						}
-						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", level.PT, level.LH.GameStyle, CP),
+						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", assetFolder, level.LH.GameStyle, CP),
 							level.MapCPipe[i].Node[J].X * Zm, (H - 1 - level.MapCPipe[i].Node[J].Y - K) * Zm, 2 * Zm,
 							Zm);
 						break;
@@ -4279,7 +4288,7 @@ void Drawers::DrawCPipe() {
 						} else {
 							CP = "A";
 						}
-						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", level.PT, level.LH.GameStyle, CP),
+						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", assetFolder, level.LH.GameStyle, CP),
 							(level.MapCPipe[i].Node[J].X - 1) * Zm, (H - 1 - level.MapCPipe[i].Node[J].Y + K) * Zm,
 							2 * Zm, Zm);
 						break;
@@ -4296,25 +4305,25 @@ void Drawers::DrawCPipe() {
 					switch(level.MapCPipe[i].Node[J].Dir) {
 					case 0: // R
 						CP = (K == level.MapCPipe[i].Node[J].H - 1) ? "E" : "D";
-						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", level.PT, level.LH.GameStyle, CP),
+						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", assetFolder, level.LH.GameStyle, CP),
 							(level.MapCPipe[i].Node[J].X + K) * Zm, (H - 1 - level.MapCPipe[i].Node[J].Y) * Zm, Zm,
 							2 * Zm);
 						break;
 					case 1: // L
 						CP = (K == level.MapCPipe[i].Node[J].H - 1) ? "C" : "D";
-						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", level.PT, level.LH.GameStyle, CP),
+						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", assetFolder, level.LH.GameStyle, CP),
 							(level.MapCPipe[i].Node[J].X - K) * Zm, (H - 1 - level.MapCPipe[i].Node[J].Y - 1) * Zm, Zm,
 							2 * Zm);
 						break;
 					case 2: // U
 						CP = (K == level.MapCPipe[i].Node[J].H - 1) ? "B" : "A";
-						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", level.PT, level.LH.GameStyle, CP),
+						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", assetFolder, level.LH.GameStyle, CP),
 							level.MapCPipe[i].Node[J].X * Zm, (H - 1 - level.MapCPipe[i].Node[J].Y - K) * Zm, 2 * Zm,
 							Zm);
 						break;
 					case 3: // D
 						CP = (K == level.MapCPipe[i].Node[J].H - 1) ? "" : "A";
-						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", level.PT, level.LH.GameStyle, CP),
+						DrawImage(fmt::format("{}/img/{}/obj/93{}.png", assetFolder, level.LH.GameStyle, CP),
 							(level.MapCPipe[i].Node[J].X - 1) * Zm, (H - 1 - level.MapCPipe[i].Node[J].Y + K) * Zm,
 							2 * Zm, Zm);
 						break;
@@ -4327,25 +4336,25 @@ void Drawers::DrawCPipe() {
 					switch(level.MapCPipe[i].Node[J].type) {
 					case 3:
 					case 7: // RU DL
-						DrawImage(fmt::format("{}/img/{}/obj/93G.png", level.PT, level.LH.GameStyle),
+						DrawImage(fmt::format("{}/img/{}/obj/93G.png", assetFolder, level.LH.GameStyle),
 							(level.MapCPipe[i].Node[J].X) * Zm, (H - 2.0 - level.MapCPipe[i].Node[J].Y) * Zm, 2 * Zm,
 							2 * Zm);
 						break;
 					case 4:
 					case 9: // RD UL
-						DrawImage(fmt::format("{}/img/{}/obj/93H.png", level.PT, level.LH.GameStyle),
+						DrawImage(fmt::format("{}/img/{}/obj/93H.png", assetFolder, level.LH.GameStyle),
 							(level.MapCPipe[i].Node[J].X) * Zm, (H - 2.0 - level.MapCPipe[i].Node[J].Y) * Zm, 2 * Zm,
 							2 * Zm);
 						break;
 					case 6:
 					case 10: // UR LD
-						DrawImage(fmt::format("{}/img/{}/obj/93J.png", level.PT, level.LH.GameStyle),
+						DrawImage(fmt::format("{}/img/{}/obj/93J.png", assetFolder, level.LH.GameStyle),
 							(level.MapCPipe[i].Node[J].X) * Zm, (H - 2.0 - level.MapCPipe[i].Node[J].Y) * Zm, 2 * Zm,
 							2 * Zm);
 						break;
 					case 5:
 					case 8: // DR LU
-						DrawImage(fmt::format("{}/img/{}/obj/93F.png", level.PT, level.LH.GameStyle),
+						DrawImage(fmt::format("{}/img/{}/obj/93F.png", assetFolder, level.LH.GameStyle),
 							(level.MapCPipe[i].Node[J].X) * Zm, (H - 2.0 - level.MapCPipe[i].Node[J].Y) * Zm, 2 * Zm,
 							2 * Zm);
 						break;
@@ -4361,22 +4370,22 @@ void Drawers::DrawCPipe() {
 					for(K = 0; K < tempVar4; K++) {
 						switch(level.MapCPipe[i].Node[J].Dir) {
 						case 0: // R
-							DrawImage(fmt::format("{}/img/{}/obj/93D.png", level.PT, level.LH.GameStyle),
+							DrawImage(fmt::format("{}/img/{}/obj/93D.png", assetFolder, level.LH.GameStyle),
 								(level.MapCPipe[i].Node[J].X + K) * Zm, (H - 1 - level.MapCPipe[i].Node[J].Y) * Zm, Zm,
 								2 * Zm);
 							break;
 						case 1: // L
-							DrawImage(fmt::format("{}/img/{}/obj/93D.png", level.PT, level.LH.GameStyle),
+							DrawImage(fmt::format("{}/img/{}/obj/93D.png", assetFolder, level.LH.GameStyle),
 								(level.MapCPipe[i].Node[J].X - K) * Zm, (H - 1 - level.MapCPipe[i].Node[J].Y - 1) * Zm,
 								Zm, 2 * Zm);
 							break;
 						case 2: // U
-							DrawImage(fmt::format("{}/img/{}/obj/93A.png", level.PT, level.LH.GameStyle),
+							DrawImage(fmt::format("{}/img/{}/obj/93A.png", assetFolder, level.LH.GameStyle),
 								level.MapCPipe[i].Node[J].X * Zm, (H - 1 - level.MapCPipe[i].Node[J].Y - K) * Zm,
 								2 * Zm, Zm);
 							break;
 						case 3: // D
-							DrawImage(fmt::format("{}/img/{}/obj/93A.png", level.PT, level.LH.GameStyle),
+							DrawImage(fmt::format("{}/img/{}/obj/93A.png", assetFolder, level.LH.GameStyle),
 								(level.MapCPipe[i].Node[J].X - 1) * Zm, (H - 1 - level.MapCPipe[i].Node[J].Y + K) * Zm,
 								2 * Zm, Zm);
 							break;

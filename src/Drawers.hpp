@@ -28,6 +28,7 @@ public:
 	void SetZoom(int zoom);
 	void SetIsOverworld(bool isOverworld);
 	void SetLog(bool log);
+	void SetAssetFolder(std::string folder);
 	int GetWidth();
 	int GetHeight();
 	void DrawGridlines();
@@ -71,4 +72,5 @@ private:
 	cairo_t* cr = NULL; // Graphics instance
 	LevelParser& level; // Level instance
 	bool doLogging = false;
+	std::string assetFolder;
 };

@@ -52,25 +52,29 @@ std::string assetsFolder;
 int focused_window_index        = -1;
 int cached_focused_window_index = -1;
 std::vector<std::string> cached_focused_window_info;
+bool remove_grid;
+bool render_objects_over_pipes;
 
 struct LevelWindow {
 	int level_render_width  = 0;
 	int level_render_height = 0;
 	std::string filename;
+	std::string name;
 	uint64_t window_id;
 	GLuint level_render_image = 0;
-	LevelParser level;
+	LevelParser* level;
 };
 
 std::vector<LevelWindow> opened_level_windows;
 
-void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destination) {
-	Drawers drawer(level);
+void DrawMap(LevelParser* level, bool isOverworld, bool log, std::string destination) {
+	Drawers drawer(*level);
 
 	drawer.Setup();
 	drawer.SetZoom(16);
 	drawer.SetIsOverworld(isOverworld);
 	drawer.SetLog(log);
+	drawer.SetAssetFolder(assetsFolder);
 
 	puts("Set zoom");
 
@@ -87,13 +91,15 @@ void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destina
 
 	puts("Set graphics");
 
-	std::string tilesheet = fmt::format("{}/img/tile/{}-{}{}.png", level.PT, level.LH.GameStyle, level.MapHdr.Theme,
-		(level.MapHdr.Flag == 2) ? "A" : "");
+	std::string tilesheet = fmt::format("{}/img/tile/{}-{}{}.png", assetsFolder, level->LH.GameStyle,
+		level->MapHdr.Theme, (level->MapHdr.Flag == 2) ? "A" : "");
 	drawer.SetTilesheet(tilesheet);
 
 	fmt::print("Set tilesheet to {}\n", tilesheet);
 
-	drawer.DrawGridlines();
+	if(!remove_grid) {
+		drawer.DrawGridlines();
+	}
 
 	// 3D平台
 	//半碰撞
@@ -225,8 +231,9 @@ void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destina
 
 	puts("Draw clear pipe");
 
-	// Optional, draw pipes again
-	drawer.DrawItem({ 9 }, false);
+	if(!render_objects_over_pipes) {
+		drawer.DrawItem({ 9 }, false);
+	}
 
 	cairo_surface_write_to_png(surface, destination.c_str());
 
@@ -234,6 +241,7 @@ void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destina
 	Helpers::LoadTextureFromSurface(surface, &newLevelWindow.level_render_image, &newLevelWindow.level_render_width,
 		&newLevelWindow.level_render_height);
 	newLevelWindow.filename  = destination;
+	newLevelWindow.name      = std::filesystem::path(destination).filename().string();
 	newLevelWindow.window_id = new_window_counter;
 	newLevelWindow.level     = level;
 	opened_level_windows.push_back(newLevelWindow);
@@ -244,15 +252,15 @@ void DrawMap(LevelParser& level, bool isOverworld, bool log, std::string destina
 }
 
 void AttemptRender(std::string choice, bool log, std::string destination) {
-	LevelParser levelParser;
+	LevelParser* levelParser = new LevelParser();
 
 	uintmax_t filesize = std::filesystem::file_size(choice);
 	fmt::print("Level filesize is {}\n", filesize);
 
 	if(filesize == 0x5C000) {
 		puts("File is encrypted");
-		levelParser.DecryptLevelData(choice, "temp.bcd");
-		choice = "temp.bcd";
+		levelParser->DecryptLevelData(choice, fmt::format("{}/temp.bcd", assetsFolder));
+		choice = fmt::format("{}/temp.bcd", assetsFolder);
 	} else {
 		// First, check if compressed
 		FILE* magicFile = fopen(choice.c_str(), "rb");
@@ -272,35 +280,40 @@ void AttemptRender(std::string choice, bool log, std::string destination) {
 			readFile.close();
 
 			std::string decompressed = gzip::decompress((const char*)data.data(), data.size());
-			std::ofstream writeFile("temp.bcd", std::ios::out | std::ios::binary);
+			std::ofstream writeFile(fmt::format("{}/temp.bcd", assetsFolder), std::ios::out | std::ios::binary);
 			writeFile.write(decompressed.data(), decompressed.size());
 			writeFile.close();
 
-			choice = "temp.bcd";
+			choice = fmt::format("{}/temp.bcd", assetsFolder);
 		} else {
 			puts("File is uncompressed or an unknown format");
 		}
 	}
 
-	bool isOverworld = true;
+	uintmax_t newFilesize = std::filesystem::file_size(choice);
 
-	puts("Loading level data");
-	levelParser.LoadLevelData(choice, isOverworld);
-	puts("Done loading level data");
+	if(newFilesize == 0x5BFC0) {
+		bool isOverworld = true;
+
+		puts("Loading level data");
+		levelParser->LoadLevelData(choice, isOverworld);
+		puts("Done loading level data");
 
 #ifdef _WIN32
-	SetConsoleOutputCP(CP_UTF8);
+		SetConsoleOutputCP(CP_UTF8);
 #endif
 
-	fmt::print("Assets folder: {}\n", assetsFolder);
-	levelParser.SetAssetsFolder(assetsFolder);
+		fmt::print("Assets folder: {}\n", assetsFolder);
 
-	auto start = std::chrono::high_resolution_clock::now();
-	DrawMap(levelParser, isOverworld, log, destination);
-	auto stop = std::chrono::high_resolution_clock::now();
+		auto start = std::chrono::high_resolution_clock::now();
+		DrawMap(levelParser, isOverworld, log, destination);
+		auto stop = std::chrono::high_resolution_clock::now();
 
-	fmt::print("Rendering took {} milliseconds\n",
-		std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
+		fmt::print("Rendering took {} milliseconds\n",
+			std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
+	} else {
+		puts("File is not a level");
+	}
 }
 
 #ifdef __EMSCRIPTEN__
@@ -355,11 +368,21 @@ static void main_loop() {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
 		ImGui_ImplSDL2_ProcessEvent(&event);
-		if(event.type == SDL_QUIT)
+		if(event.type == SDL_QUIT) {
 			done = true;
+		}
+
 		if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE
-			&& event.window.windowID == SDL_GetWindowID(window))
+			&& event.window.windowID == SDL_GetWindowID(window)) {
+			auto iter = opened_level_windows.begin();
+			while(iter != opened_level_windows.end()) {
+				std::filesystem::remove(iter->filename);
+				delete iter->level;
+				++iter;
+			}
+
 			done = true;
+		}
 	}
 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -375,19 +398,11 @@ static void main_loop() {
 		ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize
 			| ImGuiWindowFlags_NoMove);
 
+	ImGui::Checkbox("Remove Grid", &remove_grid);
+	ImGui::Checkbox("Render Objects Over Pipes", &render_objects_over_pipes);
+
 	std::string choice;
-	ImGui::Text("Choose your file:");
-
-#ifdef __EMSCRIPTEN__
-	char* fileString = CheckReadFileFromUserJS();
-	if(fileString != nullptr) {
-		puts("File chosen");
-		choice = std::string(fileString);
-		free(fileString);
-	}
-#endif
-
-	if(ImGui::Button("File")) {
+	if(ImGui::Button("Load Level")) {
 #ifdef __EMSCRIPTEN__
 		ReadFileFromUserJS();
 #else
@@ -401,28 +416,105 @@ static void main_loop() {
 #endif
 	}
 
+#ifdef __EMSCRIPTEN__
+	char* fileString = CheckReadFileFromUserJS();
+	if(fileString != nullptr) {
+		puts("File chosen");
+		choice = std::string(fileString);
+		free(fileString);
+	}
+#endif
+
 	if(!choice.empty()) {
 		puts(choice.c_str());
-		AttemptRender(choice, true, std::filesystem::path(choice).filename().string() + ".png");
+		AttemptRender(
+			choice, true, fmt::format("{}/{}.png", assetsFolder, std::filesystem::path(choice).filename().string()));
 	}
 
 	if(focused_window_index != -1) {
+		if(ImGui::Button("Download Image")) {
+			LevelWindow selected_level_info = opened_level_windows[focused_window_index];
+#ifdef __EMSCRIPTEN__
+			EM_ASM(
+				{
+					var filenameToDownload = UTF8ToString($0, $1);
+					var buf                = FS.readFile(filenameToDownload, { encoding: "binary" });
+					var fileBlob           = new Blob([buf.buffer], {
+						type:
+							"image/png"
+					});
+					saveAs(fileBlob, UTF8ToString($2, $3));
+				},
+				selected_level_info.filename.c_str(), selected_level_info.filename.size(),
+				selected_level_info.name.c_str(), selected_level_info.name.size());
+#else
+			auto selection = pfd::save_file(
+				"Choose level to open", selected_level_info.name, { "PNG Image", ".png" }, pfd::opt::none)
+								 .result();
+			if(!selection.empty()) {
+				puts("Location chosen");
+				std::filesystem::copy(selected_level_info.filename, selection);
+			} else {
+				puts("No location chosen");
+			}
+#endif
+		}
+
 		if(focused_window_index != cached_focused_window_index) {
 			auto& cwfi = cached_focused_window_info;
 
 			cwfi.clear();
 			cached_focused_window_index = focused_window_index;
 
-			fmt::print("Caching level data for {}\n", opened_level_windows[focused_window_index].filename);
-			LevelParser& level = opened_level_windows[focused_window_index].level;
+			fmt::print("Caching level data for {}\n", opened_level_windows[focused_window_index].name);
+			LevelParser& level = *opened_level_windows[focused_window_index].level;
 			cwfi.push_back(fmt::format("Name: {}", level.LH.Name));
 			cwfi.push_back(fmt::format("Description: {}", level.LH.Desc));
-			cwfi.push_back(fmt::format("Gamestyle: {}", LevelParserMappings::NumToGameStyle.at(level.LH.GameStyle)));
-			cwfi.push_back(
-				fmt::format("Clear Time: {}", LevelParserMappings::FormatMillisecondTime(level.LH.ClearTime)));
+			cwfi.push_back(fmt::format("Gamestyle: {}", levelMappings->NumToGameStyle.at(level.LH.GameStyle)));
+			cwfi.push_back(fmt::format("Theme: {}", levelMappings->NumToTheme.at(level.MapHdr.Theme)));
+			cwfi.push_back(fmt::format("Is Night Time: {}", level.MapHdr.Flag == 1 ? "yes" : "no"));
+			cwfi.push_back(fmt::format("Game Version: {}", levelMappings->NumToGameVersion.at(level.LH.ClearVer)));
+			cwfi.push_back(fmt::format("Clear Time: {}", levelMappings->FormatMillisecondTime(level.LH.ClearTime)));
 			cwfi.push_back(fmt::format("Clear Attempts: {}", level.LH.ClearAttempts));
 			// cwfi.push_back(fmt::format("Uploaded: {:02}-{:02}-{} {}:{:02}", level.LH.DateDD, level.LH.DateMM,
-			//	level.LH.DateYY, level.LH.DateH, level.LH.DateM));
+			// 	level.LH.DateYY, level.LH.DateH, level.LH.DateM));
+			cwfi.push_back(fmt::format("Timer: {}", level.LH.Timer));
+			cwfi.push_back(fmt::format("Start Y: {}", level.LH.StartY));
+			cwfi.push_back(fmt::format("Goal X: {}", level.LH.GoalX));
+			cwfi.push_back(fmt::format("Goal Y: {}", level.LH.GoalY));
+			std::string clear_condition
+				= fmt::format(levelMappings->NumToClearCondition.at(level.LH.ClearCRC), level.LH.ClearCA);
+			cwfi.push_back(fmt::format("Clear Condition: {}", clear_condition));
+			cwfi.push_back(fmt::format(
+				"Clear Condition Category: {}", levelMappings->NumToClearConditionCategory.at(level.LH.ClearCC)));
+			cwfi.push_back(
+				fmt::format("Autoscroll Speed: {}", levelMappings->NumToAutoscrollSpeed.at(level.LH.AutoscrollSpd)));
+			cwfi.push_back(
+				fmt::format("Autoscroll Type: {}", levelMappings->NumToAutoscrollType.at(level.MapHdr.AutoscrollType)));
+			cwfi.push_back(fmt::format("Orientation: {}", levelMappings->NumToOrientation.at(level.MapHdr.Ori)));
+			cwfi.push_back(fmt::format("Liquid Start Height: {}", level.MapHdr.LiqSHeight));
+			cwfi.push_back(fmt::format("Liquid End Height: {}", level.MapHdr.LiqEHeight));
+			cwfi.push_back(fmt::format("Liquid Mode: {}", levelMappings->NumToLiquidMode.at(level.MapHdr.LiqMode)));
+			cwfi.push_back(fmt::format("Liquid Speed: {}", levelMappings->NumToLiquidSpeed.at(level.MapHdr.LiqSpd)));
+			cwfi.push_back(fmt::format("Boundary Type: {}", levelMappings->NumToBoundaryType.at(level.MapHdr.BorFlag)));
+			cwfi.push_back(fmt::format("Right Boundary: {}", level.MapHdr.BorR));
+			cwfi.push_back(fmt::format("Top Boundary: {}", level.MapHdr.BorT));
+			cwfi.push_back(fmt::format("Left Boundary: {}", level.MapHdr.BorL));
+			cwfi.push_back(fmt::format("Bottom Boundary: {}", level.MapHdr.BorB));
+			cwfi.push_back(fmt::format("Object Count: {}", level.MapHdr.ObjCount));
+			cwfi.push_back(fmt::format("Sound Effect Count: {}", level.MapHdr.SndCount));
+			cwfi.push_back(fmt::format("Snake Block Count: {}", level.MapHdr.SnakeCount));
+			cwfi.push_back(fmt::format("Clear Pipe Count: {}", level.MapHdr.ClearPipCount));
+			cwfi.push_back(fmt::format("Piranha Creeper Count: {}", level.MapHdr.CreeperCount));
+			cwfi.push_back(fmt::format("! Block Count: {}", level.MapHdr.iBlkCount));
+			cwfi.push_back(fmt::format("Track Count: {}", level.MapHdr.TrackCount));
+			cwfi.push_back(fmt::format("Track Block Count: {}", level.MapHdr.TrackBlkCount));
+			cwfi.push_back(fmt::format("Ground Count: {}", level.MapHdr.GroundCount));
+			cwfi.push_back(fmt::format("Icicle Count: {}", level.MapHdr.IceCount));
+			cwfi.push_back(fmt::format("UploadID (Unknown): {}", level.LH.UploadID));
+			cwfi.push_back(fmt::format("CreationID (Unknown): {}", level.LH.CreationID));
+			cwfi.push_back(fmt::format("GameVer (Unknown): {}", level.LH.GameVer));
+			cwfi.push_back(fmt::format("Management Flags (Unknown): {}", level.LH.MFlag));
 		}
 
 		for(auto& info : cached_focused_window_info) {
@@ -436,20 +528,24 @@ static void main_loop() {
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
 	ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 3.0f);
 	bool is_open;
-	auto iter            = opened_level_windows.begin();
-	int i                = 0;
-	focused_window_index = -1;
+	auto iter = opened_level_windows.begin();
+	int i     = 0;
 	while(iter != opened_level_windows.end()) {
-		is_open = true;
-		bool should_render = ImGui::Begin(fmt::format("{}##{}", iter->filename, iter->window_id).c_str(), &is_open);
+		is_open            = true;
+		bool should_render = ImGui::Begin(fmt::format("{}##{}", iter->name, iter->window_id).c_str(), &is_open);
 		if(!is_open) {
-			fmt::print("Deleted window {}\n", iter->filename);
+			fmt::print("Deleted window {}\n", iter->name);
+			std::filesystem::remove(iter->filename);
+			delete iter->level;
+			focused_window_index = -1;
 			glDeleteTextures(1, &iter->level_render_image);
 			iter = opened_level_windows.erase(iter);
 		} else {
-			if (should_render) {
-				ImGui::Image((void*)(intptr_t)iter->level_render_image, ImVec2(iter->level_render_width, iter->level_render_height));
-				ImGui::SetWindowSize(ImVec2((float)iter->level_render_width + 25.0f, (float)iter->level_render_height + 45.0f));
+			if(should_render) {
+				ImGui::Image((void*)(intptr_t)iter->level_render_image,
+					ImVec2(iter->level_render_width, iter->level_render_height));
+				ImGui::SetWindowSize(
+					ImVec2((float)iter->level_render_width + 25.0f, (float)iter->level_render_height + 45.0f));
 			}
 
 			if(ImGui::IsWindowFocused()) {
@@ -477,7 +573,7 @@ static void main_loop() {
 
 int main(int argc, char** argv) {
 
-	cxxopts::Options options("TOOST", "A Super Mario Maker 2 level viewer, based on JiXiaomai/SMM2LevelViewer");
+	cxxopts::Options options("TOOST", "A Super Mario Maker 2 level viewer, based on JiXiaomai's SMM2LevelViewer");
 
 	// clang-format off
 	options.add_options()
@@ -519,6 +615,7 @@ int main(int argc, char** argv) {
 	}
 
 	puts("Starting toost GUI");
+	auto start = std::chrono::high_resolution_clock::now();
 
 	std::string font_path = fmt::format("{}/fonts/unifont-14.0.01.ttf", assetsFolder);
 	FT_Init_FreeType(&freetype_library);
@@ -590,7 +687,7 @@ int main(int argc, char** argv) {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
+	ImGuiIO& io             = ImGui::GetIO();
 	static ImWchar ranges[] = { 0x20, 0xFFFF, 0 };
 	static ImFontConfig cfg;
 	io.Fonts->AddFontFromFileTTF(font_path.c_str(), 18.0, &cfg, ranges);
@@ -606,6 +703,10 @@ int main(int argc, char** argv) {
 	// Setup Platform/Renderer backends
 	ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
 	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	auto stop = std::chrono::high_resolution_clock::now();
+	fmt::print(
+		"Startup took {} milliseconds\n", std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
 
 #ifdef __EMSCRIPTEN__
 	emscripten_set_main_loop(main_loop, 0, true);

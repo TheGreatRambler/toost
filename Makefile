@@ -34,7 +34,7 @@ ifeq ($(PLATFORM),web)
 
 	EMS += -s USE_SDL=2 -s USE_ZLIB=1 -s USE_FREETYPE=1 -s USE_LIBPNG=1 -s DISABLE_EXCEPTION_CATCHING=1
 	CPPFLAGS += -I./third_party/cairo-1.16.0/src -O2 $(EMS)
-	LDFLAGS += -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1 -s ASYNCIFY -s FORCE_FILESYSTEM=1 -o bin/index.html --shell-file shell_minimal.html $(PRELOADED_FILES) $(EMS) -L./third_party/cairo-1.16.0/src/.libs -lcairo -L./third_party/pixman-0.40.0/pixman/.libs -lpixman-1
+	LDFLAGS += -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=10000000 -s ASYNCIFY -s FORCE_FILESYSTEM=1 -o bin/index.html --shell-file shell_minimal.html $(PRELOADED_FILES) $(EMS) -L./third_party/cairo-1.16.0/src/.libs -lcairo -L./third_party/pixman-0.40.0/pixman/.libs -lpixman-1
 else
 	CPPFLAGS += $(shell pkg-config --cflags sdl2 glew glfw3 zlib cairo freetype2) -Wno-cast-function-type
 	LDFLAGS := -lpthread -lopengl32 $(shell pkg-config --libs --static sdl2 glew glfw3 zlib cairo freetype2) -liconv -mconsole -fPIC -static -static-libgcc -static-libstdc++
@@ -59,6 +59,9 @@ CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
+ifeq ($(PLATFORM),web)
+	cp js/FileSaver.min.js bin
+endif
 
 # assembly
 $(BUILD_DIR)/%.s.o: %.s

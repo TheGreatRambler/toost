@@ -55,17 +55,15 @@ std::string LevelParser::GetItemName(int n, int v) {
 	return tempGetItemName;
 }
 
-void LevelParser::SetAssetsFolder(std::string path) {
-	PT = path;
-}
-
 bool LevelParser::DecryptLevelData(const std::string& input, const std::string& output) {
 	return LevelDecryptor::decrypt(input.c_str(), output.c_str());
 }
 
 void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 	int Offset;
-	Offset = overworld ? 0x200 : 0x2E0E0;
+	Offset      = overworld ? 0x200 : 0x2E0E0;
+	long long i = 0;
+	long long j = 0;
 
 	FILE* levelPtr = fopen(P.c_str(), "rb");
 	fread(&LH.StartY, sizeof(LH.StartY), 1, levelPtr);
@@ -95,8 +93,6 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> wstringConverter;
 
-	long long i    = 0;
-	long long j    = 0;
 	std::wstring S = L"";
 	short K        = 0;
 	for(i = 1; i <= 0x42; i += 2) {
@@ -437,9 +433,4 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 	fclose(levelPtr);
 }
 
-const std::string LevelParserMappings::FormatMillisecondTime(int milliseconds) {
-	int seconds  = (milliseconds / 1000) % 60;
-	int minutes  = (milliseconds / 1000) / 60;
-	milliseconds = milliseconds % 1000;
-	return fmt::format("{:02}:{:02}.{:03}", minutes, seconds, milliseconds);
-}
+LevelParserMappings* levelMappings = new LevelParserMappings();
