@@ -4032,7 +4032,7 @@ void Drawers::DrawCID() {
 				}
 			} else {
 				if((level.MapObj[i].CFlag / 0x40000) % 2 == 1) {
-					DrawImage(fmt::format("{}/img/{}/cid/{]B.png", P, level.LH.GameStyle, level.MapObj[i].CID), LX, LY,
+					DrawImage(fmt::format("{}/img/{}/cid/{}B.png", P, level.LH.GameStyle, level.MapObj[i].CID), LX, LY,
 						Zm, Zm);
 				} else {
 					DrawImage(fmt::format("{}/img/{}/cid/{}.png", P, level.LH.GameStyle, level.MapObj[i].CID), LX, LY,
@@ -4083,7 +4083,7 @@ void Drawers::DrawCID() {
 		default:
 			if((level.MapObj[i].CFlag / 0x4) % 2 == 1) {
 				DrawImage(
-					fmt::format("{}/img/{}/cid/{]A.png", P, level.LH.GameStyle, level.MapObj[i].CID), LX, LY, Zm, Zm);
+					fmt::format("{}/img/{}/cid/{}A.png", P, level.LH.GameStyle, level.MapObj[i].CID), LX, LY, Zm, Zm);
 			} else {
 				DrawImage(
 					fmt::format("{}/img/{}/cid/{}.png", P, level.LH.GameStyle, level.MapObj[i].CID), LX, LY, Zm, Zm);

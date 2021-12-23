@@ -2,10 +2,14 @@
 #include "Helpers.hpp"
 #include "LevelParser.hpp"
 
+#define CURL_STATICLIB
+
 #include <SDL.h>
+#include <atomic>
 #include <cairo-ft.h>
 #include <cairo.h>
 #include <chrono>
+#include <csignal>
 #include <cstdio>
 #include <cxxopts.hpp>
 #include <filesystem>
@@ -15,9 +19,10 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_impl_sdl.h>
+#include <iostream>
 #include <iterator>
+#include <mutex>
 #include <stdio.h>
-#include <thread>
 #include <vector>
 
 #ifdef _WIN32
@@ -27,12 +32,15 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <emscripten/fetch.h>
 #include <emscripten/html5.h>
 #include <freetype.h>
 using namespace emscripten;
 #else
+#include <curl/curl.h>
 #include <freetype/freetype.h>
 #include <portable-file-dialogs.h>
+#include <thread>
 #endif
 
 #if defined(IMGUI_IMPL_OPENGL_ES2) || defined(__EMSCRIPTEN__)
@@ -45,15 +53,36 @@ SDL_Window* window          = nullptr;
 SDL_GLContext gl_context    = nullptr;
 bool done                   = false;
 ImVec4 clear_color          = ImVec4(0.69f, 0.54f, 0.41f, 1.00f);
-uint64_t new_window_counter = 0;
+uint64_t new_window_counter = 3;
+
+#ifndef __EMSCRIPTEN__
+std::thread downloading_thread;
+#endif
+
 FT_Library freetype_library;
 FT_Face main_font;
+
 std::string assetsFolder;
+
 int focused_window_index        = -1;
 int cached_focused_window_index = -1;
 std::vector<std::string> cached_focused_window_info;
+
 bool remove_grid;
 bool render_objects_over_pipes;
+float image_scale = 1.0f;
+
+GLuint background_image;
+int background_image_width  = 0;
+int background_image_height = 0;
+GLuint side_image;
+int side_width  = 0;
+int side_height = 0;
+
+uint64_t frame_counter = 0;
+
+std::string popup_text;
+uint64_t remaining_popup_time = 0;
 
 struct LevelWindow {
 	int level_render_width  = 0;
@@ -235,7 +264,23 @@ void DrawMap(LevelParser* level, bool isOverworld, bool log, std::string destina
 		drawer.DrawItem({ 9 }, false);
 	}
 
+	puts("Scaling image");
+	cairo_pattern_t* pattern = cairo_pattern_create_for_surface(surface);
+	cairo_destroy(cr);
+	cairo_surface_destroy(surface);
+	cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
+	surface = cairo_image_surface_create(
+		CAIRO_FORMAT_ARGB32, drawer.GetWidth() * image_scale, drawer.GetHeight() * image_scale);
+	cr = cairo_create(surface);
+	cairo_scale(cr, image_scale, image_scale);
+	cairo_set_source(cr, pattern);
+	cairo_paint(cr);
+	cairo_pattern_destroy(pattern);
+	puts("Done scaling");
+
+	puts("Writing image");
 	cairo_surface_write_to_png(surface, destination.c_str());
+	puts("Done writing");
 
 	LevelWindow newLevelWindow;
 	Helpers::LoadTextureFromSurface(surface, &newLevelWindow.level_render_image, &newLevelWindow.level_render_width,
@@ -363,6 +408,97 @@ EM_JS(char*, CheckReadFileFromUserJS, (), {
 });
 #endif
 
+#ifndef __EMSCRIPTEN__
+std::atomic_uint8_t download_level_flag = 0;
+std::mutex download_level_mutex;
+#else
+uint8_t download_level_flag = 0;
+#endif
+std::string download_level_id;
+std::string download_level_destination;
+void level_downloading_thread() {
+#ifndef __EMSCRIPTEN__
+	CURL* curl_handle = curl_easy_init();
+	if(curl_handle == NULL) {
+		puts("CURL was not able to start");
+	}
+#endif
+	while(!done) {
+#ifndef __EMSCRIPTEN__
+		std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		download_level_mutex.lock();
+#endif
+		if(!download_level_id.empty()) {
+			fmt::print("Recieved request for {}\n", download_level_id);
+			std::string request_url = fmt::format("https://tgrcode.com/mm2/level_data/{}", download_level_id);
+			fmt::print("URL is {}\n", request_url);
+#ifdef __EMSCRIPTEN__
+			emscripten_fetch_attr_t attr;
+			emscripten_fetch_attr_init(&attr);
+			strcpy(attr.requestMethod, "GET");
+			attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+			attr.onsuccess  = +[](emscripten_fetch_t* fetch) {
+                puts("Request worked");
+                download_level_destination = fmt::format("{}/{}.bcd", assetsFolder, download_level_id);
+                std::filesystem::remove(download_level_destination);
+                auto destination_file = std::fstream(download_level_destination, std::ios::out | std::ios::binary);
+                destination_file.write((char*)&fetch->data[0], fetch->numBytes);
+                destination_file.close();
+                download_level_flag = 1;
+                download_level_id   = "";
+                download_level_id   = "";
+			};
+			attr.onerror = +[](emscripten_fetch_t* fetch) {
+				fmt::print("Request failed, http status code {}\n", fetch->status);
+				download_level_destination = download_level_id;
+				download_level_flag        = 2;
+				download_level_id          = "";
+			};
+			emscripten_fetch(&attr, request_url.c_str());
+			return;
+#else
+			curl_easy_setopt(curl_handle, CURLOPT_URL, request_url.c_str());
+			curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
+			curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 0L);
+			curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
+			auto callback = +[](void* ptr, size_t size, size_t nmemb, void* stream) {
+				std::size_t written = fwrite(ptr, size, nmemb, (FILE*)stream);
+				return written;
+			};
+			curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, callback);
+			download_level_destination = fmt::format("{}/{}.bcd", assetsFolder, download_level_id);
+			fmt::print("Writing to {}\n", download_level_destination);
+			std::filesystem::remove(download_level_destination);
+			FILE* dest = fopen(download_level_destination.c_str(), "wb");
+			curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, dest);
+			CURLcode ret = curl_easy_perform(curl_handle);
+			if(ret != CURLE_OK) {
+				fmt::print("CURL error: {}\n", curl_easy_strerror(ret));
+			}
+			fclose(dest);
+			long http_code = 0;
+			curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
+			if(http_code == 200) {
+				puts("Request worked");
+				download_level_id   = "";
+				download_level_flag = 1;
+			} else {
+				fmt::print("Request failed, http status code {}\n", http_code);
+				download_level_destination = download_level_id;
+				download_level_flag        = 2;
+			}
+			download_level_id = "";
+#endif
+		}
+#ifndef __EMSCRIPTEN__
+		download_level_mutex.unlock();
+#endif
+	}
+#ifndef __EMSCRIPTEN__
+	curl_easy_cleanup(curl_handle);
+#endif
+}
+
 static void main_loop() {
 	ImGuiIO& io = ImGui::GetIO();
 	SDL_Event event;
@@ -374,14 +510,16 @@ static void main_loop() {
 
 		if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE
 			&& event.window.windowID == SDL_GetWindowID(window)) {
-			auto iter = opened_level_windows.begin();
-			while(iter != opened_level_windows.end()) {
-				std::filesystem::remove(iter->filename);
-				delete iter->level;
-				++iter;
+			for(auto& window : opened_level_windows) {
+				std::filesystem::remove(window.filename);
+				delete window.level;
+				glDeleteTextures(1, &window.level_render_image);
 			}
 
 			done = true;
+#ifndef __EMSCRIPTEN__
+			downloading_thread.join();
+#endif
 		}
 	}
 
@@ -390,16 +528,37 @@ static void main_loop() {
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.50f, 0.33f, 0.22f, 1.0f));
 	ImGui::NewFrame();
 
+	int w;
 	int h;
-	SDL_GetWindowSize(window, nullptr, &h);
+	SDL_GetWindowSize(window, &w, &h);
+
+	// ImGui::SetNextWindowPos(ImVec2(0, 0));
+	// ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+	// ImGui::Begin("background_image", NULL, ImVec2(0, 0), 0.0f,
+	//	ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar
+	//		| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoBringToFrontOnFocus);
+
+	auto background_draw_list = ImGui::GetBackgroundDrawList();
+	int frame_offset_x        = frame_counter % background_image_width;
+	int frame_offset_y        = frame_counter % background_image_height;
+	for(int x = -background_image_width + frame_offset_x; x < w + background_image_width; x += background_image_width) {
+		for(int y = -background_image_height + frame_offset_y; y < h + background_image_height;
+			y += background_image_height) {
+			background_draw_list->AddImage((void*)(intptr_t)background_image, ImVec2(x, y),
+				ImVec2(x + background_image_width, y + background_image_height));
+		}
+	}
+
 	ImGui::SetNextWindowSize(ImVec2(450, h));
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
-	ImGui::Begin("Toost", nullptr,
+	ImGui::Begin("Toost, by TheGreatRambler", nullptr,
 		ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize
 			| ImGuiWindowFlags_NoMove);
 
 	ImGui::Checkbox("Remove Grid", &remove_grid);
 	ImGui::Checkbox("Render Objects Over Pipes", &render_objects_over_pipes);
+	ImGui::Text("Image Scale");
+	ImGui::DragFloat("##1", &image_scale, 0.125f, 0.125f, 8.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
 
 	std::string choice;
 	if(ImGui::Button("Load Level")) {
@@ -431,6 +590,74 @@ static void main_loop() {
 			choice, true, fmt::format("{}/{}.png", assetsFolder, std::filesystem::path(choice).filename().string()));
 	}
 
+	static char input_string[10] = { 0 };
+	ImGui::Text("Download By Level ID");
+	ImGui::InputText("##2", input_string, sizeof(input_string));
+	if(ImGui::Button("Download Level")) {
+		std::string download_id                 = std::string(input_string);
+		static std::unordered_set<char> charset = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'B', 'C', 'D',
+			'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y' };
+		bool id_valid                           = true;
+		if(download_id.size() != 9) {
+			id_valid = false;
+		} else {
+			for(std::size_t i = 0; i < download_id.size(); i++) {
+				download_id[i] = std::toupper(download_id.at(i));
+				if(!charset.contains(download_id.at(i))) {
+					id_valid = false;
+					break;
+				}
+			}
+		}
+
+		if(id_valid) {
+			puts("Sending request");
+#ifdef __EMSCRIPTEN__
+			download_level_id = download_id;
+			level_downloading_thread();
+#else
+			download_level_mutex.lock();
+			download_level_id = download_id;
+			download_level_mutex.unlock();
+#endif
+		} else {
+			popup_text           = fmt::format("Level ID {} is not of the right format", download_id);
+			remaining_popup_time = 180;
+		}
+	}
+
+	if(download_level_flag != 0) {
+#ifndef __EMSCRIPTEN__
+		download_level_mutex.lock();
+#endif
+		if(download_level_flag == 2) {
+			popup_text           = fmt::format("Level ID {} could not be downloaded", download_level_destination);
+			remaining_popup_time = 180;
+		} else {
+			fmt::print("Level was downloaded to {}\n", download_level_destination);
+			AttemptRender(download_level_destination, true,
+				fmt::format(
+					"{}/{}.png", assetsFolder, std::filesystem::path(download_level_destination).filename().string()));
+		}
+		download_level_flag = 0;
+#ifndef __EMSCRIPTEN__
+		download_level_mutex.unlock();
+#endif
+	}
+
+	if(remaining_popup_time > 0) {
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.74f, 0.25f, 0.18f, 1.0f));
+		if(ImGui::BeginPopupModal("Problem encountered")) {
+			ImGui::TextUnformatted(popup_text.c_str());
+			ImGui::EndPopup();
+			remaining_popup_time--;
+		} else {
+			remaining_popup_time = 0;
+		}
+		ImGui::PopStyleColor(1);
+	}
+
+	bool close_current_level = false;
 	if(focused_window_index != -1) {
 		if(ImGui::Button("Download Image")) {
 			LevelWindow selected_level_info = opened_level_windows[focused_window_index];
@@ -453,12 +680,17 @@ static void main_loop() {
 								 .result();
 			if(!selection.empty()) {
 				puts("Location chosen");
+				if(std::filesystem::exists(selection)) {
+					std::filesystem::remove(selection);
+				}
 				std::filesystem::copy(selected_level_info.filename, selection);
 			} else {
 				puts("No location chosen");
 			}
 #endif
 		}
+
+		close_current_level = ImGui::Button("Close Level");
 
 		if(focused_window_index != cached_focused_window_index) {
 			auto& cwfi = cached_focused_window_info;
@@ -468,14 +700,15 @@ static void main_loop() {
 
 			fmt::print("Caching level data for {}\n", opened_level_windows[focused_window_index].name);
 			LevelParser& level = *opened_level_windows[focused_window_index].level;
+			cwfi.reserve(40);
 			cwfi.push_back(fmt::format("Name: {}", level.LH.Name));
 			cwfi.push_back(fmt::format("Description: {}", level.LH.Desc));
 			cwfi.push_back(fmt::format("Gamestyle: {}", levelMappings->NumToGameStyle.at(level.LH.GameStyle)));
 			cwfi.push_back(fmt::format("Theme: {}", levelMappings->NumToTheme.at(level.MapHdr.Theme)));
 			cwfi.push_back(fmt::format("Is Night Time: {}", level.MapHdr.Flag == 1 ? "yes" : "no"));
-			cwfi.push_back(fmt::format("Game Version: {}", levelMappings->NumToGameVersion.at(level.LH.ClearVer)));
 			cwfi.push_back(fmt::format("Clear Time: {}", levelMappings->FormatMillisecondTime(level.LH.ClearTime)));
 			cwfi.push_back(fmt::format("Clear Attempts: {}", level.LH.ClearAttempts));
+			cwfi.push_back(fmt::format("Game Version: {}", levelMappings->NumToGameVersion.at(level.LH.ClearVer)));
 			// cwfi.push_back(fmt::format("Uploaded: {:02}-{:02}-{} {}:{:02}", level.LH.DateDD, level.LH.DateMM,
 			// 	level.LH.DateYY, level.LH.DateH, level.LH.DateM));
 			cwfi.push_back(fmt::format("Timer: {}", level.LH.Timer));
@@ -511,10 +744,16 @@ static void main_loop() {
 			cwfi.push_back(fmt::format("Track Block Count: {}", level.MapHdr.TrackBlkCount));
 			cwfi.push_back(fmt::format("Ground Count: {}", level.MapHdr.GroundCount));
 			cwfi.push_back(fmt::format("Icicle Count: {}", level.MapHdr.IceCount));
-			cwfi.push_back(fmt::format("UploadID (Unknown): {}", level.LH.UploadID));
-			cwfi.push_back(fmt::format("CreationID (Unknown): {}", level.LH.CreationID));
-			cwfi.push_back(fmt::format("GameVer (Unknown): {}", level.LH.GameVer));
-			cwfi.push_back(fmt::format("Management Flags (Unknown): {}", level.LH.MFlag));
+
+			// Due to string corruption on emscripten, don't use fmt
+			cwfi.push_back(std::string("UploadID (Unknown): ") + std::to_string(level.LH.UploadID));
+			cwfi.push_back(std::string("CreationID (Unknown): ") + std::to_string(level.LH.CreationID));
+			cwfi.push_back(std::string("GameVer (Unknown): ") + std::to_string(level.LH.GameVer));
+			cwfi.push_back(std::string("Management Flags (Unknown): ") + std::to_string(level.LH.MFlag));
+			// cwfi.push_back(fmt::format("UploadID (Unknown): {}", level.LH.UploadID));
+			// cwfi.push_back(fmt::format("CreationID (Unknown): {}", level.LH.CreationID));
+			// cwfi.push_back(fmt::format("GameVer (Unknown): {}", level.LH.GameVer));
+			// cwfi.push_back(fmt::format("Management Flags (Unknown): {}", level.LH.MFlag));
 		}
 
 		for(auto& info : cached_focused_window_info) {
@@ -532,12 +771,14 @@ static void main_loop() {
 	int i     = 0;
 	while(iter != opened_level_windows.end()) {
 		is_open            = true;
-		bool should_render = ImGui::Begin(fmt::format("{}##{}", iter->name, iter->window_id).c_str(), &is_open);
-		if(!is_open) {
+		bool should_render = ImGui::Begin(
+			fmt::format("{}##{}", iter->name, iter->window_id).c_str(), &is_open, ImGuiWindowFlags_NoResize);
+		if(!is_open || (close_current_level && i == focused_window_index)) {
 			fmt::print("Deleted window {}\n", iter->name);
 			std::filesystem::remove(iter->filename);
 			delete iter->level;
-			focused_window_index = -1;
+			focused_window_index        = -1;
+			cached_focused_window_index = -1;
 			glDeleteTextures(1, &iter->level_render_image);
 			iter = opened_level_windows.erase(iter);
 		} else {
@@ -569,6 +810,8 @@ static void main_loop() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	SDL_GL_SwapWindow(window);
+
+	frame_counter++;
 }
 
 int main(int argc, char** argv) {
@@ -600,7 +843,6 @@ int main(int argc, char** argv) {
 	if(result.count("path")) {
 		std::string path = result["path"].as<std::string>();
 		if(std::filesystem::exists(path)) {
-
 			if(result.count("output")) {
 				std::string output = result["output"].as<std::string>();
 				AttemptRender(path, result.count("debug"), output);
@@ -614,10 +856,29 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	signal(SIGINT, [](int) {
+		for(auto& window : opened_level_windows) {
+			std::filesystem::remove(window.filename);
+			delete window.level;
+			glDeleteTextures(1, &window.level_render_image);
+		}
+
+		done = true;
+#ifndef __EMSCRIPTEN__
+		downloading_thread.join();
+#endif
+	});
+
+#ifndef __EMSCRIPTEN__
+	curl_global_init(CURL_GLOBAL_ALL);
+	puts("Creating downloading thread");
+	downloading_thread = std::thread(level_downloading_thread);
+#endif
+
 	puts("Starting toost GUI");
 	auto start = std::chrono::high_resolution_clock::now();
 
-	std::string font_path = fmt::format("{}/fonts/unifont-14.0.01.ttf", assetsFolder);
+	std::string font_path = fmt::format("{}/fonts/NotoSansJP-Bold.otf", assetsFolder);
 	FT_Init_FreeType(&freetype_library);
 	FT_New_Face(freetype_library, font_path.c_str(), 0, &main_font);
 
@@ -673,7 +934,7 @@ int main(int argc, char** argv) {
 	SDL_WindowFlags window_flags
 		= (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 	window     = SDL_CreateWindow("Toost | Super Mario Maker 2 Level Viewer", SDL_WINDOWPOS_CENTERED,
-			SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+			SDL_WINDOWPOS_CENTERED, 1366, 768, window_flags);
 	gl_context = SDL_GL_CreateContext(window);
 
 	if(!gl_context) {
@@ -687,10 +948,14 @@ int main(int argc, char** argv) {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io             = ImGui::GetIO();
-	static ImWchar ranges[] = { 0x20, 0xFFFF, 0 };
+	ImGuiIO& io = ImGui::GetIO();
+	// static ImWchar ranges[] = { 0x20, 0xFFFF, 0 };
+	// Taken loosely from the Nintendo font
+	static ImWchar ranges[] = { 0x0020, 0x277F, 0x3000, 0x33D4, 0x4E00, 0x4FFF, 0x5005, 0x5FFF, 0x600E, 0x6FFE, 0x7001,
+		0x7FFC, 0x8000, 0x8FFD, 0x9000, 0x9FA0, 0xF929, 0xF9DC, 0xFA0E, 0xFA2D, 0xFB01, 0xFB02, 0xFE30, 0xFFE6, 0 };
 	static ImFontConfig cfg;
-	io.Fonts->AddFontFromFileTTF(font_path.c_str(), 18.0, &cfg, ranges);
+	io.Fonts->AddFontFromFileTTF(font_path.c_str(), 24.0, &cfg, ranges);
+	io.Fonts->GetGlyphRangesChineseFull();
 	io.IniFilename = NULL;
 	(void)io;
 	// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
@@ -703,6 +968,12 @@ int main(int argc, char** argv) {
 	// Setup Platform/Renderer backends
 	ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
 	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	// Create backgrounds
+	cairo_surface_t* image
+		= cairo_image_surface_create_from_png(fmt::format("{}/img/background.png", assetsFolder).c_str());
+	Helpers::LoadTextureFromSurface(image, &background_image, &background_image_width, &background_image_height);
+	cairo_surface_destroy(image);
 
 	auto stop = std::chrono::high_resolution_clock::now();
 	fmt::print(

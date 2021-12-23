@@ -8,3 +8,6 @@ test*
 *.png
 tilesheetFiles.txt
 third_party
+*.txt
+*.bcd
+*.zip

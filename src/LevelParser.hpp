@@ -550,11 +550,13 @@ public:
 		{ 3, "x3" },
 	};
 
-	const std::string FormatMillisecondTime(int milliseconds) {
-		int seconds      = (milliseconds / 1000) % 60;
-		int minutes      = (milliseconds / 1000) / 60;
-		milliseconds     = milliseconds % 1000;
-		std::string time = fmt::format("{:02}:{:02}.{:03}", minutes, seconds, milliseconds);
+	const std::string FormatMillisecondTime(int32_t milliseconds) {
+		int32_t seconds = (milliseconds / 1000) % 60;
+		int32_t minutes = (milliseconds / 1000) / 60;
+		milliseconds    = milliseconds % 1000;
+		// Corrupts the string on emscripten
+		// std::string time = fmt::format("{:02}:{:02}.{:03}", minutes, seconds, milliseconds);
+		std::string time = fmt::format("{}:{:02}.{}", minutes, seconds, milliseconds);
 		return time;
 	}
 };
