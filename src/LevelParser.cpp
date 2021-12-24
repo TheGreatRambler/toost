@@ -30,6 +30,7 @@ LevelParser::LevelParser() {
 	}
 }
 
+/*
 std::string LevelParser::GetItemName(int n, int v) {
 	std::string tempGetItemName = "";
 	switch(v) {
@@ -54,12 +55,14 @@ std::string LevelParser::GetItemName(int n, int v) {
 	}
 	return tempGetItemName;
 }
+*/
 
 bool LevelParser::DecryptLevelData(const std::string& input, const std::string& output) {
 	return LevelDecryptor::decrypt(input.c_str(), output.c_str());
 }
 
 void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
+	isOverworld = overworld;
 	int Offset;
 	Offset      = overworld ? 0x200 : 0x2E0E0;
 	long long i = 0;
@@ -432,5 +435,302 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 
 	fclose(levelPtr);
 }
+
+void LevelParser::ExportToJSON(const std::string& outputPath) {
+	rapidjson::StringBuffer sb;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+
+	writer.StartObject();
+	writer.Key("name");
+	writer.String(LH.Name);
+	writer.Key("description");
+	writer.String(LH.Desc);
+	writer.Key("gamestyle");
+	writer.String(levelMappings->NumToGameStyle.at(LH.GameStyle));
+	writer.Key("gamestyle_raw");
+	writer.Int(LH.GameStyle);
+	writer.Key("theme");
+	writer.String(levelMappings->NumToTheme.at(MapHdr.Theme));
+	writer.Key("theme_raw");
+	writer.Int(MapHdr.Theme);
+	writer.Key("is_overworld");
+	writer.Bool(isOverworld);
+	writer.Key("night_time");
+	writer.Bool(MapHdr.Flag == 1);
+	writer.Key("clear_time");
+	writer.Int(LH.ClearTime);
+	writer.Key("clear_time_pretty");
+	writer.String(levelMappings->FormatMillisecondTime(LH.ClearTime));
+	writer.Key("clear_attempts");
+	writer.Int(LH.ClearAttempts);
+	writer.Key("game_version");
+	writer.String(levelMappings->NumToGameVersion.at(LH.ClearVer));
+	writer.Key("game_version_raw");
+	writer.Int(LH.ClearVer);
+	writer.Key("timer");
+	writer.Int(LH.Timer);
+	writer.Key("start_y");
+	writer.Int(LH.StartY);
+	writer.Key("goal_x");
+	writer.Int(LH.GoalX);
+	writer.Key("goal_y");
+	writer.Int(LH.GoalY);
+	writer.Key("clear_condition_type");
+	writer.String(levelMappings->NumToClearCondition.at(LH.ClearCRC));
+	writer.Key("clear_condition_type_raw");
+	writer.Int(LH.ClearCRC);
+	writer.Key("clear_condition_magnitude");
+	writer.Int(LH.ClearCA);
+	writer.Key("clear_condition");
+	writer.String(fmt::format(levelMappings->NumToClearCondition.at(LH.ClearCRC), LH.ClearCA));
+	writer.Key("clear_condition_category");
+	writer.String(levelMappings->NumToClearConditionCategory.at(LH.ClearCC));
+	writer.Key("clear_condition_category_raw");
+	writer.Int(LH.ClearCC);
+	writer.Key("autoscroll_speed");
+	writer.String(levelMappings->NumToAutoscrollSpeed.at(LH.AutoscrollSpd));
+	writer.Key("autoscroll_speed_raw");
+	writer.Int(LH.AutoscrollSpd);
+	writer.Key("autoscroll_type");
+	writer.String(levelMappings->NumToAutoscrollType.at(MapHdr.AutoscrollType));
+	writer.Key("autoscroll_type_raw");
+	writer.Int(MapHdr.AutoscrollType);
+	writer.Key("orientation");
+	writer.String(levelMappings->NumToOrientation.at(MapHdr.Ori));
+	writer.Key("orientation_raw");
+	writer.Int(MapHdr.Ori);
+	writer.Key("liquid_start_height");
+	writer.Int(MapHdr.LiqSHeight);
+	writer.Key("liquid_end_height");
+	writer.Int(MapHdr.LiqEHeight);
+	writer.Key("liquid_mode");
+	writer.String(levelMappings->NumToLiquidMode.at(MapHdr.LiqMode));
+	writer.Key("liquid_speed");
+	writer.String(levelMappings->NumToLiquidSpeed.at(MapHdr.LiqSpd));
+	writer.Key("boundary_type");
+	writer.String(levelMappings->NumToBoundaryType.at(MapHdr.BorFlag));
+	writer.Key("liquid_mode_raw");
+	writer.Int(MapHdr.LiqMode);
+	writer.Key("liquid_speed_raw");
+	writer.Int(MapHdr.LiqSpd);
+	writer.Key("boundary_type_raw");
+	writer.Int(MapHdr.BorFlag);
+	writer.Key("right_boundary");
+	writer.Int(MapHdr.BorR);
+	writer.Key("top_boundary");
+	writer.Int(MapHdr.BorT);
+	writer.Key("left_boundary");
+	writer.Int(MapHdr.BorL);
+	writer.Key("bottom_boundary");
+	writer.Int(MapHdr.BorB);
+	writer.Key("object_count");
+	writer.Int(MapHdr.ObjCount);
+	writer.Key("sound_effect_count");
+	writer.Int(MapHdr.SndCount);
+	writer.Key("snake_block_count");
+	writer.Int(MapHdr.SnakeCount);
+	writer.Key("clear_pipe_count");
+	writer.Int(MapHdr.ClearPipCount);
+	writer.Key("piranha_creeper_count");
+	writer.Int(MapHdr.CreeperCount);
+	writer.Key("exclamation_mark_block_count");
+	writer.Int(MapHdr.iBlkCount);
+	writer.Key("track_count");
+	writer.Int(MapHdr.TrackCount);
+	writer.Key("ground_count");
+	writer.Int(MapHdr.GroundCount);
+	writer.Key("icicle_count");
+	writer.Int(MapHdr.IceCount);
+	writer.Key("upload_id");
+	writer.Int64(LH.UploadID);
+	writer.Key("creation_id");
+	writer.Uint(LH.CreationID);
+	writer.Key("gamever");
+	writer.Int(LH.GameVer);
+	writer.Key("management_flags");
+	writer.Int(LH.MFlag);
+
+	writer.Key("objects");
+	writer.StartArray();
+	for(auto& obj : MapObj) {
+		writer.StartObject();
+		writer.Key("name");
+		writer.String(ObjEng[obj.ID]);
+		writer.Key("x");
+		writer.Int(obj.X);
+		writer.Key("y");
+		writer.Int(obj.Y);
+		writer.Key("w");
+		writer.Int(obj.W);
+		writer.Key("h");
+		writer.Int(obj.H);
+		writer.Key("flag");
+		writer.Int(obj.Flag);
+		writer.Key("cflag");
+		writer.Int(obj.CFlag);
+		writer.Key("ex");
+		writer.Int(obj.Ex);
+		writer.Key("id");
+		writer.Int(obj.ID);
+		writer.Key("cid");
+		writer.Int(obj.CID);
+		writer.Key("lid");
+		writer.Int(obj.LID);
+		writer.Key("sid");
+		writer.Int(obj.SID);
+		writer.Key("link_type");
+		writer.Int(obj.LinkType);
+		writer.EndObject();
+	}
+	writer.EndArray();
+
+	writer.Key("ground");
+	writer.StartArray();
+	for(auto& ground : MapGrd) {
+		writer.StartObject();
+		writer.Key("x");
+		writer.Int(ground.X);
+		writer.Key("y");
+		writer.Int(ground.Y);
+		writer.Key("id");
+		writer.Int(ground.ID);
+		writer.Key("bid");
+		writer.Int(ground.BID);
+		writer.EndObject();
+	}
+	writer.EndArray();
+
+	writer.Key("track");
+	writer.StartArray();
+	for(auto& track : MapTrk) {
+		writer.StartObject();
+		writer.Key("x");
+		writer.Int(track.X);
+		writer.Key("y");
+		writer.Int(track.Y);
+		writer.Key("un");
+		writer.Int(track.UN);
+		writer.Key("flag");
+		writer.Int(track.Flag);
+		writer.Key("type");
+		writer.Int(track.Type);
+		writer.Key("lid");
+		writer.Int(track.LID);
+		writer.Key("k0");
+		writer.Int(track.K0);
+		writer.Key("k1");
+		writer.Int(track.K1);
+		writer.Key("f0");
+		writer.Int(track.F0);
+		writer.Key("f1");
+		writer.Int(track.F1);
+		writer.Key("f2");
+		writer.Int(track.F2);
+		writer.EndObject();
+	}
+	writer.EndArray();
+
+	writer.Key("clear_pipes");
+	writer.StartArray();
+	for(auto& pipe : MapCPipe) {
+		writer.StartObject();
+		writer.Key("index");
+		writer.Int(pipe.Index);
+		writer.Key("node_count");
+		writer.Int(pipe.NodeCount);
+		writer.Key("nodes");
+		writer.StartArray();
+		for(auto& node : pipe.Node) {
+			writer.StartObject();
+			writer.Key("x");
+			writer.Int(node.X);
+			writer.Key("y");
+			writer.Int(node.Y);
+			writer.Key("type");
+			writer.Int(node.type);
+			writer.Key("index");
+			writer.Int(node.index);
+			writer.Key("w");
+			writer.Int(node.W);
+			writer.Key("h");
+			writer.Int(node.H);
+			writer.Key("direction");
+			writer.Int(node.Dir);
+			writer.EndObject();
+		}
+		writer.EndArray();
+		writer.EndObject();
+	}
+	writer.EndArray();
+
+	writer.Key("snakes");
+	writer.StartArray();
+	for(auto& snake : MapSnk) {
+		writer.StartObject();
+		writer.Key("index");
+		writer.Int(snake.index);
+		writer.Key("node_count");
+		writer.Int(snake.NodeCount);
+		writer.Key("nodes");
+		writer.StartArray();
+		for(auto& node : snake.Node) {
+			writer.StartObject();
+			writer.Key("index");
+			writer.Int(node.index);
+			writer.Key("direction");
+			writer.Int(node.Dir);
+			writer.EndObject();
+		}
+		writer.EndArray();
+		writer.EndObject();
+	}
+	writer.EndArray();
+
+	writer.Key("piranha_creepers");
+	writer.StartArray();
+	for(auto& creeper : MapCrp) {
+		writer.StartObject();
+		writer.Key("index");
+		writer.Int(creeper.index);
+		writer.Key("node_count");
+		writer.Int(creeper.NodeCount);
+		writer.Key("nodes");
+		writer.StartArray();
+		for(auto& node : creeper.Node) {
+			writer.Int(node);
+		}
+		writer.EndArray();
+		writer.EndObject();
+	}
+	writer.EndArray();
+
+	writer.EndObject();
+
+	if(std::filesystem::exists(outputPath)) {
+		std::filesystem::remove(outputPath);
+	}
+	std::string output    = sb.GetString();
+	auto destination_file = std::fstream(outputPath, std::ios::out);
+	destination_file.write(output.c_str(), output.size());
+	destination_file.close();
+}
+
+const char* ObjEng[] = { "Goomba", "Koopa", "Piranha Flower", "Hammer Bro", "Block", "? Block", "Stone", "Hard Block",
+	"Coin", "Pipe", "Spring", "Lift", "Thwomp", "Bullet Bill Blaster", "Mushroom Platform", "Bob-omb",
+	"Semisolid Platform", "Bridge", "P Switch", "POW", "Super Mushroom", "Donut Block", "Cloud", "Note Block",
+	"Fire Bar", "Spiny", "Hard Block", "Goal", "Buzzy Beetle", "Hidden Block", "Lakitu", "Lakitu Cloud", "Banzai Bill",
+	"1UP", "Fire Flower", "Super Star", "Lava Lift", "Starting Brick", "Starting Arrow", "Magikoopa", "Spike Top",
+	"Boo", "Clown Car", "Spikes", "Big Mushroom", "Shoe Goomba", "Dry Bones", "Cannon", "Blooper", "Castle Bridge",
+	"Jumping Machine", "Skipsqueak", "Wiggler", "Conveyor Belt", "Burner", "Door", "Cheep Cheep", "Muncher",
+	"Rocky Wrench", "Track", "Lava Bubble", "Chain Chomp", "Bowser", "Ice Block", "Vine", "Stingby", "Arrow", "One-Way",
+	"Saw", "Player", "Big Coin", "Half Collision Platform", "Koopa Car", "Cinobio (not yet named)", "Spike/Ball",
+	"Stone", "Twister", "Boom Boom", "Pokey", "P Block", "Sprint Platform", "SMB2 Mushroom", "Donut", "Skewer",
+	"Snake Block", "Spike Block", "Charvaargh", "Slight Slope", "Steep Slope", "Reel Camera", "Checkpoint Flag",
+	"Seesaw", "Red Coin", "Clear Pipe", "Conveyor Belt", "Key", "Ant Trooper", "Warp Box", "Bowser Jr", "ON/OFF Block",
+	"Dotted-Line Block", "Water Marker", "Monty Mole", "Fish Bone", "Angry Sun", "Swinging Claw", "Tree",
+	"Piranha Creeper", "Blinking Block", "Sound Effect", "Spike Block", "Mechakoopa", "Crate", "Mushroom Trampoline",
+	"Porkupuffer", "Cinobic", "Super Hammer", "Bully", "Icicle", "! Block", "Lemmy", "Morton", "Larry", "Wendy", "Iggy",
+	"Roy", "Ludwig", "Cannon Box", "Propeller Box", "Goomba Mask", "Bullet Bill Mask", "Red POW Box",
+	"ON/OFF Trampoline" };
 
 LevelParserMappings* levelMappings = new LevelParserMappings();

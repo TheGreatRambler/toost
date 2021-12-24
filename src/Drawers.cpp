@@ -557,8 +557,6 @@ void Drawers::DrawSnake(unsigned char EX, int X, int Y, int SW, int SH) {
 }
 
 void Drawers::DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y) {
-	// On Error GoTo Err basically means jump to end of routine on error
-
 	int XX = 0;
 	int YY = 0;
 	XX     = std::round(X / 160.0 + 1);

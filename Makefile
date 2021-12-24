@@ -48,6 +48,11 @@ endif
 
 
 SRCS := ./src/main.cpp ./src/LevelParser.cpp ./src/Drawers.cpp ./src/Helpers.cpp ./src/imgui/imgui.cpp ./src/imgui/imgui_widgets.cpp ./src/imgui/imgui_tables.cpp ./src/imgui/imgui_impl_sdl.cpp ./src/imgui/imgui_impl_opengl3.cpp ./src/imgui/imgui_draw.cpp ./src/SMM2CourseDecryptor/aes.cpp ./src/SMM2CourseDecryptor/decrypt.cpp ./src/fmt/format.cpp ./src/fmt/os.cpp
+
+ifeq ($(UNAME)$(PLATFORM),Msys)
+SRCS += src/info.rc src/icon.rc
+endif
+
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
@@ -77,6 +82,12 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 	$(MKDIR_P) $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
+ifeq ($(UNAME),Msys)
+# Windows RES file
+$(BUILD_DIR)/%.rc.o: %.rc
+	$(MKDIR_P) $(dir $@)
+	windres $< $@
+endif
 
 .PHONY: clean
 
