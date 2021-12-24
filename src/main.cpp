@@ -607,8 +607,9 @@ static void main_loop() {
 
 	if(!choice.empty()) {
 		puts(choice.c_str());
-		std::string dest = fmt::format("{}/{}.png", assetsFolder, std::filesystem::path(choice).filename().string());
-		AttemptRender(choice, true, true, dest, dest);
+		AttemptRender(choice, true, true,
+			fmt::format("{}/{}overworld.png", assetsFolder, std::filesystem::path(choice).filename().string()),
+			fmt::format("{}/{}subworld.png", assetsFolder, std::filesystem::path(choice).filename().string()));
 	}
 
 	static char input_string[10] = { 0 };
@@ -656,9 +657,11 @@ static void main_loop() {
 			remaining_popup_time = 180;
 		} else {
 			fmt::print("Level was downloaded to {}\n", download_level_destination);
-			std::string dest = fmt::format(
-				"{}/{}.png", assetsFolder, std::filesystem::path(download_level_destination).filename().string());
-			AttemptRender(download_level_destination, true, true, dest, dest);
+			AttemptRender(download_level_destination, true, true,
+				fmt::format("{}/{}overworld.png", assetsFolder,
+					std::filesystem::path(download_level_destination).filename().string()),
+				fmt::format("{}/{}subworld.png", assetsFolder,
+					std::filesystem::path(download_level_destination).filename().string()));
 		}
 		download_level_flag = 0;
 #ifndef __EMSCRIPTEN__
