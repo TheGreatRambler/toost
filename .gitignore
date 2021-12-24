@@ -5,9 +5,9 @@ compile_commands.json
 imgui.ini
 temp.bcd
 test*
-*.png
 tilesheetFiles.txt
 third_party
-*.txt
-*.bcd
-*.zip
+/*.png
+/*.txt
+/*.bcd
+/*.zip
