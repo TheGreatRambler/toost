@@ -1,4 +1,5 @@
 #include "Drawers.hpp"
+#include "FontRanges.hpp"
 #include "Helpers.hpp"
 #include "LevelParser.hpp"
 
@@ -561,8 +562,10 @@ static void main_loop() {
 	//		| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
 	auto background_draw_list = ImGui::GetBackgroundDrawList();
-	int frame_offset_x        = frame_counter % background_image_width;
-	int frame_offset_y        = frame_counter % background_image_height;
+	// int frame_offset_x        = frame_counter % background_image_width;
+	// int frame_offset_y        = frame_counter % background_image_height;
+	int frame_offset_x = 0;
+	int frame_offset_y = 0;
 	for(int x = -background_image_width + frame_offset_x; x < w + background_image_width; x += background_image_width) {
 		for(int y = -background_image_height + frame_offset_y; y < h + background_image_height;
 			y += background_image_height) {
@@ -1049,15 +1052,12 @@ int main(int argc, char** argv) {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
-	// static ImWchar ranges[] = { 0x20, 0xFFFF, 0 };
-	// Taken loosely from the Nintendo font
-	static ImWchar ranges[] = { 0x0020, 0x277F, 0x3000, 0x33D4, 0x4E00, 0x4FFF, 0x5005, 0x5FFF, 0x600E, 0x6FFE, 0x7001,
-		0x7FFC, 0x8000, 0x8FFD, 0x9000, 0x9FA0, 0xF929, 0xF9DC, 0xFA0E, 0xFA2D, 0xFB01, 0xFB02, 0xFE30, 0xFFE6, 0 };
 	static ImFontConfig cfg;
-	io.Fonts->AddFontFromFileTTF(font_path.c_str(), 24.0, &cfg, ranges);
-	io.Fonts->GetGlyphRangesChineseFull();
+	cfg.OversampleH = 1;
+	cfg.OversampleV = 1;
+	io.Fonts->AddFontFromFileTTF(font_path.c_str(), 24.0, &cfg, font_ranges);
+	io.Fonts->Build();
 	io.IniFilename = NULL;
-	(void)io;
 	// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	// io.ConfigFlags != ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
 
@@ -1078,6 +1078,10 @@ int main(int argc, char** argv) {
 	auto stop = std::chrono::high_resolution_clock::now();
 	fmt::print(
 		"Startup took {} milliseconds\n", std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
+
+#ifdef __EMSCRIPTEN__
+	EM_ASM({ Module.showLoading = false; });
+#endif
 
 #ifdef __EMSCRIPTEN__
 	emscripten_set_main_loop(main_loop, 0, true);

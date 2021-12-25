@@ -30,10 +30,22 @@
 			image-rendering: pixelated;
 			-ms-interpolation-mode: nearest-neighbor;
 		}
+
+		#loading {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			text-align: center;
+			min-height: 100vh;
+			background-color: #805438;
+		}
 	</style>
 </head>
 
 <body>
+	<div id="loading">
+		<p>Loading...</p>
+	</div>
 	<canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
 	<script type='text/javascript'>
 		var Module = {
@@ -59,7 +71,8 @@
 			},
 			monitorRunDependencies: function(left) {
 				// no run dependencies to log
-			}
+			},
+			showLoading: true
 		};
 		window.onerror = function() {
 			console.log("onerror: " + event);
@@ -73,6 +86,15 @@
 
 			return originalCanvasGetContext.call(this, contextType, contextAttributes);
 		};
+
+		var loadingElement = document.getElementById("loading");
+		setInterval(function() {
+			if (Module.showLoading) {
+				loadingElement.style.display = "flex";
+			} else {
+				loadingElement.style.display = "none";
+			}
+		}, 50);
 	</script>
 	<script src="FileSaver.min.js"></script>
 	{{{ SCRIPT }}}
