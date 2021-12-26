@@ -620,7 +620,7 @@ static void main_loop() {
 		}
 	}
 
-	static char input_string[10] = { 0 };
+	static char input_string[12] = { 0 };
 	ImGui::Text("Download By Level ID");
 	ImGui::InputText("##2", input_string, sizeof(input_string));
 	if(ImGui::Button("Download Level")) {
