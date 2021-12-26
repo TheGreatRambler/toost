@@ -263,7 +263,7 @@ void DrawMap(LevelParser* level, bool isOverworld, bool log, std::string destina
 	puts("Draw clear pipe");
 
 	if(!render_objects_over_pipes) {
-		drawer.DrawItem({ 9 }, false);
+		drawer.DrawItem({ 9, 42 }, true);
 	}
 
 	puts("Scaling image");
@@ -610,9 +610,14 @@ static void main_loop() {
 
 	if(!choice.empty()) {
 		puts(choice.c_str());
-		AttemptRender(choice, true, true,
+		auto results = AttemptRender(choice, true, true,
 			fmt::format("{}/{}overworld.png", assetsFolder, std::filesystem::path(choice).filename().string()),
 			fmt::format("{}/{}subworld.png", assetsFolder, std::filesystem::path(choice).filename().string()));
+
+		if(results.size() == 0) {
+			popup_text           = "Level file could not be parsed.";
+			remaining_popup_time = 180;
+		}
 	}
 
 	static char input_string[10] = { 0 };
@@ -674,9 +679,10 @@ static void main_loop() {
 
 	if(remaining_popup_time > 0) {
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.74f, 0.25f, 0.18f, 1.0f));
-		if(ImGui::BeginPopupModal("Problem encountered")) {
+		ImGui::SetNextWindowSize(ImVec2(400, 100));
+		if(ImGui::Begin("Message", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
 			ImGui::TextUnformatted(popup_text.c_str());
-			ImGui::EndPopup();
+			ImGui::End();
 			remaining_popup_time--;
 		} else {
 			remaining_popup_time = 0;
@@ -930,9 +936,10 @@ int main(int argc, char** argv) {
 			if(!overworldImage.empty() || !subworldImage.empty()) {
 				levels = AttemptRender(path, result.count("debug"), true, overworldImage, subworldImage);
 			} else {
-				std::string base = std::filesystem::path(path).filename().string();
-				levels
-					= AttemptRender(path, result.count("debug"), true, base + "-overworld.png", base + "-subworld.png");
+				// Don't do any rendering
+				// std::string base = std::filesystem::path(path).filename().string();
+				// levels = AttemptRender(path, result.count("debug"), true, base + "-overworld.png", base +
+				// "-subworld.png");
 			}
 
 			if(result.count("overworldJson")) {
