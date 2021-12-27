@@ -14,6 +14,25 @@ If building for web, first obtain a working Emscripten build environment and put
 # Hosting the web build
 As long as all files in `bin` are in the same directory on your webserver and you are hosting them over https, you can access index.html to see the viewer.
 
+# Building in Docker
+You can build and run the web interface in a docker container, making it portable, and negating the need to obtain dependencies and set up a development environment.
+
+1. [Get Docker](https://docs.docker.com/get-docker/)
+2. Build the docker image
+
+```
+docker build --tag toost .
+```
+
+3. Run the docker container
+
+```
+docker run -p 8080:8080 toost
+```
+
+4. View the app in your browser (http://localhost:8080)
+
+
 # Command line usage
 ```
 A Super Mario Maker 2 level viewer, based on JiXiaomai's SMM2LevelViewer
