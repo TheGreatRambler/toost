@@ -118,10 +118,6 @@ void Drawers::SetTilesheet(std::string tilesheet) {
 	TileW = cairo_image_surface_get_width(Tile) / 16;
 }
 
-void Drawers::SetZoom(int zoom) {
-	Zm = zoom;
-}
-
 void Drawers::SetIsOverworld(bool isOverworld) {
 	NowIO = isOverworld;
 }
@@ -145,7 +141,7 @@ int Drawers::GetHeight() {
 void Drawers::DrawGridlines() {
 	int i = 0;
 
-	cairo_set_line_width(cr, 0.5);
+	cairo_set_line_width(cr, 0.25);
 	for(i = 0; i <= H; i++) {
 		cairo_set_source_rgb(cr, 0.41, 0.41, 0.41);
 		cairo_move_to(cr, 0, i * Zm);

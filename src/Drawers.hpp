@@ -14,8 +14,9 @@ class Drawers {
 public:
 	using Point = LevelParser::Point;
 
-	Drawers(LevelParser& level_)
+	Drawers(LevelParser& level_, int zoom)
 		: level(level_) {
+		Zm           = zoom;
 		H            = level.MapHdr.BorT / 16;
 		W            = level.MapHdr.BorR / 16;
 		renderWidth  = (level.MapHdr.BorR / 16) * Zm;
@@ -25,7 +26,6 @@ public:
 	void Setup();
 	void SetGraphics(cairo_t* graphics);
 	void SetTilesheet(std::string tilesheet);
-	void SetZoom(int zoom);
 	void SetIsOverworld(bool isOverworld);
 	void SetLog(bool log);
 	void SetAssetFolder(std::string folder);
