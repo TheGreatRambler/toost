@@ -99,7 +99,7 @@ struct LevelWindow {
 std::vector<LevelWindow> opened_level_windows;
 
 void DrawMap(LevelParser* level, bool isOverworld, bool log, std::string destination) {
-	Drawers drawer(*level, 32);
+	Drawers drawer(*level, 16);
 
 	drawer.Setup();
 	drawer.SetIsOverworld(isOverworld);
