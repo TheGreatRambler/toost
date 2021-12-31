@@ -109,7 +109,9 @@ void Drawers::SetGraphics(cairo_t* graphics) {
 }
 
 void Drawers::SetTilesheet(std::string tilesheet) {
-	Tile = cairo_image_surface_create_from_png(tilesheet.c_str());
+	Tile          = cairo_image_surface_create_from_png(tilesheet.c_str());
+	tilesheetPath = tilesheet;
+	tilesheetPath.erase(0, assetFolder.length());
 
 	if(cairo_surface_status(Tile) == CAIRO_STATUS_FILE_NOT_FOUND) {
 		fmt::print("Tilesheet {} does not exist\n", tilesheet);
@@ -130,6 +132,14 @@ void Drawers::SetAssetFolder(std::string folder) {
 	assetFolder = folder;
 }
 
+void Drawers::SetOnlyInstructions() {
+	noRender = true;
+}
+
+std::vector<DrawingInstruction>& Drawers::GetInstructions() {
+	return drawingInstructions;
+}
+
 int Drawers::GetWidth() {
 	return renderWidth;
 }
@@ -141,57 +151,59 @@ int Drawers::GetHeight() {
 void Drawers::DrawGridlines() {
 	int i = 0;
 
-	cairo_set_line_width(cr, 0.25);
-	for(i = 0; i <= H; i++) {
-		cairo_set_source_rgb(cr, 0.41, 0.41, 0.41);
-		cairo_move_to(cr, 0, i * Zm);
-		cairo_line_to(cr, W * Zm, i * Zm);
-		cairo_stroke(cr);
-
-		if(i % 13 == 0) {
-			cairo_move_to(cr, 0, (H - i) * Zm + 1);
-			cairo_line_to(cr, W * Zm, (H - i) * Zm + 1);
+	if(!noRender) {
+		cairo_set_line_width(cr, 0.25);
+		for(i = 0; i <= H; i++) {
+			cairo_set_source_rgb(cr, 0.41, 0.41, 0.41);
+			cairo_move_to(cr, 0, i * Zm);
+			cairo_line_to(cr, W * Zm, i * Zm);
 			cairo_stroke(cr);
+
+			if(i % 13 == 0) {
+				cairo_move_to(cr, 0, (H - i) * Zm + 1);
+				cairo_line_to(cr, W * Zm, (H - i) * Zm + 1);
+				cairo_stroke(cr);
+			}
+
+			if((H - i) % 10 == 0) {
+				cairo_set_source_rgb(cr, 0, 0, 0);
+				cairo_move_to(cr, 3, (i - 0.25) * Zm);
+				cairo_show_text(cr, std::to_string(H - i).c_str());
+			}
 		}
 
-		if((H - i) % 10 == 0) {
-			cairo_set_source_rgb(cr, 0, 0, 0);
-			cairo_move_to(cr, 3, (i - 0.25) * Zm);
-			cairo_show_text(cr, std::to_string(H - i).c_str());
-		}
-	}
-
-	for(i = 0; i <= W; i++) {
-		cairo_set_source_rgb(cr, 0.41, 0.41, 0.41);
-		cairo_move_to(cr, i * Zm, 0);
-		cairo_line_to(cr, i * Zm, W * Zm);
-		cairo_stroke(cr);
-
-		if(i % 24 == 0) {
-			cairo_move_to(cr, i * Zm + 1, 0);
-			cairo_line_to(cr, i * Zm + 1, H * Zm);
+		for(i = 0; i <= W; i++) {
+			cairo_set_source_rgb(cr, 0.41, 0.41, 0.41);
+			cairo_move_to(cr, i * Zm, 0);
+			cairo_line_to(cr, i * Zm, W * Zm);
 			cairo_stroke(cr);
+
+			if(i % 24 == 0) {
+				cairo_move_to(cr, i * Zm + 1, 0);
+				cairo_line_to(cr, i * Zm + 1, H * Zm);
+				cairo_stroke(cr);
+			}
+
+			if(i % 10 == 9) {
+				cairo_set_source_rgb(cr, 0, 0, 0);
+				cairo_move_to(cr, i * Zm + 3, Zm * 0.75);
+				cairo_show_text(cr, std::to_string(i + 1).c_str());
+			}
 		}
 
-		if(i % 10 == 9) {
-			cairo_set_source_rgb(cr, 0, 0, 0);
-			cairo_move_to(cr, i * Zm + 3, Zm * 0.75);
-			cairo_show_text(cr, std::to_string(i + 1).c_str());
+		if(level.MapHdr.Theme == 2) {
+			cairo_set_source_rgba(cr, 1.0, 0.0, 0.0, 0.4);
+			cairo_rectangle(cr, 0, (H - level.MapHdr.LiqEHeight - 0.5) * Zm, W * Zm, H * Zm);
+			cairo_rectangle(cr, 0, (H - level.MapHdr.LiqSHeight - 0.5) * Zm, W * Zm, H * Zm);
+			cairo_stroke_preserve(cr);
+			cairo_fill(cr);
+		} else if(level.MapHdr.Theme == 9) {
+			cairo_set_source_rgba(cr, 0.0, 0.0, 1.0, 0.4);
+			cairo_rectangle(cr, 0, (H - level.MapHdr.LiqEHeight - 0.5) * Zm, W * Zm, H * Zm);
+			cairo_rectangle(cr, 0, (H - level.MapHdr.LiqSHeight - 0.5) * Zm, W * Zm, H * Zm);
+			cairo_stroke_preserve(cr);
+			cairo_fill(cr);
 		}
-	}
-
-	if(level.MapHdr.Theme == 2) {
-		cairo_set_source_rgba(cr, 1.0, 0.0, 0.0, 0.4);
-		cairo_rectangle(cr, 0, (H - level.MapHdr.LiqEHeight - 0.5) * Zm, W * Zm, H * Zm);
-		cairo_rectangle(cr, 0, (H - level.MapHdr.LiqSHeight - 0.5) * Zm, W * Zm, H * Zm);
-		cairo_stroke_preserve(cr);
-		cairo_fill(cr);
-	} else if(level.MapHdr.Theme == 9) {
-		cairo_set_source_rgba(cr, 0.0, 0.0, 1.0, 0.4);
-		cairo_rectangle(cr, 0, (H - level.MapHdr.LiqEHeight - 0.5) * Zm, W * Zm, H * Zm);
-		cairo_rectangle(cr, 0, (H - level.MapHdr.LiqSHeight - 0.5) * Zm, W * Zm, H * Zm);
-		cairo_stroke_preserve(cr);
-		cairo_fill(cr);
 	}
 }
 
@@ -199,85 +211,147 @@ void Drawers::DrawTile(int tileX, int tileY, int tileW, int tileH, int x, int y,
 	if(doLogging)
 		fmt::print("Printing tile X:{} Y:{}\n", tileX, tileY);
 
-	cairo_save(cr);
-	cairo_translate(cr, (double)x, (double)y);
-	cairo_scale(cr, (double)targetWidth / (TileW * tileW), (double)targetHeight / (TileW * tileH));
-	cairo_set_source_surface(cr, Tile, -TileW * tileX, -TileW * tileY);
-	cairo_rectangle(cr, 0, 0, TileW * tileW, TileW * tileH);
-	cairo_clip(cr);
-	cairo_paint(cr);
-	cairo_restore(cr);
+	if(!noRender) {
+		cairo_save(cr);
+		cairo_translate(cr, (double)x, (double)y);
+		cairo_scale(cr, (double)targetWidth / (TileW * tileW), (double)targetHeight / (TileW * tileH));
+		cairo_set_source_surface(cr, Tile, -TileW * tileX, -TileW * tileY);
+		cairo_rectangle(cr, 0, 0, TileW * tileW, TileW * tileH);
+		cairo_clip(cr);
+		cairo_paint(cr);
+		cairo_restore(cr);
+	}
+
+	if(addDrawingInstructions) {
+		DrawingInstruction instruction;
+		instruction.path         = tilesheetPath;
+		instruction.isTile       = true;
+		instruction.x            = x;
+		instruction.y            = y;
+		instruction.targetWidth  = targetWidth;
+		instruction.targetHeight = targetHeight;
+		instruction.tileX        = tileX;
+		instruction.tileY        = tileY;
+		instruction.tileW        = tileW;
+		instruction.tileH        = tileH;
+		drawingInstructions.push_back(instruction);
+	}
 }
 
 void Drawers::DrawImage(std::string path, int x, int y, int targetWidth, int targetHeight) {
 	if(doLogging)
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
-	cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
+	if(!noRender) {
+		cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 
-	if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
-		fmt::print("Image {} does not exist\n", path);
-		return;
+		if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
+			fmt::print("Image {} does not exist\n", path);
+			return;
+		}
+
+		int imageWidth           = cairo_image_surface_get_width(image);
+		int imageHeight          = cairo_image_surface_get_height(image);
+		cairo_pattern_t* pattern = cairo_pattern_create_for_surface(image);
+		cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
+		cairo_save(cr);
+		cairo_translate(cr, (double)x, (double)y);
+		cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
+		cairo_set_source(cr, pattern);
+		cairo_paint_with_alpha(cr, 1.0);
+		cairo_restore(cr);
+		cairo_pattern_destroy(pattern);
+		cairo_surface_destroy(image);
 	}
 
-	int imageWidth           = cairo_image_surface_get_width(image);
-	int imageHeight          = cairo_image_surface_get_height(image);
-	cairo_pattern_t* pattern = cairo_pattern_create_for_surface(image);
-	cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
-	cairo_save(cr);
-	cairo_translate(cr, (double)x, (double)y);
-	cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
-	cairo_set_source(cr, pattern);
-	cairo_paint_with_alpha(cr, 1.0);
-	cairo_restore(cr);
-	cairo_pattern_destroy(pattern);
-	cairo_surface_destroy(image);
+	if(addDrawingInstructions) {
+		DrawingInstruction instruction;
+		instruction.path         = path.erase(0, assetFolder.length());
+		instruction.isTile       = false;
+		instruction.x            = x;
+		instruction.y            = y;
+		instruction.targetWidth  = targetWidth;
+		instruction.targetHeight = targetHeight;
+		instruction.angle        = 0;
+		instruction.opacity      = 1.0;
+		drawingInstructions.push_back(instruction);
+	}
 }
 
 void Drawers::DrawImageOpacity(std::string path, double opacity, int x, int y, int targetWidth, int targetHeight) {
 	if(doLogging)
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
-	cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
+	if(!noRender) {
+		cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 
-	if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
-		fmt::print("Image {} does not exist\n", path);
-		return;
+		if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
+			fmt::print("Image {} does not exist\n", path);
+			return;
+		}
+
+		int imageWidth  = cairo_image_surface_get_width(image);
+		int imageHeight = cairo_image_surface_get_height(image);
+		cairo_save(cr);
+		cairo_translate(cr, (double)x, (double)y);
+		cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
+		cairo_set_source_surface(cr, image, 0, 0);
+		cairo_paint_with_alpha(cr, opacity);
+		cairo_restore(cr);
+		cairo_surface_destroy(image);
 	}
 
-	int imageWidth  = cairo_image_surface_get_width(image);
-	int imageHeight = cairo_image_surface_get_height(image);
-	cairo_save(cr);
-	cairo_translate(cr, (double)x, (double)y);
-	cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
-	cairo_set_source_surface(cr, image, 0, 0);
-	cairo_paint_with_alpha(cr, opacity);
-	cairo_restore(cr);
-	cairo_surface_destroy(image);
+	if(addDrawingInstructions) {
+		DrawingInstruction instruction;
+		instruction.path         = path.erase(0, assetFolder.length());
+		instruction.isTile       = false;
+		instruction.x            = x;
+		instruction.y            = y;
+		instruction.targetWidth  = targetWidth;
+		instruction.targetHeight = targetHeight;
+		instruction.angle        = 0;
+		instruction.opacity      = opacity;
+		drawingInstructions.push_back(instruction);
+	}
 }
 
 void Drawers::DrawImageRotate(std::string path, double angle, int x, int y, int targetWidth, int targetHeight) {
 	if(doLogging)
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
-	cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
+	if(!noRender) {
+		cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 
-	if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
-		fmt::print("Image {} does not exist\n", path);
-		return;
+		if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
+			fmt::print("Image {} does not exist\n", path);
+			return;
+		}
+
+		int imageWidth  = cairo_image_surface_get_width(image);
+		int imageHeight = cairo_image_surface_get_height(image);
+		cairo_save(cr);
+		cairo_translate(cr, (double)x + (targetWidth / 2), (double)y + (targetHeight / 2));
+		cairo_rotate(cr, angle);
+		cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
+		cairo_translate(cr, -imageWidth / 2, -imageHeight / 2);
+		cairo_set_source_surface(cr, image, 0, 0);
+		cairo_paint(cr);
+		cairo_restore(cr);
+		cairo_surface_destroy(image);
 	}
 
-	int imageWidth  = cairo_image_surface_get_width(image);
-	int imageHeight = cairo_image_surface_get_height(image);
-	cairo_save(cr);
-	cairo_translate(cr, (double)x + (targetWidth / 2), (double)y + (targetHeight / 2));
-	cairo_rotate(cr, angle);
-	cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
-	cairo_translate(cr, -imageWidth / 2, -imageHeight / 2);
-	cairo_set_source_surface(cr, image, 0, 0);
-	cairo_paint(cr);
-	cairo_restore(cr);
-	cairo_surface_destroy(image);
+	if(addDrawingInstructions) {
+		DrawingInstruction instruction;
+		instruction.path         = path.erase(0, assetFolder.length());
+		instruction.isTile       = false;
+		instruction.x            = x;
+		instruction.y            = y;
+		instruction.targetWidth  = targetWidth;
+		instruction.targetHeight = targetHeight;
+		instruction.angle        = angle;
+		instruction.opacity      = 1.0;
+		drawingInstructions.push_back(instruction);
+	}
 }
 
 void Drawers::DrawImageRotateOpacity(
@@ -285,24 +359,39 @@ void Drawers::DrawImageRotateOpacity(
 	if(doLogging)
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
-	cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
+	if(!noRender) {
+		cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 
-	if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
-		fmt::print("Image {} does not exist\n", path);
-		return;
+		if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
+			fmt::print("Image {} does not exist\n", path);
+			return;
+		}
+
+		int imageWidth  = cairo_image_surface_get_width(image);
+		int imageHeight = cairo_image_surface_get_height(image);
+		cairo_save(cr);
+		cairo_translate(cr, (double)x + (targetWidth / 2), (double)y + (targetHeight / 2));
+		cairo_rotate(cr, angle);
+		cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
+		cairo_translate(cr, -imageWidth / 2, -imageHeight / 2);
+		cairo_set_source_surface(cr, image, 0, 0);
+		cairo_paint_with_alpha(cr, opacity);
+		cairo_restore(cr);
+		cairo_surface_destroy(image);
 	}
 
-	int imageWidth  = cairo_image_surface_get_width(image);
-	int imageHeight = cairo_image_surface_get_height(image);
-	cairo_save(cr);
-	cairo_translate(cr, (double)x + (targetWidth / 2), (double)y + (targetHeight / 2));
-	cairo_rotate(cr, angle);
-	cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
-	cairo_translate(cr, -imageWidth / 2, -imageHeight / 2);
-	cairo_set_source_surface(cr, image, 0, 0);
-	cairo_paint_with_alpha(cr, opacity);
-	cairo_restore(cr);
-	cairo_surface_destroy(image);
+	if(addDrawingInstructions) {
+		DrawingInstruction instruction;
+		instruction.path         = path.erase(0, assetFolder.length());
+		instruction.isTile       = false;
+		instruction.x            = x;
+		instruction.y            = y;
+		instruction.targetWidth  = targetWidth;
+		instruction.targetHeight = targetHeight;
+		instruction.angle        = angle;
+		instruction.opacity      = opacity;
+		drawingInstructions.push_back(instruction);
+	}
 }
 
 void Drawers::DrawCrp(unsigned char EX, int X, int Y) {

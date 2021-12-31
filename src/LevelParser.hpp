@@ -17,6 +17,21 @@
 #include <unordered_map>
 #include <vector>
 
+struct DrawingInstruction {
+	std::string path;
+	bool isTile;
+	int x;
+	int y;
+	int targetWidth;
+	int targetHeight;
+	int tileX;
+	int tileY;
+	int tileW;
+	int tileH;
+	double angle;
+	double opacity;
+};
+
 class LevelParser {
 public:
 	struct Point {
@@ -201,7 +216,7 @@ public:
 	// std::string GetItemName(int n, int v);
 	static bool DecryptLevelData(const std::string& input, const std::string& output);
 	void LoadLevelData(const std::string& P, bool overworld);
-	void ExportToJSON(const std::string& outputPath);
+	void ExportToJSON(const std::string& outputPath, std::vector<DrawingInstruction>& drawingInstructions);
 };
 
 /*

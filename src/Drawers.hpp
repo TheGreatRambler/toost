@@ -29,6 +29,8 @@ public:
 	void SetIsOverworld(bool isOverworld);
 	void SetLog(bool log);
 	void SetAssetFolder(std::string folder);
+	void SetOnlyInstructions();
+	std::vector<DrawingInstruction>& GetInstructions();
 	int GetWidth();
 	int GetHeight();
 	void DrawGridlines();
@@ -73,4 +75,8 @@ private:
 	LevelParser& level; // Level instance
 	bool doLogging = false;
 	std::string assetFolder;
+	std::string tilesheetPath;
+	bool addDrawingInstructions = true;
+	bool noRender               = false;
+	std::vector<DrawingInstruction> drawingInstructions;
 };

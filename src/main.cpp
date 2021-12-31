@@ -93,42 +93,60 @@ struct LevelWindow {
 	std::string name;
 	uint64_t window_id;
 	GLuint level_render_image = 0;
-	LevelParser* level;
+	LevelParser* parser;
+	Drawers* drawer;
+};
+
+struct LevelData {
+	LevelParser* overworld   = nullptr;
+	LevelParser* subworld    = nullptr;
+	Drawers* drawerOverworld = nullptr;
+	Drawers* drawerSubworld  = nullptr;
 };
 
 std::vector<LevelWindow> opened_level_windows;
+bool started_level_windows = false;
 
-void DrawMap(LevelParser* level, bool isOverworld, bool log, std::string destination) {
-	Drawers drawer(*level, 16);
+Drawers* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string destination) {
+	Drawers* drawer = new Drawers(*level, 16);
 
-	drawer.Setup();
-	drawer.SetIsOverworld(isOverworld);
-	drawer.SetLog(log);
-	drawer.SetAssetFolder(assetsFolder);
+	drawer->Setup();
+	drawer->SetIsOverworld(isOverworld);
+	drawer->SetLog(log);
+	drawer->SetAssetFolder(assetsFolder);
 
-	puts("Set zoom");
+	if(log)
+		puts("Set zoom");
 
-	cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, drawer.GetWidth(), drawer.GetHeight());
+	cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, drawer->GetWidth(), drawer->GetHeight());
 	cairo_t* cr              = cairo_create(surface);
 
 	cairo_font_face_t* font = cairo_ft_font_face_create_for_ft_face(main_font, 0);
 	cairo_set_font_face(cr, font);
 	cairo_font_face_destroy(font);
 
-	fmt::print("Width: {}\nHeight: {}\n", drawer.GetWidth(), drawer.GetHeight());
+	if(log)
+		fmt::print("Width: {}\nHeight: {}\n", drawer->GetWidth(), drawer->GetHeight());
 
-	drawer.SetGraphics(cr);
+	drawer->SetGraphics(cr);
 
-	puts("Set graphics");
+	if(log)
+		puts("Set graphics");
 
 	std::string tilesheet = fmt::format("{}/img/tile/{}-{}{}.png", assetsFolder, level->LH.GameStyle,
 		level->MapHdr.Theme, (level->MapHdr.Flag == 2) ? "A" : "");
-	drawer.SetTilesheet(tilesheet);
+	drawer->SetTilesheet(tilesheet);
 
-	fmt::print("Set tilesheet to {}\n", tilesheet);
+	if(log)
+		fmt::print("Set tilesheet to {}\n", tilesheet);
+
+	if(destination == "instructionsOnly") {
+		// Export as instructions only instead
+		drawer->SetOnlyInstructions();
+	}
 
 	if(!remove_grid) {
-		drawer.DrawGridlines();
+		drawer->DrawGridlines();
 	}
 
 	// 3D平台
@@ -137,173 +155,199 @@ void DrawMap(LevelParser* level, bool isOverworld, bool log, std::string destina
 	//桥
 	//蘑菇跳台
 	//开关跳台
-	drawer.DrawItem({ 132 }, false);
-	drawer.DrawItem({ 16 }, false);
-	drawer.DrawItem({ 14 }, false);
-	drawer.DrawItem({ 17 }, false);
-	drawer.DrawItem({ 113 }, false);
-	drawer.DrawItem({ 71 }, false);
+	drawer->DrawItem({ 132 }, false);
+	drawer->DrawItem({ 16 }, false);
+	drawer->DrawItem({ 14 }, false);
+	drawer->DrawItem({ 17 }, false);
+	drawer->DrawItem({ 113 }, false);
+	drawer->DrawItem({ 71 }, false);
 
-	puts("Draw first bunch");
+	if(log)
+		puts("Draw first bunch");
 
 	//箭头 单向板 中间旗 藤蔓
 
-	drawer.DrawItem({ 66, 67, 106 }, false);
-	drawer.DrawItem({ 64 }, false);
-	drawer.DrawItem({ 90 }, false);
+	drawer->DrawItem({ 66, 67, 106 }, false);
+	drawer->DrawItem({ 64 }, false);
+	drawer->DrawItem({ 90 }, false);
 
-	puts("Draw second bunch");
+	if(log)
+		puts("Draw second bunch");
 
 	//树 长长吞食花
-	drawer.DrawItem({ 106, 107 }, false);
+	drawer->DrawItem({ 106, 107 }, false);
 
-	puts("Draw third bunch");
+	if(log)
+		puts("Draw third bunch");
 
 	//地面 传送带 开关 开关砖 P砖 冰锥
 	//斜坡单独
-	drawer.ReGrdCode();
-	drawer.DrawGrd();
+	drawer->ReGrdCode();
+	drawer->DrawGrd();
 	// DrawSlope()
-	drawer.DrawGrdCode();
+	drawer->DrawGrdCode();
 
-	puts("Draw grid");
+	if(log)
+		puts("Draw grid");
 
-	drawer.DrawItem({ 53, 94, 99, 100, 79 }, false);
-	drawer.DrawIce();
+	drawer->DrawItem({ 53, 94, 99, 100, 79 }, false);
+	drawer->DrawIce();
 
-	puts("Draw ice");
+	if(log)
+		puts("Draw ice");
 
 	//无LINKE
 	//管道 门 蛇 传送箱
-	drawer.DrawItem({ 9, 55, 84, 97 }, false);
+	drawer->DrawItem({ 9, 55, 84, 97 }, false);
 	//机动砖 轨道砖
-	drawer.DrawItem({ 85, 119 }, false);
+	drawer->DrawItem({ 85, 119 }, false);
 	//夹子
-	drawer.DrawItem({ 105 }, false);
+	drawer->DrawItem({ 105 }, false);
 	//轨道
-	drawer.DrawTrack();
+	drawer->DrawTrack();
 	//软砖 问号 硬砖 竹轮 云 音符 隐藏 刺 冰块 闪烁砖
-	drawer.DrawItem({ 4, 5, 6, 21, 22, 23, 29, 43, 63, 110, 108 }, false);
+	drawer->DrawItem({ 4, 5, 6, 21, 22, 23, 29, 43, 63, 110, 108 }, false);
 
-	puts("Draw fourth bunch");
+	if(log)
+		puts("Draw fourth bunch");
 
 	//跷跷板 熔岩台 升降台
-	drawer.DrawItem({ 91, 36, 11 }, false);
+	drawer->DrawItem({ 91, 36, 11 }, false);
 
 	//狼牙棒
-	drawer.DrawItem({ 83 }, false);
+	drawer->DrawItem({ 83 }, false);
 
 	//齿轮 甜甜圈
-	drawer.DrawItem({ 68, 82 }, false);
+	drawer->DrawItem({ 68, 82 }, false);
 
-	puts("Draw fifth bunch");
+	if(log)
+		puts("Draw fifth bunch");
 
 	//道具
-	drawer.DrawItem({ 0, 1, 2, 3, 8, 10, 12, 13, 15, 18, 19, 20, 25, 28, 30, 31, 32, 33, 34, 35, 39 }, false);
-	drawer.DrawItem({ 40, 41, 42, 44, 45, 46, 47, 48, 52, 56, 57, 58, 60, 61, 62, 70, 74, 76, 77, 78, 81, 92, 95, 98,
-						102, 103, 104 },
+	drawer->DrawItem({ 0, 1, 2, 3, 8, 10, 12, 13, 15, 18, 19, 20, 25, 28, 30, 31, 32, 33, 34, 35, 39 }, false);
+	drawer->DrawItem({ 40, 41, 42, 44, 45, 46, 47, 48, 52, 56, 57, 58, 60, 61, 62, 70, 74, 76, 77, 78, 81, 92, 95, 98,
+						 102, 103, 104 },
 		false);
-	drawer.DrawItem(
+	drawer->DrawItem(
 		{ 111, 120, 121, 122, 123, 124, 125, 126, 112, 127, 128, 129, 130, 131, 72, 50, 51, 65, 80, 114, 116 }, false);
-	drawer.DrawItem({ 96, 117, 86 }, false);
+	drawer->DrawItem({ 96, 117, 86 }, false);
 	//喷枪 火棍
-	drawer.DrawItem({ 24, 54 }, false);
+	drawer->DrawItem({ 24, 54 }, false);
 
-	puts("Draw sixth bunch");
+	if(log)
+		puts("Draw sixth bunch");
 
 	// DrawFireBar(False)
 	// DrawFire(False)
 	//夹子
-	drawer.DrawItem({ 105 }, false);
+	drawer->DrawItem({ 105 }, false);
 	//轨道
-	drawer.DrawTrack();
+	drawer->DrawTrack();
 	//夹子
-	drawer.DrawItem({ 105 }, true);
+	drawer->DrawItem({ 105 }, true);
 	//卷轴相机
 	// DrawItem("/89/", False)
 
-	puts("Draw seventh bunch");
+	if(log)
+		puts("Draw seventh bunch");
 
 	// LINK
 	//软砖 问号 硬砖 竹轮 云 音符 隐藏 刺 冰块
-	drawer.DrawItem({ 4, 5, 6, 21, 22, 23, 29, 43, 63 }, true);
+	drawer->DrawItem({ 4, 5, 6, 21, 22, 23, 29, 43, 63 }, true);
 
 	//跷跷板 熔岩台 升降台
-	drawer.DrawItem({ 91, 36, 11 }, true);
+	drawer->DrawItem({ 91, 36, 11 }, true);
 
 	//齿轮 甜甜圈
-	drawer.DrawItem({ 68, 82 }, true);
+	drawer->DrawItem({ 68, 82 }, true);
 
-	puts("Draw eigth bunch");
+	if(log)
+		puts("Draw eigth bunch");
 
 	//道具
-	drawer.DrawItem({ 0, 1, 2, 3, 8, 10, 12, 13, 15, 18, 19, 20, 25, 28, 30, 31, 32, 33, 34, 35, 39 }, true);
-	drawer.DrawItem({ 40, 41, 42, 44, 45, 46, 47, 48, 52, 56, 57, 58, 60, 61, 62, 70, 74, 76, 77, 78, 81, 92, 95, 98,
-						102, 103, 104 },
+	drawer->DrawItem({ 0, 1, 2, 3, 8, 10, 12, 13, 15, 18, 19, 20, 25, 28, 30, 31, 32, 33, 34, 35, 39 }, true);
+	drawer->DrawItem({ 40, 41, 42, 44, 45, 46, 47, 48, 52, 56, 57, 58, 60, 61, 62, 70, 74, 76, 77, 78, 81, 92, 95, 98,
+						 102, 103, 104 },
 		true);
-	drawer.DrawItem(
+	drawer->DrawItem(
 		{ 111, 120, 121, 122, 123, 124, 125, 126, 112, 127, 128, 129, 130, 131, 72, 50, 51, 65, 80, 114, 116 }, true);
-	drawer.DrawItem({ 96, 117, 86 }, true);
+	drawer->DrawItem({ 96, 117, 86 }, true);
 
-	puts("Draw ninth bunch");
+	if(log)
+		puts("Draw ninth bunch");
 
-	drawer.DrawCID();
+	drawer->DrawCID();
 
 	//喷枪 火棍
-	drawer.DrawItem({ 24, 54 }, true);
-	drawer.DrawFireBar();
-	drawer.DrawFire();
+	drawer->DrawItem({ 24, 54 }, true);
+	drawer->DrawFireBar();
+	drawer->DrawFire();
 
-	puts("Draw firebars");
+	if(log)
+		puts("Draw firebars");
 
 	//透明管
-	drawer.DrawCPipe();
+	drawer->DrawCPipe();
 
-	puts("Draw clear pipe");
+	if(log)
+		puts("Draw clear pipe");
 
 	if(!render_objects_over_pipes) {
-		drawer.DrawItem({ 9, 42 }, true);
+		drawer->DrawItem({ 9, 42 }, true);
 	}
 
-	puts("Scaling image");
-	cairo_pattern_t* pattern = cairo_pattern_create_for_surface(surface);
+	if(destination != "instructionsOnly") {
+		if(log)
+			puts("Scaling image");
+		cairo_pattern_t* pattern = cairo_pattern_create_for_surface(surface);
+		cairo_destroy(cr);
+		cairo_surface_destroy(surface);
+		cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
+		surface = cairo_image_surface_create(
+			CAIRO_FORMAT_ARGB32, drawer->GetWidth() * image_scale, drawer->GetHeight() * image_scale);
+		cr = cairo_create(surface);
+		cairo_scale(cr, image_scale, image_scale);
+		cairo_set_source(cr, pattern);
+		cairo_paint(cr);
+		cairo_pattern_destroy(pattern);
+		if(log)
+			puts("Done scaling");
+
+		if(log)
+			puts("Writing image");
+		cairo_surface_write_to_png(surface, destination.c_str());
+		if(log)
+			puts("Done writing");
+
+		if(started_level_windows) {
+			LevelWindow newLevelWindow;
+			Helpers::LoadTextureFromSurface(surface, &newLevelWindow.level_render_image,
+				&newLevelWindow.level_render_width, &newLevelWindow.level_render_height);
+			newLevelWindow.filename  = destination;
+			newLevelWindow.name      = std::filesystem::path(destination).stem().string();
+			newLevelWindow.window_id = new_window_counter;
+			newLevelWindow.parser    = level;
+			newLevelWindow.drawer    = drawer;
+			opened_level_windows.push_back(newLevelWindow);
+			new_window_counter++;
+		}
+	}
+
 	cairo_destroy(cr);
 	cairo_surface_destroy(surface);
-	cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
-	surface = cairo_image_surface_create(
-		CAIRO_FORMAT_ARGB32, drawer.GetWidth() * image_scale, drawer.GetHeight() * image_scale);
-	cr = cairo_create(surface);
-	cairo_scale(cr, image_scale, image_scale);
-	cairo_set_source(cr, pattern);
-	cairo_paint(cr);
-	cairo_pattern_destroy(pattern);
-	puts("Done scaling");
 
-	puts("Writing image");
-	cairo_surface_write_to_png(surface, destination.c_str());
-	puts("Done writing");
-
-	LevelWindow newLevelWindow;
-	Helpers::LoadTextureFromSurface(surface, &newLevelWindow.level_render_image, &newLevelWindow.level_render_width,
-		&newLevelWindow.level_render_height);
-	newLevelWindow.filename  = destination;
-	newLevelWindow.name      = std::filesystem::path(destination).filename().string();
-	newLevelWindow.window_id = new_window_counter;
-	newLevelWindow.level     = level;
-	opened_level_windows.push_back(newLevelWindow);
-	new_window_counter++;
-
-	cairo_destroy(cr);
-	cairo_surface_destroy(surface);
+	return drawer;
 }
 
-std::unordered_map<std::string, LevelParser*> AttemptRender(
-	std::string choice, bool log, bool render, std::string destinationOverworld, std::string destinationSubworld) {
+LevelData AttemptRender(
+	std::string choice, bool log, std::string destinationOverworld, std::string destinationSubworld) {
 	uintmax_t filesize = std::filesystem::file_size(choice);
-	fmt::print("Level filesize is {}\n", filesize);
+	if(log)
+		fmt::print("Level filesize is {}\n", filesize);
 
 	if(filesize == 0x5C000) {
-		puts("File is encrypted");
+		if(log)
+			puts("File is encrypted");
 		LevelParser::DecryptLevelData(choice, fmt::format("{}/temp.bcd", assetsFolder));
 		choice = fmt::format("{}/temp.bcd", assetsFolder);
 	} else {
@@ -318,7 +362,8 @@ std::unordered_map<std::string, LevelParser*> AttemptRender(
 		fclose(magicFile);
 		if(memcmp(zlibMagic, validZlibMagic1, 2) == 0 || memcmp(zlibMagic, validZlibMagic2, 2) == 0
 			|| memcmp(zlibMagic, validZlibMagic3, 2) == 0 || memcmp(zlibMagic, validZlibMagic4, 2) == 0) {
-			puts("File is compressed");
+			if(log)
+				puts("File is compressed");
 			// Is compressed, decompress and write to new file
 			std::ifstream readFile(choice, std::ios::in | std::ios::binary);
 			std::vector<uint8_t> data((std::istreambuf_iterator<char>(readFile)), std::istreambuf_iterator<char>());
@@ -342,46 +387,49 @@ std::unordered_map<std::string, LevelParser*> AttemptRender(
 		SetConsoleOutputCP(CP_UTF8);
 #endif
 
-		fmt::print("Assets folder: {}\n", assetsFolder);
+		if(log)
+			fmt::print("Assets folder: {}\n", assetsFolder);
 
-		std::unordered_map<std::string, LevelParser*> ret;
+		LevelData data;
 
 		if(!destinationOverworld.empty()) {
 			LevelParser* overworldLevelParser = new LevelParser();
-			puts("Loading overworld level data");
+			if(log)
+				puts("Loading overworld level data");
 			overworldLevelParser->LoadLevelData(choice, true);
-			puts("Done loading overworld level data");
-			if(render) {
-				auto start = std::chrono::high_resolution_clock::now();
-				DrawMap(overworldLevelParser, true, log, destinationOverworld);
-				auto stop = std::chrono::high_resolution_clock::now();
+			if(log)
+				puts("Done loading overworld level data");
+			auto start           = std::chrono::high_resolution_clock::now();
+			data.drawerOverworld = DrawMap(overworldLevelParser, true, log, destinationOverworld);
+			auto stop            = std::chrono::high_resolution_clock::now();
+			if(log)
 				fmt::print("Rendering overworld took {} milliseconds\n",
 					std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
-			}
-			ret["overworld"] = overworldLevelParser;
+			data.overworld = overworldLevelParser;
 		}
 
 		if(!destinationSubworld.empty()) {
 			LevelParser* subworldLevelParser = new LevelParser();
-			puts("Loading subworld level data");
+			if(log)
+				puts("Loading subworld level data");
 			subworldLevelParser->LoadLevelData(choice, false);
-			puts("Done loading subworld level data");
-			if(render) {
-				auto start = std::chrono::high_resolution_clock::now();
-				DrawMap(subworldLevelParser, false, log, destinationSubworld);
-				auto stop = std::chrono::high_resolution_clock::now();
+			if(log)
+				puts("Done loading subworld level data");
+			auto start          = std::chrono::high_resolution_clock::now();
+			data.drawerSubworld = DrawMap(subworldLevelParser, false, log, destinationSubworld);
+			auto stop           = std::chrono::high_resolution_clock::now();
+			if(log)
 				fmt::print("Rendering subworld took {} milliseconds\n",
 					std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
-			}
-			ret["subworld"] = subworldLevelParser;
+			data.subworld = subworldLevelParser;
 		}
 
-		return ret;
+		return data;
 	} else {
 		puts("File is not a level");
 	}
 
-	return std::unordered_map<std::string, LevelParser*>();
+	return LevelData();
 }
 
 #ifdef __EMSCRIPTEN__
@@ -536,7 +584,8 @@ static void main_loop() {
 			&& event.window.windowID == SDL_GetWindowID(window)) {
 			for(auto& window : opened_level_windows) {
 				std::filesystem::remove(window.filename);
-				delete window.level;
+				delete window.parser;
+				delete window.drawer;
 				glDeleteTextures(1, &window.level_render_image);
 			}
 
@@ -611,14 +660,9 @@ static void main_loop() {
 
 	if(!choice.empty()) {
 		puts(choice.c_str());
-		auto results = AttemptRender(choice, true, true,
-			fmt::format("{}/{}overworld.png", assetsFolder, std::filesystem::path(choice).filename().string()),
-			fmt::format("{}/{}subworld.png", assetsFolder, std::filesystem::path(choice).filename().string()));
-
-		if(results.size() == 0) {
-			popup_text           = "Level file could not be parsed.";
-			remaining_popup_time = 180;
-		}
+		AttemptRender(choice, true,
+			fmt::format("{}/{}overworld.png", assetsFolder, std::filesystem::path(choice).stem().string()),
+			fmt::format("{}/{}subworld.png", assetsFolder, std::filesystem::path(choice).stem().string()));
 	}
 
 	static char input_string[12] = { 0 };
@@ -666,11 +710,11 @@ static void main_loop() {
 			remaining_popup_time = 180;
 		} else {
 			fmt::print("Level was downloaded to {}\n", download_level_destination);
-			AttemptRender(download_level_destination, true, true,
+			AttemptRender(download_level_destination, true,
 				fmt::format("{}/{}overworld.png", assetsFolder,
-					std::filesystem::path(download_level_destination).filename().string()),
+					std::filesystem::path(download_level_destination).stem().string()),
 				fmt::format("{}/{}subworld.png", assetsFolder,
-					std::filesystem::path(download_level_destination).filename().string()));
+					std::filesystem::path(download_level_destination).stem().string()));
 		}
 		download_level_flag = 0;
 #ifndef __EMSCRIPTEN__
@@ -729,7 +773,7 @@ static void main_loop() {
 #ifdef __EMSCRIPTEN__
 			std::string dest = fmt::format("{}/{}.json", assetsFolder, selected_level_info.name);
 			std::string name = selected_level_info.name + ".json";
-			selected_level_info.level->ExportToJSON(dest);
+			selected_level_info.level->ExportToJSON(dest, selected_level_info.drawer.GetInstructions());
 			EM_ASM(
 				{
 					var filenameToDownload = UTF8ToString($0, $1);
@@ -747,7 +791,7 @@ static void main_loop() {
 								 .result();
 			if(!selection.empty()) {
 				puts("Location chosen");
-				selected_level_info.level->ExportToJSON(selection);
+				selected_level_info.parser->ExportToJSON(selection, selected_level_info.drawer->GetInstructions());
 				puts("JSON generated");
 			} else {
 				puts("No location chosen");
@@ -764,7 +808,7 @@ static void main_loop() {
 			cached_focused_window_index = focused_window_index;
 
 			fmt::print("Caching level data for {}\n", opened_level_windows[focused_window_index].name);
-			LevelParser& level = *opened_level_windows[focused_window_index].level;
+			LevelParser& level = *opened_level_windows[focused_window_index].parser;
 			cwfi.reserve(50);
 			cwfi.push_back(std::string("Name: ") + level.LH.Name);
 			cwfi.push_back(std::string("Description: ") + level.LH.Desc);
@@ -838,14 +882,13 @@ static void main_loop() {
 	int i     = 0;
 	while(iter != opened_level_windows.end()) {
 		is_open            = true;
-		bool should_render = ImGui::Begin(
-			fmt::format("{} {}##{}", iter->name, iter->level->isOverworld ? "Overworld" : "Subworld", iter->window_id)
-				.c_str(),
-			&is_open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
+		bool should_render = ImGui::Begin(fmt::format("{}##{}", iter->name, iter->window_id).c_str(), &is_open,
+			ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 		if(!is_open || (close_current_level && i == focused_window_index)) {
 			fmt::print("Deleted window {}\n", iter->name);
 			std::filesystem::remove(iter->filename);
-			delete iter->level;
+			delete iter->parser;
+			delete iter->drawer;
 			focused_window_index        = -1;
 			cached_focused_window_index = -1;
 			glDeleteTextures(1, &iter->level_render_image);
@@ -885,6 +928,7 @@ static void main_loop() {
 
 #ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE bool mobile_emscripten_render(char* id) {
+	// Not implemented
 	download_level_id = std::string(id);
 	level_downloading_routine();
 	std::string path;
@@ -902,7 +946,11 @@ EMSCRIPTEN_KEEPALIVE bool mobile_emscripten_render(char* id) {
 		return false;
 	}
 
-	AttemptRender(path, false, true, std::string(id) + "-overworld.png", std::string(id) + "-subworld.png");
+	LevelData data = AttemptRender(path, false, std::string(id) + "-overworld.png", std::string(id) + "-subworld.png");
+	delete data.overworld;
+	delete data.subworld;
+	delete data.drawerOverworld;
+	delete data.drawerSubworld;
 	return true;
 }
 #endif
@@ -988,34 +1036,37 @@ int main(int argc, char** argv) {
 				image_scale = result["scale"].as<float>();
 			}
 
-			std::unordered_map<std::string, LevelParser*> levels;
-
 			if(!overworldImage.empty() || !subworldImage.empty()) {
-				levels = AttemptRender(path, result.count("debug"), true, overworldImage, subworldImage);
-			} else {
-				// Don't do any rendering
-				// std::string base = std::filesystem::path(path).filename().string();
-				// levels = AttemptRender(path, result.count("debug"), true, base + "-overworld.png", base +
-				// "-subworld.png");
+				LevelData data = AttemptRender(path, result.count("debug"), overworldImage, subworldImage);
+				if(data.overworld) {
+					delete data.overworld;
+					delete data.subworld;
+				}
+				if(data.subworld) {
+					delete data.drawerOverworld;
+					delete data.drawerSubworld;
+				}
+			}
+
+			LevelData data;
+			if(result.count("overworldJson") || result.count("subworldJson")) {
+				data = AttemptRender(path, result.count("debug"), "instructionsOnly", "instructionsOnly");
 			}
 
 			if(result.count("overworldJson")) {
-				if(!levels.contains("overworld")) {
-					levels = AttemptRender(path, result.count("debug"), false, " ", " ");
-				}
-				if(levels.contains("overworld")) {
-					levels["overworld"]->ExportToJSON(result["overworldJson"].as<std::string>());
-				}
+				data.overworld->ExportToJSON(
+					result["overworldJson"].as<std::string>(), data.drawerOverworld->GetInstructions());
 			}
 
 			if(result.count("subworldJson")) {
-				if(!levels.contains("subworld")) {
-					levels = AttemptRender(path, result.count("debug"), false, " ", " ");
-				}
-				if(levels.contains("subworld")) {
-					levels["subworld"]->ExportToJSON(result["subworldJson"].as<std::string>());
-				}
+				data.subworld->ExportToJSON(
+					result["subworldJson"].as<std::string>(), data.drawerSubworld->GetInstructions());
 			}
+
+			delete data.overworld;
+			delete data.subworld;
+			delete data.drawerOverworld;
+			delete data.drawerSubworld;
 
 			if(result.count("code")) {
 				std::filesystem::remove(path);
@@ -1035,7 +1086,8 @@ int main(int argc, char** argv) {
 	signal(SIGINT, [](int) {
 		for(auto& window : opened_level_windows) {
 			std::filesystem::remove(window.filename);
-			delete window.level;
+			delete window.parser;
+			delete window.drawer;
 			glDeleteTextures(1, &window.level_render_image);
 		}
 
@@ -1051,7 +1103,8 @@ int main(int argc, char** argv) {
 #endif
 
 	puts("Starting toost GUI");
-	auto start = std::chrono::high_resolution_clock::now();
+	started_level_windows = true;
+	auto start            = std::chrono::high_resolution_clock::now();
 
 	// Setup SDL
 	// (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows

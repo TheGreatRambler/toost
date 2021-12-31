@@ -436,7 +436,7 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 	fclose(levelPtr);
 }
 
-void LevelParser::ExportToJSON(const std::string& outputPath) {
+void LevelParser::ExportToJSON(const std::string& outputPath, std::vector<DrawingInstruction>& drawingInstructions) {
 	rapidjson::StringBuffer sb;
 	rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
 
@@ -700,6 +700,41 @@ void LevelParser::ExportToJSON(const std::string& outputPath) {
 			writer.Int(node);
 		}
 		writer.EndArray();
+		writer.EndObject();
+	}
+	writer.EndArray();
+
+	writer.Key("drawing_instructions");
+	writer.StartArray();
+	for(auto& instruction : drawingInstructions) {
+		writer.StartObject();
+		writer.Key("path");
+		writer.String(instruction.path);
+		writer.Key("is_tile");
+		writer.Bool(instruction.isTile);
+		writer.Key("x");
+		writer.Int(instruction.x);
+		writer.Key("y");
+		writer.Int(instruction.y);
+		writer.Key("target_width");
+		writer.Int(instruction.targetWidth);
+		writer.Key("target_height");
+		writer.Int(instruction.targetHeight);
+		if(instruction.isTile) {
+			writer.Key("tile_x");
+			writer.Int(instruction.tileX);
+			writer.Key("tile_y");
+			writer.Int(instruction.tileY);
+			writer.Key("tile_w");
+			writer.Int(instruction.tileW);
+			writer.Key("tile_h");
+			writer.Int(instruction.tileH);
+		} else {
+			writer.Key("angle");
+			writer.Double(instruction.angle);
+			writer.Key("opacity");
+			writer.Double(instruction.opacity);
+		}
 		writer.EndObject();
 	}
 	writer.EndArray();
