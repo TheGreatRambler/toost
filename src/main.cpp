@@ -434,14 +434,76 @@ EM_JS(char*, CheckReadFileFromUserJS, (), {
 #ifndef __EMSCRIPTEN__
 std::atomic_uint8_t download_level_flag = 0;
 std::mutex download_level_mutex;
+CURL* curl_handle;
 #else
 uint8_t download_level_flag = 0;
 #endif
 std::string download_level_id;
 std::string download_level_destination;
+
+void level_downloading_routine() {
+	fmt::print("Recieved request for {}\n", download_level_id);
+	std::string request_url = fmt::format("https://tgrcode.com/mm2/level_data/{}", download_level_id);
+	fmt::print("URL is {}\n", request_url);
+#ifdef __EMSCRIPTEN__
+	emscripten_fetch_attr_t attr;
+	emscripten_fetch_attr_init(&attr);
+	strcpy(attr.requestMethod, "GET");
+	attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+	attr.onsuccess  = +[](emscripten_fetch_t* fetch) {
+        puts("Request worked");
+        download_level_destination = fmt::format("{}/{}.bcd", assetsFolder, download_level_id);
+        std::filesystem::remove(download_level_destination);
+        auto destination_file = std::fstream(download_level_destination, std::ios::out | std::ios::binary);
+        destination_file.write((char*)&fetch->data[0], fetch->numBytes);
+        destination_file.close();
+        download_level_flag = 1;
+        download_level_id   = "";
+	};
+	attr.onerror = +[](emscripten_fetch_t* fetch) {
+		fmt::print("Request failed, http status code {}\n", fetch->status);
+		download_level_destination = download_level_id;
+		download_level_flag        = 2;
+		download_level_id          = "";
+	};
+	emscripten_fetch(&attr, request_url.c_str());
+	return;
+#else
+	curl_easy_setopt(curl_handle, CURLOPT_URL, request_url.c_str());
+	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
+	curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 0L);
+	curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
+	auto callback = +[](void* ptr, size_t size, size_t nmemb, void* stream) {
+		std::size_t written = fwrite(ptr, size, nmemb, (FILE*)stream);
+		return written;
+	};
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, callback);
+	download_level_destination = fmt::format("{}/{}.bcd", assetsFolder, download_level_id);
+	fmt::print("Writing to {}\n", download_level_destination);
+	std::filesystem::remove(download_level_destination);
+	FILE* dest = fopen(download_level_destination.c_str(), "wb");
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, dest);
+	CURLcode ret = curl_easy_perform(curl_handle);
+	if(ret != CURLE_OK) {
+		fmt::print("CURL error: {}\n", curl_easy_strerror(ret));
+	}
+	fclose(dest);
+	long http_code = 0;
+	curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
+	if(http_code == 200) {
+		puts("Request worked");
+		download_level_id   = "";
+		download_level_flag = 1;
+	} else {
+		fmt::print("Request failed, http status code {}\n", http_code);
+		download_level_destination = download_level_id;
+		download_level_flag        = 2;
+	}
+#endif
+}
+
 void level_downloading_thread() {
 #ifndef __EMSCRIPTEN__
-	CURL* curl_handle = curl_easy_init();
 	if(curl_handle == NULL) {
 		puts("CURL was not able to start");
 	}
@@ -452,73 +514,13 @@ void level_downloading_thread() {
 		download_level_mutex.lock();
 #endif
 		if(!download_level_id.empty()) {
-			fmt::print("Recieved request for {}\n", download_level_id);
-			std::string request_url = fmt::format("https://tgrcode.com/mm2/level_data/{}", download_level_id);
-			fmt::print("URL is {}\n", request_url);
-#ifdef __EMSCRIPTEN__
-			emscripten_fetch_attr_t attr;
-			emscripten_fetch_attr_init(&attr);
-			strcpy(attr.requestMethod, "GET");
-			attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
-			attr.onsuccess  = +[](emscripten_fetch_t* fetch) {
-                puts("Request worked");
-                download_level_destination = fmt::format("{}/{}.bcd", assetsFolder, download_level_id);
-                std::filesystem::remove(download_level_destination);
-                auto destination_file = std::fstream(download_level_destination, std::ios::out | std::ios::binary);
-                destination_file.write((char*)&fetch->data[0], fetch->numBytes);
-                destination_file.close();
-                download_level_flag = 1;
-                download_level_id   = "";
-			};
-			attr.onerror = +[](emscripten_fetch_t* fetch) {
-				fmt::print("Request failed, http status code {}\n", fetch->status);
-				download_level_destination = download_level_id;
-				download_level_flag        = 2;
-				download_level_id          = "";
-			};
-			emscripten_fetch(&attr, request_url.c_str());
-			return;
-#else
-			curl_easy_setopt(curl_handle, CURLOPT_URL, request_url.c_str());
-			curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
-			curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 0L);
-			curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
-			auto callback = +[](void* ptr, size_t size, size_t nmemb, void* stream) {
-				std::size_t written = fwrite(ptr, size, nmemb, (FILE*)stream);
-				return written;
-			};
-			curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, callback);
-			download_level_destination = fmt::format("{}/{}.bcd", assetsFolder, download_level_id);
-			fmt::print("Writing to {}\n", download_level_destination);
-			std::filesystem::remove(download_level_destination);
-			FILE* dest = fopen(download_level_destination.c_str(), "wb");
-			curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, dest);
-			CURLcode ret = curl_easy_perform(curl_handle);
-			if(ret != CURLE_OK) {
-				fmt::print("CURL error: {}\n", curl_easy_strerror(ret));
-			}
-			fclose(dest);
-			long http_code = 0;
-			curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
-			if(http_code == 200) {
-				puts("Request worked");
-				download_level_id   = "";
-				download_level_flag = 1;
-			} else {
-				fmt::print("Request failed, http status code {}\n", http_code);
-				download_level_destination = download_level_id;
-				download_level_flag        = 2;
-			}
+			level_downloading_routine();
 			download_level_id = "";
-#endif
 		}
 #ifndef __EMSCRIPTEN__
 		download_level_mutex.unlock();
 #endif
 	}
-#ifndef __EMSCRIPTEN__
-	curl_easy_cleanup(curl_handle);
-#endif
 }
 
 static void main_loop() {
@@ -643,7 +645,7 @@ static void main_loop() {
 			puts("Sending request");
 #ifdef __EMSCRIPTEN__
 			download_level_id = download_id;
-			level_downloading_thread();
+			level_downloading_routine();
 #else
 			download_level_mutex.lock();
 			download_level_id = download_id;
@@ -881,13 +883,37 @@ static void main_loop() {
 	frame_counter++;
 }
 
-int main(int argc, char** argv) {
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE bool mobile_emscripten_render(char* id) {
+	download_level_id = std::string(id);
+	level_downloading_routine();
+	std::string path;
+	for(int i = 0; i < 1000; i++) {
+		// Give 20 seconds
+		if(download_level_flag == 2) {
+			return false;
+		} else {
+			path = download_level_destination;
+			break;
+		}
+	}
 
+	if(path.empty()) {
+		return false;
+	}
+
+	AttemptRender(path, false, true, std::string(id) + "-overworld.png", std::string(id) + "-subworld.png");
+	return true;
+}
+#endif
+
+int main(int argc, char** argv) {
 	cxxopts::Options options("TOOST", "A Super Mario Maker 2 level viewer, based on JiXiaomai's SMM2LevelViewer");
 
 	// clang-format off
 	options.add_options()
 		("p,path", "Path to level to view", cxxopts::value<std::string>())
+		("c,code", "Level code to view", cxxopts::value<std::string>())
 		("o,overworld", "Where to put rendered overworld image", cxxopts::value<std::string>())
 		("s,subworld", "Where to put rendered subworld image", cxxopts::value<std::string>())
 		("overworldJson", "Where to put overworld JSON", cxxopts::value<std::string>())
@@ -898,6 +924,7 @@ int main(int argc, char** argv) {
 		("d,debug", "Enable debug logging")
 		("h,help", "Print help menu");
 	// clang-format on
+	options.allow_unrecognised_options();
 
 	auto result = options.parse(argc, argv);
 
@@ -913,12 +940,43 @@ int main(int argc, char** argv) {
 	std::replace(assetsFolder.begin(), assetsFolder.end(), '\\', '/');
 #endif
 
+#ifndef __EMSCRIPTEN__
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl_handle = curl_easy_init();
+#endif
+
 	std::string font_path = fmt::format("{}/fonts/NotoSansJP-Bold.otf", assetsFolder);
 	FT_Init_FreeType(&freetype_library);
 	FT_New_Face(freetype_library, font_path.c_str(), 0, &main_font);
 
-	if(result.count("path")) {
-		std::string path = result["path"].as<std::string>();
+	if(result.count("path") || result.count("code")) {
+		std::string path;
+		if(result.count("path")) {
+			path = result["path"].as<std::string>();
+		} else {
+			download_level_id = result["code"].as<std::string>();
+			level_downloading_routine();
+			for(int i = 0; i < 1000; i++) {
+// Give 20 seconds
+#ifndef __EMSCRIPTEN__
+				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+#endif
+				if(download_level_flag == 2) {
+					fmt::print("Level ID {} could not be downloaded\n", download_level_destination);
+					return 1;
+				} else {
+					fmt::print("Level was downloaded to {}\n", download_level_destination);
+					path = download_level_destination;
+					break;
+				}
+			}
+
+			if(path.empty()) {
+				puts("Downloading took too long");
+				return 1;
+			}
+		}
+
 		if(std::filesystem::exists(path)) {
 			std::string overworldImage = result.count("overworld") ? result["overworld"].as<std::string>() : "";
 			std::string subworldImage  = result.count("subworld") ? result["subworld"].as<std::string>() : "";
@@ -983,7 +1041,6 @@ int main(int argc, char** argv) {
 	});
 
 #ifndef __EMSCRIPTEN__
-	curl_global_init(CURL_GLOBAL_ALL);
 	puts("Creating downloading thread");
 	downloading_thread = std::thread(level_downloading_thread);
 #endif
@@ -1101,6 +1158,10 @@ int main(int argc, char** argv) {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
+
+#ifndef __EMSCRIPTEN__
+	curl_easy_cleanup(curl_handle);
+#endif
 
 	SDL_GL_DeleteContext(gl_context);
 	SDL_DestroyWindow(window);
