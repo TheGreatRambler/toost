@@ -773,7 +773,7 @@ static void main_loop() {
 #ifdef __EMSCRIPTEN__
 			std::string dest = fmt::format("{}/{}.json", assetsFolder, selected_level_info.name);
 			std::string name = selected_level_info.name + ".json";
-			selected_level_info.level->ExportToJSON(dest, selected_level_info.drawer.GetInstructions());
+			selected_level_info.parser->ExportToJSON(dest, selected_level_info.drawer->GetInstructions());
 			EM_ASM(
 				{
 					var filenameToDownload = UTF8ToString($0, $1);
