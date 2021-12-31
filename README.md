@@ -40,6 +40,7 @@ Usage:
   TOOST [OPTION...]
 
   -p, --path arg           Path to level to view
+  -c, --code arg           Level code to view
   -o, --overworld arg      Where to put rendered overworld image
   -s, --subworld arg       Where to put rendered subworld image
       --overworldJson arg  Where to put overworld JSON
@@ -51,6 +52,7 @@ Usage:
   -h, --help               Print help menu
 ```
 * `path`: The location of the `.bcd` level file
+* `code`: The level code to download, replaces `path`
 * `overworld`: If provided, renders the image of the overworld into this location
 * `subworld`: If provided, renders the image of the subworld into this location
 * `overworldJson`: If provided, writes JSON info of the overworld into this location
