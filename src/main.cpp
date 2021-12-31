@@ -1016,6 +1016,11 @@ int main(int argc, char** argv) {
 					levels["subworld"]->ExportToJSON(result["subworldJson"].as<std::string>());
 				}
 			}
+
+			if(result.count("code")) {
+				std::filesystem::remove(path);
+			}
+
 			return 0;
 		} else {
 			fmt::print("Path {} does not exist\n", path);
