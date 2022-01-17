@@ -992,7 +992,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 									H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm), Zm,
 									Zm);
 							} else if(j == level.MapObj[i].W - 1) {
-								DrawTile(j2 + 1, 3, 1, 1, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+								DrawTile(j2 + 2, 3, 1, 1, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
 									H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm), Zm,
 									Zm);
 							} else {
