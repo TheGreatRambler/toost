@@ -1,9 +1,9 @@
 mkdir third_party
 wget -c https://www.cairographics.org/releases/cairo-1.16.0.tar.xz
-C:/msys64/usr/bin/tar.exe -xvf cairo-1.16.0.tar.xz -C third_party
+tar -xvf cairo-1.16.0.tar.xz -C third_party
 rm cairo-1.16.0.tar.xz
 wget -c https://www.cairographics.org/releases/pixman-0.40.0.tar.gz
-C:/msys64/usr/bin/tar.exe -xvf pixman-0.40.0.tar.gz -C third_party
+tar -xvf pixman-0.40.0.tar.gz -C third_party
 rm pixman-0.40.0.tar.gz
 
 cd third_party/pixman-0.40.0
