@@ -299,11 +299,11 @@ void Drawers::DrawImageOpacity(std::string path, double opacity, int x, int y, i
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	if(!noRender) {
-		cairo_surface_t* image = nullptr;
-		if(imageCache.contains(path)) {
-			image = imageCache[path];
+		cairo_pattern_t* pattern = nullptr;
+		if(patternCache.contains(path)) {
+			pattern = patternCache[path];
 		} else {
-			image = cairo_image_surface_create_from_png(path.c_str());
+			cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 
 			if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
 				fmt::print("Image {} does not exist\n", path);
@@ -311,6 +311,9 @@ void Drawers::DrawImageOpacity(std::string path, double opacity, int x, int y, i
 			}
 
 			imageCache[path] = image;
+			pattern          = cairo_pattern_create_for_surface(image);
+			cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
+			patternCache[path] = pattern;
 		}
 
 		int imageWidth  = cairo_image_surface_get_width(imageCache[path]);
@@ -318,10 +321,9 @@ void Drawers::DrawImageOpacity(std::string path, double opacity, int x, int y, i
 		cairo_save(cr);
 		cairo_translate(cr, (double)x, (double)y);
 		cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
-		cairo_set_source_surface(cr, image, 0, 0);
+		cairo_set_source(cr, pattern);
 		cairo_paint_with_alpha(cr, opacity);
 		cairo_restore(cr);
-		cairo_surface_destroy(image);
 	}
 
 	if(addDrawingInstructions) {
@@ -343,11 +345,11 @@ void Drawers::DrawImageRotate(std::string path, double angle, int x, int y, int 
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	if(!noRender) {
-		cairo_surface_t* image = nullptr;
-		if(imageCache.contains(path)) {
-			image = imageCache[path];
+		cairo_pattern_t* pattern = nullptr;
+		if(patternCache.contains(path)) {
+			pattern = patternCache[path];
 		} else {
-			image = cairo_image_surface_create_from_png(path.c_str());
+			cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 
 			if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
 				fmt::print("Image {} does not exist\n", path);
@@ -355,6 +357,9 @@ void Drawers::DrawImageRotate(std::string path, double angle, int x, int y, int 
 			}
 
 			imageCache[path] = image;
+			pattern          = cairo_pattern_create_for_surface(image);
+			cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
+			patternCache[path] = pattern;
 		}
 
 		int imageWidth  = cairo_image_surface_get_width(imageCache[path]);
@@ -364,10 +369,9 @@ void Drawers::DrawImageRotate(std::string path, double angle, int x, int y, int 
 		cairo_rotate(cr, angle);
 		cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
 		cairo_translate(cr, -imageWidth / 2, -imageHeight / 2);
-		cairo_set_source_surface(cr, image, 0, 0);
+		cairo_set_source(cr, pattern);
 		cairo_paint(cr);
 		cairo_restore(cr);
-		cairo_surface_destroy(image);
 	}
 
 	if(addDrawingInstructions) {
@@ -390,11 +394,11 @@ void Drawers::DrawImageRotateOpacity(
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	if(!noRender) {
-		cairo_surface_t* image = nullptr;
-		if(imageCache.contains(path)) {
-			image = imageCache[path];
+		cairo_pattern_t* pattern = nullptr;
+		if(patternCache.contains(path)) {
+			pattern = patternCache[path];
 		} else {
-			image = cairo_image_surface_create_from_png(path.c_str());
+			cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 
 			if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
 				fmt::print("Image {} does not exist\n", path);
@@ -402,6 +406,9 @@ void Drawers::DrawImageRotateOpacity(
 			}
 
 			imageCache[path] = image;
+			pattern          = cairo_pattern_create_for_surface(image);
+			cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
+			patternCache[path] = pattern;
 		}
 
 		int imageWidth  = cairo_image_surface_get_width(imageCache[path]);
@@ -411,10 +418,9 @@ void Drawers::DrawImageRotateOpacity(
 		cairo_rotate(cr, angle);
 		cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
 		cairo_translate(cr, -imageWidth / 2, -imageHeight / 2);
-		cairo_set_source_surface(cr, image, 0, 0);
+		cairo_set_source(cr, pattern);
 		cairo_paint_with_alpha(cr, opacity);
 		cairo_restore(cr);
-		cairo_surface_destroy(image);
 	}
 
 	if(addDrawingInstructions) {
