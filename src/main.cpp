@@ -296,6 +296,8 @@ Drawers* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string des
 		drawer->DrawItem({ 9, 42 }, true);
 	}
 
+	drawer->ClearImageCache();
+
 	if(destination != "instructionsOnly") {
 		if(log)
 			puts("Scaling image");
@@ -402,9 +404,8 @@ LevelData AttemptRender(
 			auto start           = std::chrono::high_resolution_clock::now();
 			data.drawerOverworld = DrawMap(overworldLevelParser, true, log, destinationOverworld);
 			auto stop            = std::chrono::high_resolution_clock::now();
-			if(log)
-				fmt::print("Rendering overworld took {} milliseconds\n",
-					std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
+			fmt::print("Rendering overworld took {} milliseconds\n",
+				std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
 			data.overworld = overworldLevelParser;
 		}
 
@@ -418,9 +419,8 @@ LevelData AttemptRender(
 			auto start          = std::chrono::high_resolution_clock::now();
 			data.drawerSubworld = DrawMap(subworldLevelParser, false, log, destinationSubworld);
 			auto stop           = std::chrono::high_resolution_clock::now();
-			if(log)
-				fmt::print("Rendering subworld took {} milliseconds\n",
-					std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
+			fmt::print("Rendering subworld took {} milliseconds\n",
+				std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
 			data.subworld = subworldLevelParser;
 		}
 
@@ -1158,7 +1158,7 @@ int main(int argc, char** argv) {
 	SDL_WindowFlags window_flags
 		= (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 	window     = SDL_CreateWindow("Toost | Super Mario Maker 2 Level Viewer", SDL_WINDOWPOS_CENTERED,
-			SDL_WINDOWPOS_CENTERED, 1366, 768, window_flags);
+        SDL_WINDOWPOS_CENTERED, 1366, 768, window_flags);
 	gl_context = SDL_GL_CreateContext(window);
 
 	if(!gl_context) {

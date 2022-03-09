@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fmt/core.h>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -33,6 +34,7 @@ public:
 	std::vector<DrawingInstruction>& GetInstructions();
 	int GetWidth();
 	int GetHeight();
+	void ClearImageCache();
 	void DrawGridlines();
 	void DrawTile(int tileX, int tileY, int tileW, int tileH, int x, int y, int targetWidth, int targetHeight);
 	void DrawImage(std::string path, int x, int y, int targetWidth, int targetHeight);
@@ -79,4 +81,6 @@ private:
 	bool addDrawingInstructions = true;
 	bool noRender               = false;
 	std::vector<DrawingInstruction> drawingInstructions;
+	std::unordered_map<std::string, cairo_pattern_t*> patternCache;
+	std::unordered_map<std::string, cairo_surface_t*> imageCache;
 };

@@ -148,6 +148,16 @@ int Drawers::GetHeight() {
 	return renderHeight;
 }
 
+void Drawers::ClearImageCache() {
+	for(auto& pattern : patternCache) {
+		cairo_pattern_destroy(pattern.second);
+	}
+
+	for(auto& image : imageCache) {
+		cairo_surface_destroy(image.second);
+	}
+}
+
 void Drawers::DrawGridlines() {
 	int i = 0;
 
@@ -243,25 +253,31 @@ void Drawers::DrawImage(std::string path, int x, int y, int targetWidth, int tar
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	if(!noRender) {
-		cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
+		cairo_pattern_t* pattern = nullptr;
+		if(patternCache.contains(path)) {
+			pattern = patternCache[path];
+		} else {
+			cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
 
-		if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
-			fmt::print("Image {} does not exist\n", path);
-			return;
+			if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
+				fmt::print("Image {} does not exist\n", path);
+				return;
+			}
+
+			imageCache[path] = image;
+			pattern          = cairo_pattern_create_for_surface(image);
+			cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
+			patternCache[path] = pattern;
 		}
 
-		int imageWidth           = cairo_image_surface_get_width(image);
-		int imageHeight          = cairo_image_surface_get_height(image);
-		cairo_pattern_t* pattern = cairo_pattern_create_for_surface(image);
-		cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
+		int imageWidth  = cairo_image_surface_get_width(imageCache[path]);
+		int imageHeight = cairo_image_surface_get_height(imageCache[path]);
 		cairo_save(cr);
 		cairo_translate(cr, (double)x, (double)y);
 		cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
 		cairo_set_source(cr, pattern);
 		cairo_paint_with_alpha(cr, 1.0);
 		cairo_restore(cr);
-		cairo_pattern_destroy(pattern);
-		cairo_surface_destroy(image);
 	}
 
 	if(addDrawingInstructions) {
@@ -283,15 +299,22 @@ void Drawers::DrawImageOpacity(std::string path, double opacity, int x, int y, i
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	if(!noRender) {
-		cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
+		cairo_surface_t* image = nullptr;
+		if(imageCache.contains(path)) {
+			image = imageCache[path];
+		} else {
+			image = cairo_image_surface_create_from_png(path.c_str());
 
-		if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
-			fmt::print("Image {} does not exist\n", path);
-			return;
+			if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
+				fmt::print("Image {} does not exist\n", path);
+				return;
+			}
+
+			imageCache[path] = image;
 		}
 
-		int imageWidth  = cairo_image_surface_get_width(image);
-		int imageHeight = cairo_image_surface_get_height(image);
+		int imageWidth  = cairo_image_surface_get_width(imageCache[path]);
+		int imageHeight = cairo_image_surface_get_height(imageCache[path]);
 		cairo_save(cr);
 		cairo_translate(cr, (double)x, (double)y);
 		cairo_scale(cr, (double)targetWidth / imageWidth, (double)targetHeight / imageHeight);
@@ -320,15 +343,22 @@ void Drawers::DrawImageRotate(std::string path, double angle, int x, int y, int 
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	if(!noRender) {
-		cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
+		cairo_surface_t* image = nullptr;
+		if(imageCache.contains(path)) {
+			image = imageCache[path];
+		} else {
+			image = cairo_image_surface_create_from_png(path.c_str());
 
-		if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
-			fmt::print("Image {} does not exist\n", path);
-			return;
+			if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
+				fmt::print("Image {} does not exist\n", path);
+				return;
+			}
+
+			imageCache[path] = image;
 		}
 
-		int imageWidth  = cairo_image_surface_get_width(image);
-		int imageHeight = cairo_image_surface_get_height(image);
+		int imageWidth  = cairo_image_surface_get_width(imageCache[path]);
+		int imageHeight = cairo_image_surface_get_height(imageCache[path]);
 		cairo_save(cr);
 		cairo_translate(cr, (double)x + (targetWidth / 2), (double)y + (targetHeight / 2));
 		cairo_rotate(cr, angle);
@@ -360,15 +390,22 @@ void Drawers::DrawImageRotateOpacity(
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	if(!noRender) {
-		cairo_surface_t* image = cairo_image_surface_create_from_png(path.c_str());
+		cairo_surface_t* image = nullptr;
+		if(imageCache.contains(path)) {
+			image = imageCache[path];
+		} else {
+			image = cairo_image_surface_create_from_png(path.c_str());
 
-		if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
-			fmt::print("Image {} does not exist\n", path);
-			return;
+			if(cairo_surface_status(image) == CAIRO_STATUS_FILE_NOT_FOUND) {
+				fmt::print("Image {} does not exist\n", path);
+				return;
+			}
+
+			imageCache[path] = image;
 		}
 
-		int imageWidth  = cairo_image_surface_get_width(image);
-		int imageHeight = cairo_image_surface_get_height(image);
+		int imageWidth  = cairo_image_surface_get_width(imageCache[path]);
+		int imageHeight = cairo_image_surface_get_height(imageCache[path]);
 		cairo_save(cr);
 		cairo_translate(cr, (double)x + (targetWidth / 2), (double)y + (targetHeight / 2));
 		cairo_rotate(cr, angle);
@@ -395,8 +432,6 @@ void Drawers::DrawImageRotateOpacity(
 }
 
 void Drawers::DrawCrp(unsigned char EX, int X, int Y) {
-	// VB TO C++ CONVERTER TODO TASK: 'On Error GoTo' statements are not converted by VB to C++ Converter:
-	// On Error GoTo Err
 	int XX = std::round(X / 160.0 + 1);
 	int YY = std::round((Y + 80) / 160.0 + 1);
 	int i  = 0;
@@ -430,9 +465,6 @@ void Drawers::DrawCrp(unsigned char EX, int X, int Y) {
 		break;
 	}
 
-	// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop. VB to C++
-	// Converter has created a temporary variable in order to use the initial value of ModuleSMM.MapCrp(EX -
-	// 1).NodeCount for every iteration:
 	int tempVar = level.MapCrp[EX - 1].NodeCount;
 	for(i = 0; i < tempVar; i++) {
 		DrawImage(fmt::format("{}/img/cmn/SS.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
@@ -501,13 +533,9 @@ void Drawers::DrawCrp(unsigned char EX, int X, int Y) {
 			break;
 		}
 	}
-	// Err: ;
 }
 
 void Drawers::DrawSnake(unsigned char EX, int X, int Y, int SW, int SH) {
-	//蛇砖块
-	// VB TO C++ CONVERTER TODO TASK: 'On Error GoTo' statements are not converted by VB to C++ Converter:
-	// On Error GoTo Err
 	int XX = 0;
 	int YY = 0;
 
@@ -568,9 +596,6 @@ void Drawers::DrawSnake(unsigned char EX, int X, int Y, int SW, int SH) {
 
 	int i = 0;
 
-	// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop. VB to C++
-	// Converter has created a temporary variable in order to use the initial value of ModuleSMM.MapSnk(EX -
-	// 1).NodeCount for every iteration:
 	int tempVar = level.MapSnk[EX - 1].NodeCount;
 	for(i = 0; i < tempVar; i++) {
 		DrawImage(fmt::format("{}/img/cmn/SS.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm, Zm);
@@ -678,9 +703,7 @@ void Drawers::DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y) {
 			YY += 2;
 			break;
 		}
-		// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop. VB to
-		// C++ Converter has created a temporary variable in order to use the initial value of ModuleSMM.MapTrackBlk(EX
-		// - 1).NodeCount for every iteration:
+
 		int tempVar = level.MapTrackBlk[EX - 1].NodeCount;
 		for(i = 0; i < tempVar; i++) {
 			DrawImage(fmt::format("{}/img/cmn/SS.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
@@ -779,9 +802,7 @@ void Drawers::DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y) {
 			YY += 2;
 			break;
 		}
-		// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop. VB to
-		// C++ Converter has created a temporary variable in order to use the initial value of ModuleSMM.MapMoveBlk(EX -
-		// 1).NodeCount for every iteration:
+
 		int tempVar2 = level.MapMoveBlk[EX - 1].NodeCount;
 		for(i = 0; i < tempVar2; i++) {
 			DrawImage(fmt::format("{}/img/cmn/SS.png", assetFolder), XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
@@ -869,7 +890,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 
 	for(i = 0; i < level.MapHdr.ObjCount; i++) {
 		PR = "";
-		// VB TO C++ CONVERTER TODO TASK: There is no C++ equivalent to 'ToString':
 		if(K.count(level.MapObj[i].ID)) {
 			if(level.MapObj[i].ID == 105) {
 				if((level.MapObj[i].Flag / 0x400) % 2 == 1) {
@@ -982,9 +1002,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						} else {
 							j2 = 7;
 						}
-						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
-						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
-						// value of ModuleSMM.MapObj(i).W for every iteration:
+
 						int tempVar2 = level.MapObj[i].W;
 						for(j = 0; j < tempVar2; j++) {
 							if(j == 0) {
@@ -1008,52 +1026,42 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						std::string TL = "";
 						std::string TM = "";
 						std::string TR = "";
-						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
-						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
-						// value of ModuleSMM.MapObj(i).H for every iteration:
+
 						int tempVar3 = level.MapObj[i].H;
 						for(j2 = 0; j2 < tempVar3; j2++) {
-							// VB TO C++ CONVERTER NOTE: The following VB 'Select Case' included either a non-ordinal
-							// switch expression or non-ordinal, range-type, or non-constant 'Case' expressions and was
-							// converted to C++ 'if-else' logic: 									Select Case j2
-							// ORIGINAL LINE: Case
-							// 0
 							if(j2 == 0) {
 								TL = "71";
 								TM = "71A";
 								TR = "71B";
-							}
-							// ORIGINAL LINE: Case MapObj(i).H - 1
-							else if(j2 == level.MapObj[i].H - 1) {
+							} else if(j2 == level.MapObj[i].H - 1) {
 								TL = "71F";
 								TM = "71G";
 								TR = "71H";
-							}
-							// ORIGINAL LINE: Case Else
-							else {
+							} else {
 								TL = "71C";
 								TM = "71D";
 								TR = "71E";
 							}
-							// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry
-							// to the loop. VB to C++ Converter has created a temporary variable in order to use the
-							// initial value of ModuleSMM.MapObj(i).W for every iteration:
+
 							int tempVar4 = level.MapObj[i].W;
 							for(j = 0; j < tempVar4; j++) {
 								if(j == 0) {
 									DrawImage(fmt::format("{}/img/{}/obj/{}.png", P, level.LH.GameStyle, TL),
-										(float)((j + level.MapObj[i].X / 160.0) * Zm),
-										(H + j2) * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160.0) * Zm),
+										(float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+										(H + j2) * Zm
+											- (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm),
 										Zm, Zm);
 								} else if(j == level.MapObj[i].W - 1) {
 									DrawImage(fmt::format("{}/img/{}/obj/{}.png", P, level.LH.GameStyle, TR),
-										(float)((j + level.MapObj[i].X / 160.0) * Zm),
-										(H + j2) * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160.0) * Zm),
+										(float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+										(H + j2) * Zm
+											- (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm),
 										Zm, Zm);
 								} else {
 									DrawImage(fmt::format("{}/img/{}/obj/{}.png", P, level.LH.GameStyle, TM),
-										(float)((j + level.MapObj[i].X / 160.0) * Zm),
-										(H + j2) * Zm - (float)((level.MapObj[i].H + level.MapObj[i].Y / 160.0) * Zm),
+										(float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
+										(H + j2) * Zm
+											- (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm),
 										Zm, Zm);
 								}
 							}
@@ -1061,10 +1069,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 17: {
-						//桥
-						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
-						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
-						// value of ModuleSMM.MapObj(i).W for every iteration:
 						int tempVar5 = level.MapObj[i].W;
 						for(j = 0; j < tempVar5; j++) {
 							if(j == 0) {
@@ -1082,11 +1086,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					}
 					case 113:
 					case 132: {
-						//蘑菇跳台 开关跳台
 						if((level.MapObj[i].Flag / 0x4) % 2 == 1) {
-							// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry
-							// to the loop. VB to C++ Converter has created a temporary variable in order to use the
-							// initial value of ModuleSMM.MapObj(i).W for every iteration:
 							int tempVar6 = level.MapObj[i].W;
 							for(j = 0; j < tempVar6; j++) {
 								if(j == 0) {
@@ -1107,9 +1107,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 								}
 							}
 						} else {
-							// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry
-							// to the loop. VB to C++ Converter has created a temporary variable in order to use the
-							// initial value of ModuleSMM.MapObj(i).W for every iteration:
 							int tempVar7 = level.MapObj[i].W;
 							for(j = 0; j < tempVar7; j++) {
 								if(j == 0) {
@@ -1210,10 +1207,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 64: {
-						//藤蔓
-						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
-						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
-						// value of ModuleSMM.MapObj(i).H for every iteration:
 						int tempVar8 = level.MapObj[i].H;
 						for(j = 1; j <= tempVar8; j++) {
 							if(j == 1) {
@@ -1297,9 +1290,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							(float)((-level.MapObj[i].W / 2.0 + level.MapObj[i].X / 160.0) * Zm),
 							H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm) + KY, Zm * 4,
 							Zm * 4);
-						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
-						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
-						// value of ModuleSMM.MapObj(i).H for every iteration:
+
 						int tempVar9 = level.MapObj[i].H;
 						for(j = 4; j < tempVar9; j++) {
 							DrawImage(fmt::format("{}/img/{}/obj/106A.png", P, level.LH.GameStyle),
@@ -1358,9 +1349,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 								(float)((level.MapObj[i].W - 1.5 + level.MapObj[i].X / 160.0) * Zm),
 								(H - 1) * Zm - (float)((level.MapObj[i].H - 1.5 + level.MapObj[i].Y / 160.0) * Zm), Zm,
 								Zm);
-							// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry
-							// to the loop. VB to C++ Converter has created a temporary variable in order to use the
-							// initial value of ModuleSMM.MapObj(i).W - 2 for every iteration:
+
 							int tempVar10 = level.MapObj[i].W - 2;
 							for(j = 1; j <= tempVar10; j++) {
 								DrawTile(C2.X + 1, C2.Y, 1, 2, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
@@ -1380,9 +1369,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							DrawTile(C1.X + 2, C1.Y, 1, 1,
 								(float)((level.MapObj[i].W - 1.5 + level.MapObj[i].X / 160.0) * Zm),
 								(H - 1) * Zm - (float)((-0.5 + level.MapObj[i].Y / 160.0) * Zm), Zm, Zm);
-							// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry
-							// to the loop. VB to C++ Converter has created a temporary variable in order to use the
-							// initial value of ModuleSMM.MapObj(i).W - 2 for every iteration:
+
 							int tempVar11 = level.MapObj[i].W - 2;
 							for(j = 1; j <= tempVar11; j++) {
 								DrawTile(C2.X + 4, C2.Y, 1, 2, (float)((j - 0.5 + level.MapObj[i].X / 160.0) * Zm),
@@ -1476,9 +1463,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							C1 = Point(13, 24);
 						}
 
-						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
-						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
-						// value of ModuleSMM.MapObj(i).W for every iteration:
 						int tempVar12 = level.MapObj[i].W;
 						for(j = 0; j < tempVar12; j++) {
 							if(j == 0) {
@@ -1513,30 +1497,13 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 9: {
-						//管道
 						level.ObjLinkType[level.MapObj[i].LID + 1] = 9;
-						// 0绿 4红 8蓝 C橙
-						PP = ((level.MapObj[i].Flag / 0x10000) % 0x10) / 4;
-						// Select Case (MapObj(i).Flag \ &H10000) Mod &H10
-						//	Case &H0
-						//		PR = "9"
-						//	Case &H4
-						//		PR = "9R"
-						//	Case &H8
-						//		PR = "9U"
-						//	Case &HC
-						//		PR = "9P"
-						// End Select
-						// 00右 20左 40上 60下
-						//以相对左下角为准
+						PP                                         = ((level.MapObj[i].Flag / 0x10000) % 0x10) / 4;
 						switch((level.MapObj[i].Flag) % 0x80) {
 						case 0x0: { // R
 							LX = std::round(
 								(float)((level.MapObj[i].H - 1 - 1 - 0.5 + level.MapObj[i].X / 160.0) * Zm));
-							LY = std::round(H * Zm - (float)((level.MapObj[i].Y / 160.0) * Zm));
-							// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry
-							// to the loop. VB to C++ Converter has created a temporary variable in order to use the
-							// initial value of ModuleSMM.MapObj(i).H - 2 for every iteration:
+							LY            = std::round(H * Zm - (float)((level.MapObj[i].Y / 160.0) * Zm));
 							int tempVar13 = level.MapObj[i].H - 2;
 							for(j = 0; j <= tempVar13; j++) {
 								DrawTile(level.PipeLoc[PP][4].X, level.PipeLoc[PP][4].Y, 1, 2,
@@ -1550,10 +1517,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						case 0x20: { // L
 							LX = std::round(
 								(float)((-level.MapObj[i].H + 1 + 1 - 0.5 + level.MapObj[i].X / 160.0) * Zm));
-							LY = std::round(H * Zm - (float)((1 + level.MapObj[i].Y / 160.0) * Zm));
-							// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry
-							// to the loop. VB to C++ Converter has created a temporary variable in order to use the
-							// initial value of ModuleSMM.MapObj(i).H - 2 for every iteration:
+							LY            = std::round(H * Zm - (float)((1 + level.MapObj[i].Y / 160.0) * Zm));
 							int tempVar14 = level.MapObj[i].H - 2;
 							for(j = 0; j <= tempVar14; j++) {
 								DrawTile(level.PipeLoc[PP][4].X, level.PipeLoc[PP][4].Y, 1, 2,
@@ -1567,9 +1531,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						case 0x40: { // U
 							LX = std::round((float)((+level.MapObj[i].X / 160.0) * Zm));
 							LY = (H - level.MapObj[i].H + 1 + 1) * Zm - (float)((0.5 + level.MapObj[i].Y / 160.0) * Zm);
-							// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry
-							// to the loop. VB to C++ Converter has created a temporary variable in order to use the
-							// initial value of ModuleSMM.MapObj(i).H - 2 for every iteration:
 							int tempVar15 = level.MapObj[i].H - 2;
 							for(j = 0; j <= tempVar15; j++) {
 								DrawTile(level.PipeLoc[PP][5].X, level.PipeLoc[PP][5].Y, 2, 1,
@@ -1583,9 +1544,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						case 0x60: { // D
 							LX = std::round((float)((-1 + level.MapObj[i].X / 160.0) * Zm));
 							LY = (H + level.MapObj[i].H - 1 - 1) * Zm - (float)((0.5 + level.MapObj[i].Y / 160.0) * Zm);
-							// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry
-							// to the loop. VB to C++ Converter has created a temporary variable in order to use the
-							// initial value of ModuleSMM.MapObj(i).H - 2 for every iteration:
 							int tempVar16 = level.MapObj[i].H - 2;
 							for(j = 0; j <= tempVar16; j++) {
 								DrawTile(level.PipeLoc[PP][5].X, level.PipeLoc[PP][5].Y, 2, 1,
@@ -1643,10 +1601,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 84: {
-						//蛇
-						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
-						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
-						// value of ModuleSMM.MapObj(i).W for every iteration:
 						int tempVar17 = level.MapObj[i].W;
 						for(j = 0; j < tempVar17; j++) {
 							if((level.MapObj[i].Flag / 0x4) % 2 == 1) {
@@ -2337,9 +2291,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						DrawImageOpacity(fmt::format("{}/img/{}/obj/13{}.png", P, level.LH.GameStyle, PR), 0.7, LX, LY,
 							Zm * level.MapObj[i].W, Zm * 2);
 
-						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
-						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
-						// value of ModuleSMM.MapObj(i).H for every iteration:
 						int tempVar18 = level.MapObj[i].H;
 						for(j = 2; j < tempVar18; j++) {
 							if((level.MapObj[i].Flag / 0x4) % 2 == 1) {
@@ -2504,9 +2455,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LY = std::round((H + 1) * Zm
 										- (float)((level.MapObj[i].H + std::round(level.MapObj[i].Y) / 160.0) * Zm)
 										+ KY);
-						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
-						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
-						// value of ModuleSMM.MapObj(i).H for every iteration:
+
 						int tempVar19 = level.MapObj[i].H;
 						for(j = 0; j < tempVar19; j++) {
 							if(j == level.MapObj[i].H - 1) {
@@ -2610,10 +2559,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 91: {
-						//跷跷板
-						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
-						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
-						// value of ModuleSMM.MapObj(i).W for every iteration:
 						int tempVar20 = level.MapObj[i].W;
 						for(j = 0; j < tempVar20; j++) {
 							if(j == 0) {
@@ -2658,9 +2603,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						if(level.MapObj[i].LID != -1) {
 							level.MapObj[i].W = 1;
 						}
-						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
-						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
-						// value of ModuleSMM.MapObj(i).W for every iteration:
+
 						int tempVar21 = level.MapObj[i].W;
 						for(j = 0; j < tempVar21; j++) {
 							DrawImage(fmt::format("{}/img/{}/obj/36{}.png", P, level.LH.GameStyle, PR),
@@ -2681,9 +2624,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LX = std::round((float)((-0.5 + level.MapObj[i].X / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((0.5 + level.MapObj[i].Y / 160.0) * Zm) + KY);
 
-						// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to
-						// the loop. VB to C++ Converter has created a temporary variable in order to use the initial
-						// value of ModuleSMM.MapObj(i).W for every iteration:
 						int tempVar22 = level.MapObj[i].W;
 						for(j = 0; j < tempVar22; j++) {
 							if((level.MapObj[i].Flag / 0x4) % 2 == 0) {
@@ -2922,11 +2862,7 @@ void Drawers::ReGrdCode() {
 					level.GroundNode[CX + level.MapObj[i].W][CY + level.MapObj[i].H] = 1;
 					break;
 				}
-				// GroundNode(CX + 1, CY + 1) = 23
-				// GroundNode(CX + MapObj(i).W, CY + MapObj(i).H) = 20
-				// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop.
-				// VB to C++ Converter has created a temporary variable in order to use the initial value of
-				// ModuleSMM.MapObj(i).W - 2 for every iteration:
+
 				int tempVar = level.MapObj[i].W - 2;
 				for(j = 1; j <= tempVar; j += 2) {
 					level.GroundNode[CX + 1 + j][CY + 1 + (j / 2) + 1] = 19;
@@ -2972,11 +2908,7 @@ void Drawers::ReGrdCode() {
 					level.GroundNode[CX + level.MapObj[i].W][CY + 1] = 1;
 					break;
 				}
-				// GroundNode(CX + 1, CY + MapObj(i).H) = 21
-				// GroundNode(CX + MapObj(i).W, CY + 1) = 22
-				// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop.
-				// VB to C++ Converter has created a temporary variable in order to use the initial value of
-				// ModuleSMM.MapObj(i).W - 2 for every iteration:
+
 				int tempVar2 = level.MapObj[i].W - 2;
 				for(j = 1; j <= tempVar2; j += 2) {
 					level.GroundNode[CX + 1 + j][CY + level.MapObj[i].H - (j / 2) - 1] = 17;
@@ -3028,11 +2960,7 @@ void Drawers::ReGrdCode() {
 					level.GroundNode[CX + level.MapObj[i].W][CY + level.MapObj[i].H] = 1;
 					break;
 				}
-				// GroundNode(CX + 1, CY + 1) = 9
-				// GroundNode(CX + MapObj(i).W, CY + MapObj(i).H) = 6
-				// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop.
-				// VB to C++ Converter has created a temporary variable in order to use the initial value of
-				// ModuleSMM.MapObj(i).W - 2 for every iteration:
+
 				int tempVar3 = level.MapObj[i].W - 2;
 				for(j = 1; j <= tempVar3; j++) {
 					// GroundNode(CX + 1 + j, CY + 1 + j) = 5
@@ -3077,11 +3005,6 @@ void Drawers::ReGrdCode() {
 					break;
 				}
 
-				// GroundNode(CX + MapObj(i).W, CY + 1) = 8
-				// GroundNode(CX + 1, CY + MapObj(i).W) = 7
-				// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop.
-				// VB to C++ Converter has created a temporary variable in order to use the initial value of
-				// ModuleSMM.MapObj(i).W - 2 for every iteration:
 				int tempVar4 = level.MapObj[i].W - 2;
 				for(j = 1; j <= tempVar4; j++) {
 					// GroundNode(CX + 1 + j, CY + MapObj(i).W - j) = 4
@@ -3809,19 +3732,9 @@ void Drawers::DrawGrdCode() {
 	int i = 0;
 	int j = 0;
 	Point R;
-	//斜坡
-	// GrdType
-	// 0无 1方 2陡左上 3陡右上 4陡左下 5陡右下 6端左上 7端右上 8端左下 9端右下
-	// 10  11  12缓大左上 13缓大右上 14缓大左下 15缓大右下  16缓小左上 17缓小右上 18缓小左下 19缓小右下
-	// 20端左上 21端右上 22端左下 23端右下 24    25    26
 
-	// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop. VB to C++
-	// Converter has created a temporary variable in order to use the initial value of W + 1 for every iteration:
 	int tempVar = W + 1;
 	for(i = 1; i <= tempVar; i++) {
-		// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop. VB to
-		// C++ Converter has created a temporary variable in order to use the initial value of H + 1 for every
-		// iteration:
 		int tempVar2 = H + 1;
 		for(j = 1; j <= tempVar2; j++) {
 
@@ -4185,23 +4098,17 @@ void Drawers::DrawFireBar() {
 	int LY        = 0;
 	std::string P = assetFolder;
 	float FR      = 0;
-	//'火棍
-	//'长度&H40 0000，角度EX/&H38E 38E0
 	for(i = 0; i < level.MapHdr.ObjCount; i++) {
 		if(level.MapObj[i].ID == 24) {
-			// If MapObj(i).LID = 0 And Not L Or MapObj(i).LID > 0 And L Then
 			LX = std::round((float)(-level.MapObj[i].W / 2.0 + level.MapObj[i].X / 160.0) * Zm);
 			LY = std::round(H * Zm - (float)(level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm);
 			FR = level.MapObj[i].Ex / 0x38E38E0;
-			// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop. VB
-			// to C++ Converter has created a temporary variable in order to use the initial value of
-			// (ModuleSMM.MapObj(i).Flag - 0x6000000) / 0x400000 + 1 for every iteration:
+
 			int tempVar = (level.MapObj[i].Flag - 0x6000000) / 0x400000 + 1;
 			for(j = 0; j <= tempVar; j++) {
 				DrawImageRotateOpacity(fmt::format("{}/img/{}/obj/24A.png", P, level.LH.GameStyle), -FR * 5, 0.5,
 					-Zm / 4 + j * Zm + LX + Zm / 2, -Zm / 4 + LY + Zm / 2, Zm, Zm / 2);
 			}
-			// End If
 
 			if((level.MapObj[i].Flag / 0x8) % 2 == 1) {
 				DrawImage(fmt::format("{}/img/cmn/B0.png", P), LX, LY, Zm, Zm);
@@ -4220,80 +4127,48 @@ void Drawers::DrawFire() {
 		if(level.MapObj[i].ID == 54) {
 			switch((level.MapObj[i].Flag) % 0x100) {
 			case 0x40:
-				//	G.DrawImage(Image.FromFile(P & "\img\" & LH.GameStyle.ToString & "\obj\54.png"), CSng((-MapObj(i).W
-				/// 2.0 + MapObj(i).X / 160.0) * Zm), H * Zm - CSng((MapObj(i).H - 0.5 + MapObj(i).Y / 160.0) * Zm) +
-				/// KY, Zm *
-				// MapObj(i).W, Zm * MapObj(i).H)
 				DrawImageOpacity(fmt::format("{}/img/{}/obj/54A1.png", P, level.LH.GameStyle), 0.5,
 					(float)((-level.MapObj[i].W / 2.0 + level.MapObj[i].X / 160.0) * Zm),
 					(H - 3) * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm),
 					Zm * level.MapObj[i].W, 3 * Zm * level.MapObj[i].H);
 				break;
 			case 0x48:
-				//	G.DrawImage(Image.FromFile(P & "\img\" & LH.GameStyle.ToString & "\obj\54A.png"), CSng((-MapObj(i).W
-				/// 2.0 + MapObj(i).X / 160.0) * Zm), H * Zm - CSng((MapObj(i).H - 0.5 + MapObj(i).Y / 160.0) * Zm) +
-				/// KY, Zm *
-				// MapObj(i).W, Zm * MapObj(i).H)
 				DrawImageOpacity(fmt::format("{}/img/{}/obj/54A3.png", P, level.LH.GameStyle), 0.5,
 					(float)((-level.MapObj[i].W / 2.0 + 1 + level.MapObj[i].X / 160.0) * Zm),
 					H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm),
 					3 * Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
 				break;
 			case 0x50:
-				//	G.DrawImage(Image.FromFile(P & "\img\" & LH.GameStyle.ToString & "\obj\54B.png"), CSng((-MapObj(i).W
-				/// 2.0 + MapObj(i).X / 160.0) * Zm), H * Zm - CSng((MapObj(i).H - 0.5 + MapObj(i).Y / 160.0) * Zm) +
-				/// KY, Zm *
-				// MapObj(i).W, Zm * MapObj(i).H)
 				DrawImageOpacity(fmt::format("{}/img/{}/obj/54A5.png", P, level.LH.GameStyle), 0.5,
 					(float)((-level.MapObj[i].W / 2.0 + level.MapObj[i].X / 160.0) * Zm),
 					(H + 1) * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm),
 					Zm * level.MapObj[i].W, 3 * Zm * level.MapObj[i].H);
 				break;
 			case 0x58:
-				//	G.DrawImage(Image.FromFile(P & "\img\" & LH.GameStyle.ToString & "\obj\54C.png"), CSng((-MapObj(i).W
-				/// 2.0 + MapObj(i).X / 160.0) * Zm), H * Zm - CSng((MapObj(i).H - 0.5 + MapObj(i).Y / 160.0) * Zm) +
-				/// KY, Zm *
-				// MapObj(i).W, Zm * MapObj(i).H)
 				DrawImageOpacity(fmt::format("{}/img/{}/obj/54A7.png", P, level.LH.GameStyle), 0.5,
 					(float)((-level.MapObj[i].W / 2.0 - 3 + level.MapObj[i].X / 160.0) * Zm),
 					H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm),
 					3 * Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
 				break;
 			case 0x44:
-				//	G.DrawImage(Image.FromFile(P & "\img\" & LH.GameStyle.ToString & "\obj\54.png"), CSng((-MapObj(i).W
-				/// 2.0 + MapObj(i).X / 160.0) * Zm), H * Zm - CSng((MapObj(i).H - 0.5 + MapObj(i).Y / 160.0) * Zm) +
-				/// KY, Zm *
-				// MapObj(i).W, Zm * MapObj(i).H)
 				DrawImageOpacity(fmt::format("{}/img/{}/obj/54A2.png", P, level.LH.GameStyle), 0.5,
 					(float)((-level.MapObj[i].W / 2.0 + level.MapObj[i].X / 160.0) * Zm),
 					(H - 3) * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm),
 					Zm * level.MapObj[i].W, 3 * Zm * level.MapObj[i].H);
 				break;
 			case 0x4C:
-				//	G.DrawImage(Image.FromFile(P & "\img\" & LH.GameStyle.ToString & "\obj\54A.png"), CSng((-MapObj(i).W
-				/// 2.0 + MapObj(i).X / 160.0) * Zm), H * Zm - CSng((MapObj(i).H - 0.5 + MapObj(i).Y / 160.0) * Zm) +
-				/// KY, Zm *
-				// MapObj(i).W, Zm * MapObj(i).H)
 				DrawImageOpacity(fmt::format("{}/img/{}/obj/54A4.png", P, level.LH.GameStyle), 0.5,
 					(float)((-level.MapObj[i].W / 2.0 + 1 + level.MapObj[i].X / 160.0) * Zm),
 					H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm),
 					3 * Zm * level.MapObj[i].W, Zm * level.MapObj[i].H);
 				break;
 			case 0x54:
-				//	G.DrawImage(Image.FromFile(P & "\img\" & LH.GameStyle.ToString & "\obj\54B.png"), CSng((-MapObj(i).W
-				/// 2.0 + MapObj(i).X / 160.0) * Zm), H * Zm - CSng((MapObj(i).H - 0.5 + MapObj(i).Y / 160.0) * Zm) +
-				/// KY, Zm *
-				// MapObj(i).W, Zm * MapObj(i).H)
 				DrawImageOpacity(fmt::format("{}/img/{}/obj/54A6.png", P, level.LH.GameStyle), 0.5,
 					(float)((-level.MapObj[i].W / 2.0 + level.MapObj[i].X / 160.0) * Zm),
 					(H + 1) * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm),
 					Zm * level.MapObj[i].W, 3 * Zm * level.MapObj[i].H);
 				break;
 			case 0x5C:
-				//	G.DrawImage(Image.FromFile(P & "\img\" & LH.GameStyle.ToString & "\obj\54C.png"), CSng((-MapObj(i).W
-				/// 2.0 + MapObj(i).X / 160.0) * Zm), H * Zm - CSng((MapObj(i).H - 0.5 + MapObj(i).Y / 160.0) * Zm) +
-				/// KY, Zm *
-				// MapObj(i).W, Zm * MapObj(i).H)
 				DrawImageOpacity(fmt::format("{}/img/{}/obj/54A8.png", P, level.LH.GameStyle), 0.5,
 					(float)((-level.MapObj[i].W / 2.0 - 3 + level.MapObj[i].X / 160.0) * Zm),
 					H * Zm - (float)((level.MapObj[i].H - 0.5 + level.MapObj[i].Y / 160.0) * Zm),
@@ -4311,19 +4186,9 @@ void Drawers::DrawCPipe() {
 	std::string CP = "";
 
 	for(i = 0; i < level.MapHdr.ClearPipCount; i++) {
-		// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop. VB to
-		// C++ Converter has created a temporary variable in order to use the initial value of
-		// ModuleSMM.MapCPipe(i).NodeCount for every iteration:
 		int tempVar = level.MapCPipe[i].NodeCount;
 		for(J = 0; J < tempVar; J++) {
-			// VB TO C++ CONVERTER NOTE: The following VB 'Select Case' included either a non-ordinal switch expression
-			// or non-ordinal, range-type, or non-constant 'Case' expressions and was converted to C++ 'if-else' logic:
-			//				Select Case J
-			// ORIGINAL LINE: Case 0
 			if(J == 0) {
-				// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop.
-				// VB to C++ Converter has created a temporary variable in order to use the initial value of
-				// ModuleSMM.MapCPipe(i).Node(J).H for every iteration:
 				int tempVar2 = level.MapCPipe[i].Node[J].H;
 				for(K = 0; K < tempVar2; K++) {
 					switch(level.MapCPipe[i].Node[J].Dir) {
@@ -4378,11 +4243,8 @@ void Drawers::DrawCPipe() {
 					}
 				}
 			}
-			// ORIGINAL LINE: Case MapCPipe(i).NodeCount - 1
+
 			else if(J == level.MapCPipe[i].NodeCount - 1) {
-				// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the loop.
-				// VB to C++ Converter has created a temporary variable in order to use the initial value of
-				// ModuleSMM.MapCPipe(i).Node(J).H for every iteration:
 				int tempVar3 = level.MapCPipe[i].Node[J].H;
 				for(K = 0; K < tempVar3; K++) {
 					switch(level.MapCPipe[i].Node[J].Dir) {
@@ -4442,13 +4304,7 @@ void Drawers::DrawCPipe() {
 							2 * Zm);
 						break;
 					}
-					// G.DrawString(MapCPipe(i).Node(J).type.ToString, Me.Font, Brushes.Black, (MapCPipe(i).Node(J).X) *
-					// Zm, (H - 2.0 - MapCPipe(i).Node(J).Y) * Zm)
-
 				} else {
-					// VB TO C++ CONVERTER NOTE: The ending condition of VB 'For' loops is tested only on entry to the
-					// loop. VB to C++ Converter has created a temporary variable in order to use the initial value of
-					// ModuleSMM.MapCPipe(i).Node(J).H for every iteration:
 					int tempVar4 = level.MapCPipe[i].Node[J].H;
 					for(K = 0; K < tempVar4; K++) {
 						switch(level.MapCPipe[i].Node[J].Dir) {
