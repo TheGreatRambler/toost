@@ -1,15 +1,18 @@
 #pragma once
 
 #include "LevelParser.hpp"
+#include "ObjectSpritesheet.hpp"
 
 #include <cairo.h>
 #include <cstdint>
 #include <filesystem>
 #include <fmt/core.h>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
 
 class Drawers {
 public:
@@ -26,7 +29,7 @@ public:
 
 	void Setup();
 	void SetGraphics(cairo_t* graphics);
-	void SetTilesheet(std::string tilesheet);
+	void LoadTilesheet();
 	void SetIsOverworld(bool isOverworld);
 	void SetLog(bool log);
 	void SetAssetFolder(std::string folder);
@@ -62,25 +65,26 @@ public:
 	void DrawCPipe();
 
 private:
-	cairo_surface_t* Tile;
 	int TileW;
-	int H            = 0; // Width
-	int W            = 0; //  Height
+	int H            = 0;
+	int W            = 0;
 	int renderWidth  = 0;
 	int renderHeight = 0;
-	// Zm = std::pow(2, TrackBar1->Value);
-	// B  = std::make_shared<Bitmap>(W * Zm, H * Zm);
-	// G  = Graphics::FromImage(B);
-	int Zm      = 16;   // Zoom value
-	int NowIO   = 0;    // Overworld 0, subworld 1
-	cairo_t* cr = NULL; // Graphics instance
-	LevelParser& level; // Level instance
+	int Zm           = 16;
+	int NowIO        = 0;
+
+	cairo_t* cr = NULL;
+	LevelParser& level;
 	bool doLogging = false;
+
 	std::string assetFolder;
 	std::string tilesheetPath;
+
 	bool addDrawingInstructions = true;
 	bool noRender               = false;
 	std::vector<DrawingInstruction> drawingInstructions;
+
 	std::unordered_map<std::string, cairo_pattern_t*> patternCache;
-	std::unordered_map<std::string, cairo_surface_t*> imageCache;
+	cairo_surface_t* tilesheet   = NULL;
+	cairo_surface_t* spritesheet = NULL;
 };

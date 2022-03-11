@@ -133,12 +133,7 @@ Drawers* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string des
 	if(log)
 		puts("Set graphics");
 
-	std::string tilesheet = fmt::format("{}/img/tile/{}-{}{}.png", assetsFolder, level->LH.GameStyle,
-		level->MapHdr.Theme, (level->MapHdr.Flag == 2) ? "A" : "");
-	drawer->SetTilesheet(tilesheet);
-
-	if(log)
-		fmt::print("Set tilesheet to {}\n", tilesheet);
+	drawer->LoadTilesheet();
 
 	if(destination == "instructionsOnly") {
 		// Export as instructions only instead

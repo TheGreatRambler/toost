@@ -7,6 +7,9 @@ temp.bcd
 test*
 tilesheetFiles.txt
 third_party
+node_modules
+package*.json
+*.js
 /*.png
 /*.txt
 /*.bcd

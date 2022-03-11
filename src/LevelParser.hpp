@@ -3,6 +3,7 @@
 #define RAPIDJSON_HAS_STDSTRING 1
 
 #include <SMM2CourseDecryptor/decrypt.h>
+#include <array>
 #include <cmath>
 #include <codecvt>
 #include <cstdint>
@@ -16,6 +17,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
 
 struct DrawingInstruction {
 	std::string path;

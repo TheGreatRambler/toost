@@ -272,7 +272,6 @@ void Drawers::DrawImage(std::string path, int x, int y, int targetWidth, int tar
 			cairo_surface_t* subsurface
 				= cairo_surface_create_for_rectangle(spritesheet, sprite.x, sprite.y, sprite.width, sprite.height);
 			pattern = cairo_pattern_create_for_surface(subsurface);
-			cairo_surface_destroy(subsurface);
 			cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
 			patternCache[path] = pattern;
 		}
@@ -318,7 +317,6 @@ void Drawers::DrawImageOpacity(std::string path, double opacity, int x, int y, i
 			cairo_surface_t* subsurface
 				= cairo_surface_create_for_rectangle(spritesheet, sprite.x, sprite.y, sprite.width, sprite.height);
 			pattern = cairo_pattern_create_for_surface(subsurface);
-			cairo_surface_destroy(subsurface);
 			cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
 			patternCache[path] = pattern;
 		}
@@ -364,7 +362,6 @@ void Drawers::DrawImageRotate(std::string path, double angle, int x, int y, int 
 			cairo_surface_t* subsurface
 				= cairo_surface_create_for_rectangle(spritesheet, sprite.x, sprite.y, sprite.width, sprite.height);
 			pattern = cairo_pattern_create_for_surface(subsurface);
-			cairo_surface_destroy(subsurface);
 			cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
 			patternCache[path] = pattern;
 		}
@@ -413,7 +410,6 @@ void Drawers::DrawImageRotateOpacity(
 			cairo_surface_t* subsurface
 				= cairo_surface_create_for_rectangle(spritesheet, sprite.x, sprite.y, sprite.width, sprite.height);
 			pattern = cairo_pattern_create_for_surface(subsurface);
-			cairo_surface_destroy(subsurface);
 			cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
 			patternCache[path] = pattern;
 		}

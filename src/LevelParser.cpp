@@ -151,6 +151,8 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 
 	puts("Parsed map header");
 
+	int max_x = 0;
+	int max_y = 0;
 	MapObj.resize(MapHdr.ObjCount);
 	for(M = 0; M < MapHdr.ObjCount; M++) {
 		fseek(levelPtr, Offset + 0x48 + M * 0x20, SEEK_SET);
@@ -167,12 +169,23 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 		fread(&MapObj[M].LID, sizeof(MapObj[M].LID), 1, levelPtr);
 		fread(&MapObj[M].SID, sizeof(MapObj[M].SID), 1, levelPtr);
 		MapObj[M].LinkType = 0;
+
+		if(MapObj[M].X > max_x) {
+			max_x = MapObj[M].X;
+		}
+
+		if(MapObj[M].Y > max_y) {
+			max_y = MapObj[M].Y;
+		}
 	}
+
+	// Render objects in the order they are rendered in game, makes semisolids render correctly
+	std::sort(std::begin(MapObj), std::end(MapObj), [&](MapObject& a, MapObject& b) {
+		return (a.X + (max_y - a.Y - a.H * 160) * max_x) < (b.X + (max_y - b.Y - b.H * 160) * max_x);
+	});
 
 	puts("Parsed map objects");
 
-	// 0x14584  0x4B0 (0x4 * 300)Sound Effect
-	//蛇砖块0x149F8  0x12D4 (0x3C4 * 5)Snake Block
 	MapSnk.resize(MapHdr.SnakeCount);
 	for(M = 0; M < MapHdr.SnakeCount; M++) {
 		fseek(levelPtr, Offset + 0x149F8 + M * 0x3C4, SEEK_SET);
@@ -245,7 +258,6 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 		}
 	}
 
-	// 0x245EC  0x1B8 (0x2C * 10)Track Block
 	MapTrackBlk.resize(MapHdr.TrackBlkCount);
 	for(M = 0; M < MapHdr.TrackBlkCount; M++) {
 		fseek(levelPtr, Offset + 0x245EC + 0x1 + M * 0x2C, SEEK_SET);
