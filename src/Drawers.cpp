@@ -168,9 +168,12 @@ void Drawers::DrawGridlines() {
 	int i = 0;
 
 	if(!noRender) {
-		cairo_set_line_width(cr, 0.25);
+		cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+		cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+		cairo_set_line_width(cr, 1);
+
 		for(i = 0; i <= H; i++) {
-			cairo_set_source_rgb(cr, 0.41, 0.41, 0.41);
+			cairo_set_source_rgba(cr, 0.41, 0.41, 0.41, 0.25);
 			cairo_move_to(cr, 0, i * Zm);
 			cairo_line_to(cr, W * Zm, i * Zm);
 			cairo_stroke(cr);
@@ -189,7 +192,7 @@ void Drawers::DrawGridlines() {
 		}
 
 		for(i = 0; i <= W; i++) {
-			cairo_set_source_rgb(cr, 0.41, 0.41, 0.41);
+			cairo_set_source_rgba(cr, 0.41, 0.41, 0.41, 0.25);
 			cairo_move_to(cr, i * Zm, 0);
 			cairo_line_to(cr, i * Zm, W * Zm);
 			cairo_stroke(cr);
@@ -220,6 +223,29 @@ void Drawers::DrawGridlines() {
 			cairo_stroke_preserve(cr);
 			cairo_fill(cr);
 		}
+
+		cairo_set_antialias(cr, CAIRO_ANTIALIAS_DEFAULT);
+		cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+	}
+}
+
+cairo_pattern_t* Drawers::GetCachedPattern(std::string path) {
+	if(patternCache.contains(path)) {
+		return patternCache[path];
+	} else {
+		if(!objectSpritesheet->ObjectLocation.contains(path)) {
+			fmt::print("Image {} does not exist\n", path);
+			return NULL;
+		}
+
+		const auto sprite = objectSpritesheet->ObjectLocation.at(path);
+		cairo_surface_t* subsurface
+			= cairo_surface_create_for_rectangle(spritesheet, sprite.x, sprite.y, sprite.width, sprite.height);
+		cairo_pattern_t* pattern = cairo_pattern_create_for_surface(subsurface);
+		cairo_surface_destroy(subsurface);
+		cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
+		patternCache[path] = pattern;
+		return pattern;
 	}
 }
 
@@ -259,31 +285,17 @@ void Drawers::DrawImage(std::string path, int x, int y, int targetWidth, int tar
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	if(!noRender) {
-		cairo_pattern_t* pattern = nullptr;
-		if(patternCache.contains(path)) {
-			pattern = patternCache[path];
-		} else {
-			if(!objectSpritesheet->ObjectLocation.contains(path)) {
-				fmt::print("Image {} does not exist\n", path);
-				return;
-			}
+		cairo_pattern_t* pattern = GetCachedPattern(path);
 
+		if(pattern) {
 			const auto sprite = objectSpritesheet->ObjectLocation.at(path);
-			cairo_surface_t* subsurface
-				= cairo_surface_create_for_rectangle(spritesheet, sprite.x, sprite.y, sprite.width, sprite.height);
-			pattern = cairo_pattern_create_for_surface(subsurface);
-			cairo_surface_destroy(subsurface);
-			cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
-			patternCache[path] = pattern;
+			cairo_save(cr);
+			cairo_translate(cr, (double)x, (double)y);
+			cairo_scale(cr, (double)targetWidth / sprite.width, (double)targetHeight / sprite.height);
+			cairo_set_source(cr, pattern);
+			cairo_paint_with_alpha(cr, 1.0);
+			cairo_restore(cr);
 		}
-
-		const auto sprite = objectSpritesheet->ObjectLocation.at(path);
-		cairo_save(cr);
-		cairo_translate(cr, (double)x, (double)y);
-		cairo_scale(cr, (double)targetWidth / sprite.width, (double)targetHeight / sprite.height);
-		cairo_set_source(cr, pattern);
-		cairo_paint_with_alpha(cr, 1.0);
-		cairo_restore(cr);
 	}
 
 	if(addDrawingInstructions) {
@@ -305,31 +317,17 @@ void Drawers::DrawImageOpacity(std::string path, double opacity, int x, int y, i
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	if(!noRender) {
-		cairo_pattern_t* pattern = nullptr;
-		if(patternCache.contains(path)) {
-			pattern = patternCache[path];
-		} else {
-			if(!objectSpritesheet->ObjectLocation.contains(path)) {
-				fmt::print("Image {} does not exist\n", path);
-				return;
-			}
+		cairo_pattern_t* pattern = GetCachedPattern(path);
 
+		if(pattern) {
 			const auto sprite = objectSpritesheet->ObjectLocation.at(path);
-			cairo_surface_t* subsurface
-				= cairo_surface_create_for_rectangle(spritesheet, sprite.x, sprite.y, sprite.width, sprite.height);
-			pattern = cairo_pattern_create_for_surface(subsurface);
-			cairo_surface_destroy(subsurface);
-			cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
-			patternCache[path] = pattern;
+			cairo_save(cr);
+			cairo_translate(cr, (double)x, (double)y);
+			cairo_scale(cr, (double)targetWidth / sprite.width, (double)targetHeight / sprite.height);
+			cairo_set_source(cr, pattern);
+			cairo_paint_with_alpha(cr, opacity);
+			cairo_restore(cr);
 		}
-
-		const auto sprite = objectSpritesheet->ObjectLocation.at(path);
-		cairo_save(cr);
-		cairo_translate(cr, (double)x, (double)y);
-		cairo_scale(cr, (double)targetWidth / sprite.width, (double)targetHeight / sprite.height);
-		cairo_set_source(cr, pattern);
-		cairo_paint_with_alpha(cr, opacity);
-		cairo_restore(cr);
 	}
 
 	if(addDrawingInstructions) {
@@ -351,33 +349,19 @@ void Drawers::DrawImageRotate(std::string path, double angle, int x, int y, int 
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	if(!noRender) {
-		cairo_pattern_t* pattern = nullptr;
-		if(patternCache.contains(path)) {
-			pattern = patternCache[path];
-		} else {
-			if(!objectSpritesheet->ObjectLocation.contains(path)) {
-				fmt::print("Image {} does not exist\n", path);
-				return;
-			}
+		cairo_pattern_t* pattern = GetCachedPattern(path);
 
+		if(pattern) {
 			const auto sprite = objectSpritesheet->ObjectLocation.at(path);
-			cairo_surface_t* subsurface
-				= cairo_surface_create_for_rectangle(spritesheet, sprite.x, sprite.y, sprite.width, sprite.height);
-			pattern = cairo_pattern_create_for_surface(subsurface);
-			cairo_surface_destroy(subsurface);
-			cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
-			patternCache[path] = pattern;
+			cairo_save(cr);
+			cairo_translate(cr, (double)x + (targetWidth / 2), (double)y + (targetHeight / 2));
+			cairo_rotate(cr, angle);
+			cairo_scale(cr, (double)targetWidth / sprite.width, (double)targetHeight / sprite.height);
+			cairo_translate(cr, -sprite.width / 2, -sprite.height / 2);
+			cairo_set_source(cr, pattern);
+			cairo_paint(cr);
+			cairo_restore(cr);
 		}
-
-		const auto sprite = objectSpritesheet->ObjectLocation.at(path);
-		cairo_save(cr);
-		cairo_translate(cr, (double)x + (targetWidth / 2), (double)y + (targetHeight / 2));
-		cairo_rotate(cr, angle);
-		cairo_scale(cr, (double)targetWidth / sprite.width, (double)targetHeight / sprite.height);
-		cairo_translate(cr, -sprite.width / 2, -sprite.height / 2);
-		cairo_set_source(cr, pattern);
-		cairo_paint(cr);
-		cairo_restore(cr);
 	}
 
 	if(addDrawingInstructions) {
@@ -400,33 +384,19 @@ void Drawers::DrawImageRotateOpacity(
 		fmt::print("Printing {} at X:{} Y:{} with W:{} and H:{}\n", path, x, y, targetWidth, targetHeight);
 
 	if(!noRender) {
-		cairo_pattern_t* pattern = nullptr;
-		if(patternCache.contains(path)) {
-			pattern = patternCache[path];
-		} else {
-			if(!objectSpritesheet->ObjectLocation.contains(path)) {
-				fmt::print("Image {} does not exist\n", path);
-				return;
-			}
+		cairo_pattern_t* pattern = GetCachedPattern(path);
 
+		if(pattern) {
 			const auto sprite = objectSpritesheet->ObjectLocation.at(path);
-			cairo_surface_t* subsurface
-				= cairo_surface_create_for_rectangle(spritesheet, sprite.x, sprite.y, sprite.width, sprite.height);
-			pattern = cairo_pattern_create_for_surface(subsurface);
-			cairo_surface_destroy(subsurface);
-			cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
-			patternCache[path] = pattern;
+			cairo_save(cr);
+			cairo_translate(cr, (double)x + (targetWidth / 2), (double)y + (targetHeight / 2));
+			cairo_rotate(cr, angle);
+			cairo_scale(cr, (double)targetWidth / sprite.width, (double)targetHeight / sprite.height);
+			cairo_translate(cr, -sprite.width / 2, -sprite.height / 2);
+			cairo_set_source(cr, pattern);
+			cairo_paint_with_alpha(cr, opacity);
+			cairo_restore(cr);
 		}
-
-		const auto sprite = objectSpritesheet->ObjectLocation.at(path);
-		cairo_save(cr);
-		cairo_translate(cr, (double)x + (targetWidth / 2), (double)y + (targetHeight / 2));
-		cairo_rotate(cr, angle);
-		cairo_scale(cr, (double)targetWidth / sprite.width, (double)targetHeight / sprite.height);
-		cairo_translate(cr, -sprite.width / 2, -sprite.height / 2);
-		cairo_set_source(cr, pattern);
-		cairo_paint_with_alpha(cr, opacity);
-		cairo_restore(cr);
 	}
 
 	if(addDrawingInstructions) {
@@ -893,7 +863,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 	// On Error Resume Next
 	int i          = 0;
 	int j          = 0;
-	int j2         = 0;
+	int tileY      = 0;
 	std::string PR = "";
 	int LX         = 0;
 	int LY         = 0;
@@ -964,34 +934,57 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					case 14: {
 						//蘑菇平台
 						if((objFlag / 0x40000) % 2 == 1) {
-							j2 = 3;
+							tileY = 3;
 						} else if((objFlag / 0x80000) % 2 == 1) {
-							j2 = 4;
+							tileY = 4;
 						} else {
-							j2 = 2;
+							tileY = 2;
 						}
 
-						int tempVar = objW;
-						for(j = 0; j < tempVar; j++) {
-							int offset = 4;
+						for(j = 0; j < objW; j++) {
+							int tileX = 4;
 							if(j == 0) {
-								offset = 3;
+								tileX = 3;
 							} else if(j == objW - 1) {
-								offset = 5;
+								tileX = 5;
 							}
-							DrawTile(offset, j2, 1, 1, (float)((j - 0.5 + objX / 160.0) * Zm),
+							DrawTile(tileX, tileY, 1, 1, (float)((j - 0.5 + objX / 160.0) * Zm),
 								H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm), Zm, Zm);
+						}
+
+						if(objW % 2 == 0) {
+							for(j = 1; j < objH; j++) {
+								tileY = 2;
+								if(j == 1) {
+									tileY = 1;
+								}
+
+								DrawTile(6, tileY, 1, 1, (float)((objX / 160.0 + objW / 2.0 - 1.5) * Zm),
+									H * Zm - (float)((objH - 0.5 + objY / 160.0 - j) * Zm), Zm, Zm);
+								DrawTile(7, tileY, 1, 1, (float)((objX / 160.0 + objW / 2.0 - 0.5) * Zm),
+									H * Zm - (float)((objH - 0.5 + objY / 160.0 - j) * Zm), Zm, Zm);
+							}
+						} else {
+							for(j = 1; j < objH; j++) {
+								tileY = 4;
+								if(j == 1) {
+									tileY = 3;
+								}
+
+								DrawTile(6, tileY, 1, 1, (float)((0.5 + objX / 160.0 + (objW - 3) / 2.0) * Zm),
+									H * Zm - (float)((objH - 0.5 + objY / 160.0 - j) * Zm), Zm, Zm);
+							}
 						}
 						break;
 					}
 					case 16: {
 						//半碰撞地形
 						if((objFlag / 0x40000) % 2 == 1) {
-							j2 = 10;
+							tileY = 10;
 						} else if((objFlag / 0x80000) % 2 == 1) {
-							j2 = 13;
+							tileY = 13;
 						} else {
-							j2 = 7;
+							tileY = 7;
 						}
 
 						for(j = 0; j < objW; j++) {
@@ -1013,7 +1006,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 									offsetY = 6;
 								}
 
-								DrawTile(j2 + offsetX, offsetY, 1, 1, (float)((j - 0.5 + objX / 160.0) * Zm),
+								DrawTile(tileY + offsetX, offsetY, 1, 1, (float)((j - 0.5 + objX / 160.0) * Zm),
 									H * Zm - (float)((objH - 0.5 - y + objY / 160.0) * Zm), Zm, Zm);
 							}
 						}
@@ -1025,13 +1018,12 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						std::string TM;
 						std::string TR;
 
-						int tempVar3 = objH;
-						for(j2 = 0; j2 < tempVar3; j2++) {
-							if(j2 == 0) {
+						for(tileY = 0; tileY < objH; tileY++) {
+							if(tileY == 0) {
 								TL = "71";
 								TM = "71A";
 								TR = "71B";
-							} else if(j2 == objH - 1) {
+							} else if(tileY == objH - 1) {
 								TL = "71F";
 								TM = "71G";
 								TR = "71H";
@@ -1041,28 +1033,22 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 								TR = "71E";
 							}
 
-							int tempVar4 = objW;
-							for(j = 0; j < tempVar4; j++) {
+							for(j = 0; j < objW; j++) {
+								std::string path = fmt::format("img/{}/obj/{}.png", level.LH.GameStyle, TM);
 								if(j == 0) {
-									DrawImage(fmt::format("img/{}/obj/{}.png", level.LH.GameStyle, TL),
-										(float)((j - 0.5 + objX / 160.0) * Zm),
-										(H + j2) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm), Zm, Zm);
+									path = fmt::format("img/{}/obj/{}.png", level.LH.GameStyle, TL);
 								} else if(j == objW - 1) {
-									DrawImage(fmt::format("img/{}/obj/{}.png", level.LH.GameStyle, TR),
-										(float)((j - 0.5 + objX / 160.0) * Zm),
-										(H + j2) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm), Zm, Zm);
-								} else {
-									DrawImage(fmt::format("img/{}/obj/{}.png", level.LH.GameStyle, TM),
-										(float)((j - 0.5 + objX / 160.0) * Zm),
-										(H + j2) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm), Zm, Zm);
+									path = fmt::format("img/{}/obj/{}.png", level.LH.GameStyle, TR);
 								}
+
+								DrawImage(path, (float)((j - 0.5 + objX / 160.0) * Zm),
+									(H + tileY) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm), Zm, Zm);
 							}
 						}
 						break;
 					}
 					case 17: {
-						int tempVar5 = objW;
-						for(j = 0; j < tempVar5; j++) {
+						for(j = 0; j < objW; j++) {
 							if(j == 0) {
 								DrawTile(0, 2, 1, 2, (float)((j - 0.5 + objX / 160.0) * Zm),
 									H * Zm - (float)((1.5 + objY / 160.0) * Zm), Zm, Zm * 2);
@@ -1079,8 +1065,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 					case 113:
 					case 132: {
 						if((objFlag / 0x4) % 2 == 1) {
-							int tempVar6 = objW;
-							for(j = 0; j < tempVar6; j++) {
+							for(j = 0; j < objW; j++) {
 								if(j == 0) {
 									DrawImage(fmt::format("img/{}/obj/{}D.png", level.LH.GameStyle, objID),
 										(float)((j - objW / 2.0 + objX / 160.0) * Zm),
@@ -1096,8 +1081,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 								}
 							}
 						} else {
-							int tempVar7 = objW;
-							for(j = 0; j < tempVar7; j++) {
+							for(j = 0; j < objW; j++) {
 								if(j == 0) {
 									DrawImage(fmt::format("img/{}/obj/{}A.png", level.LH.GameStyle, objID),
 										(float)((j - objW / 2.0 + objX / 160.0) * Zm),
@@ -1185,14 +1169,13 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LX = std::round((float)((-0.5 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((objH / 2.0 + objY / 160.0) * Zm));
 
-						DrawImage(fmt::format("img/{}/obj/{}{}.png", level.LH.GameStyle, objID, PR),
+						DrawImage(fmt::format("img/{}/obj/83{}.png", level.LH.GameStyle, PR),
 							(float)((-objW / 2.0 + objX / 160.0) * Zm),
 							H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm), Zm * objW, Zm * objH);
 						break;
 					}
 					case 64: {
-						int tempVar8 = objH;
-						for(j = 1; j <= tempVar8; j++) {
+						for(j = 1; j <= objH; j++) {
 							if(j == 1) {
 								DrawTile(13, 7, 1, 1, (float)(-objW / 2.0 + objX / 160.0) * Zm,
 									H * Zm - (float)((j + std::round(objY) / 160.0) * Zm), Zm, Zm);
@@ -1249,7 +1232,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LY = std::round(
 							(H + (std::round(objH) / 2) / 2.0) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY);
 
-						DrawImage(fmt::format("img/{}/obj/{}{}.png", level.LH.GameStyle, objID, PR),
+						DrawImage(fmt::format("img/{}/obj/108{}.png", level.LH.GameStyle, PR),
 							(float)((-objW / 2.0 + objX / 160.0) * Zm),
 							H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * objW, Zm * objH);
 
@@ -1264,8 +1247,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							(float)((-objW / 2.0 + objX / 160.0) * Zm),
 							H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * 4, Zm * 4);
 
-						int tempVar9 = objH;
-						for(j = 4; j < tempVar9; j++) {
+						for(j = 4; j < objH; j++) {
 							DrawImage(fmt::format("img/{}/obj/106A.png", level.LH.GameStyle),
 								(float)((-objW / 2.0 + 1.5 + objX / 160.0) * Zm),
 								(H + j) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm, Zm);
@@ -1316,8 +1298,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							DrawTile(C1.X + 2, C1.Y, 1, 1, (float)((objW - 1.5 + objX / 160.0) * Zm),
 								(H - 1) * Zm - (float)((objH - 1.5 + objY / 160.0) * Zm), Zm, Zm);
 
-							int tempVar10 = objW - 2;
-							for(j = 1; j <= tempVar10; j++) {
+							for(j = 1; j <= objW - 2; j++) {
 								DrawTile(C2.X + 1, C2.Y, 1, 2, (float)((j - 0.5 + objX / 160.0) * Zm),
 									(H - 1) * Zm - (float)((j - 0.5 + objY / 160.0) * Zm), Zm, Zm * 2);
 							}
@@ -1333,8 +1314,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							DrawTile(C1.X + 2, C1.Y, 1, 1, (float)((objW - 1.5 + objX / 160.0) * Zm),
 								(H - 1) * Zm - (float)((-0.5 + objY / 160.0) * Zm), Zm, Zm);
 
-							int tempVar11 = objW - 2;
-							for(j = 1; j <= tempVar11; j++) {
+							for(j = 1; j <= objW - 2; j++) {
 								DrawTile(C2.X + 4, C2.Y, 1, 2, (float)((j - 0.5 + objX / 160.0) * Zm),
 									(H - 1) * Zm - (float)((-0.5 - j + objH + objY / 160.0) * Zm), Zm, Zm * 2);
 							}
@@ -1366,8 +1346,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							C1 = Point(13, 24);
 						}
 
-						int tempVar12 = objW;
-						for(j = 0; j < tempVar12; j++) {
+						for(j = 0; j < objW; j++) {
 							if(j == 0) {
 								DrawTile(C1.X, C1.Y, 1, 1, (float)((j - 0.5 + objX / 160.0) * Zm),
 									H * Zm - (float)((0.5 + objY / 160.0) * Zm), Zm, Zm);
@@ -1400,10 +1379,10 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						PP                            = ((objFlag / 0x10000) % 0x10) / 4;
 						switch((objFlag) % 0x80) {
 						case 0x0: { // R
-							LX            = std::round((float)((objH - 1 - 1 - 0.5 + objX / 160.0) * Zm));
-							LY            = std::round(H * Zm - (float)((objY / 160.0) * Zm));
-							int tempVar13 = objH - 2;
-							for(j = 0; j <= tempVar13; j++) {
+							LX = std::round((float)((objH - 1 - 1 - 0.5 + objX / 160.0) * Zm));
+							LY = std::round(H * Zm - (float)((objY / 160.0) * Zm));
+
+							for(j = 0; j <= objH - 2; j++) {
 								DrawTile(level.PipeLoc[PP][4].X, level.PipeLoc[PP][4].Y, 1, 2,
 									(float)((j - 0.5 + objX / 160.0) * Zm), H * Zm - (float)((0.5 + objY / 160.0) * Zm),
 									Zm, 2 * Zm);
@@ -1413,10 +1392,10 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 								2 * Zm);
 						} break;
 						case 0x20: { // L
-							LX            = std::round((float)((-objH + 1 + 1 - 0.5 + objX / 160.0) * Zm));
-							LY            = std::round(H * Zm - (float)((1 + objY / 160.0) * Zm));
-							int tempVar14 = objH - 2;
-							for(j = 0; j <= tempVar14; j++) {
+							LX = std::round((float)((-objH + 1 + 1 - 0.5 + objX / 160.0) * Zm));
+							LY = std::round(H * Zm - (float)((1 + objY / 160.0) * Zm));
+
+							for(j = 0; j <= objH - 2; j++) {
 								DrawTile(level.PipeLoc[PP][4].X, level.PipeLoc[PP][4].Y, 1, 2,
 									(float)((-j - 0.5 + objX / 160.0) * Zm),
 									H * Zm - (float)((1.5 + objY / 160.0) * Zm), Zm, 2 * Zm);
@@ -1426,10 +1405,10 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 								Zm, 2 * Zm);
 						} break;
 						case 0x40: { // U
-							LX            = std::round((float)((+objX / 160.0) * Zm));
-							LY            = (H - objH + 1 + 1) * Zm - (float)((0.5 + objY / 160.0) * Zm);
-							int tempVar15 = objH - 2;
-							for(j = 0; j <= tempVar15; j++) {
+							LX = std::round((float)((+objX / 160.0) * Zm));
+							LY = (H - objH + 1 + 1) * Zm - (float)((0.5 + objY / 160.0) * Zm);
+
+							for(j = 0; j <= objH - 2; j++) {
 								DrawTile(level.PipeLoc[PP][5].X, level.PipeLoc[PP][5].Y, 2, 1,
 									(float)((-0.5 + objX / 160.0) * Zm),
 									(H - j) * Zm - (float)((0.5 + objY / 160.0) * Zm), 2 * Zm, Zm);
@@ -1439,10 +1418,10 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 								2 * Zm, Zm);
 						} break;
 						case 0x60: { // D
-							LX            = std::round((float)((-1 + objX / 160.0) * Zm));
-							LY            = (H + objH - 1 - 1) * Zm - (float)((0.5 + objY / 160.0) * Zm);
-							int tempVar16 = objH - 2;
-							for(j = 0; j <= tempVar16; j++) {
+							LX = std::round((float)((-1 + objX / 160.0) * Zm));
+							LY = (H + objH - 1 - 1) * Zm - (float)((0.5 + objY / 160.0) * Zm);
+
+							for(j = 0; j <= objH - 2; j++) {
 								DrawTile(level.PipeLoc[PP][5].X, level.PipeLoc[PP][5].Y, 2, 1,
 									(float)((-1.5 + objX / 160.0) * Zm),
 									(H + j) * Zm - (float)((0.5 + objY / 160.0) * Zm), 2 * Zm, Zm);
@@ -1494,8 +1473,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 84: {
-						int tempVar17 = objW;
-						for(j = 0; j < tempVar17; j++) {
+						for(j = 0; j < objW; j++) {
 							if((objFlag / 0x4) % 2 == 1) {
 								DrawImage(fmt::format("img/{}/obj/84A.png", level.LH.GameStyle),
 									(float)((j - objW / 2.0 + objX / 160.0) * Zm),
@@ -1593,7 +1571,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LY = std::round(
 							(H + (std::round(objH) / 2) / 2.0) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY);
 
-						DrawImage(fmt::format("img/{}/obj/{}{}.png", level.LH.GameStyle, objID, PR),
+						DrawImage(fmt::format("img/{}/obj/33{}.png", level.LH.GameStyle, PR),
 							(float)((-objW / 2.0 + objX / 160.0) * Zm),
 							H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * objW, Zm * objH);
 
@@ -1614,7 +1592,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LY = std::round(
 							(H + (std::round(objH) / 2) / 2.0) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY);
 
-						DrawImage(fmt::format("img/{}/obj/{}{}.png", level.LH.GameStyle, objID, PR),
+						DrawImage(fmt::format("img/{}/obj/74{}.png", level.LH.GameStyle, PR),
 							(float)((-objW / 2.0 + objX / 160.0) * Zm),
 							H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * objW, Zm * objH);
 
@@ -1630,7 +1608,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LX = std::round((float)((-objW / 2.0 + (std::round(objW) / 2) / 2.0 + objX / 160.0) * Zm));
 						LY = (H + objH - 2) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY;
 
-						DrawImage(fmt::format("img/{}/obj/{}{}.png", level.LH.GameStyle, objID, PR),
+						DrawImage(fmt::format("img/{}/obj/42{}.png", level.LH.GameStyle, PR),
 							(float)((-objW / 2.0 + objX / 160.0) * Zm),
 							(H + objH - 2) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * 2, Zm * 2);
 
@@ -1656,7 +1634,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LY = std::round(
 							(H + (std::round(objH) / 2) / 2.0) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY);
 
-						DrawImage(fmt::format("img/{}/obj/{}{}.png", level.LH.GameStyle, objID, PR),
+						DrawImage(fmt::format("img/{}/obj/34{}.png", level.LH.GameStyle, PR),
 							(float)((-objW / 2.0 + objX / 160.0) * Zm),
 							H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * objW, Zm * objH);
 
@@ -1695,7 +1673,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LY = std::round(
 							(H + (std::round(objH) / 2) / 2.0) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY);
 
-						DrawImage(fmt::format("img/{}/obj/{}{}.png", level.LH.GameStyle, objID, PR),
+						DrawImage(fmt::format("img/{}/obj/44{}.png", level.LH.GameStyle, PR),
 							(float)((-objW / 2.0 + objX / 160.0) * Zm),
 							H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * objW, Zm * objH);
 
@@ -2027,7 +2005,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LX = std::round((float)((-objW / 2.0 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((objH * 2.0 - 0.5 + objY / 160.0) * Zm) + KY);
 
-						DrawImage(fmt::format("img/{}/obj/{}{}.png", level.LH.GameStyle, objID, PR), LX, LY, Zm * objW,
+						DrawImage(fmt::format("img/{}/obj/45{}.png", level.LH.GameStyle, PR), LX, LY, Zm * objW,
 							Zm * objH * 2);
 
 						LX = std::round((float)((-objW / 2.0 + (std::round(objW) / 2) / 2.0 + objX / 160.0) * Zm));
@@ -2047,7 +2025,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 								H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * objW, Zm * objH);
 							break;
 						default:
-							DrawImage(fmt::format("img/{}/obj/{}.png", level.LH.GameStyle, objID),
+							DrawImage(fmt::format("img/{}/obj/62.png", level.LH.GameStyle),
 								(float)((-objW / 2.0 + objX / 160.0) * Zm),
 								H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * objW, Zm * objH);
 							break;
@@ -2111,8 +2089,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						DrawImageOpacity(
 							fmt::format("img/{}/obj/13{}.png", level.LH.GameStyle, PR), 0.7, LX, LY, Zm * objW, Zm * 2);
 
-						int tempVar18 = objH;
-						for(j = 2; j < tempVar18; j++) {
+						for(j = 2; j < objH; j++) {
 							if((objFlag / 0x4) % 2 == 1) {
 								DrawImageOpacity(fmt::format("img/{}/obj/13C.png", level.LH.GameStyle), 0.7, LX,
 									LY + j * Zm, Zm, Zm);
@@ -2222,24 +2199,6 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LX = std::round((float)((-objW / 2.0 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm));
 
-						/*
-						G->TranslateTransform(
-							LX + std::round(objW * Zm) / 2, LY + std::round(objH * Zm) / 2);
-						G->RotateTransform(ANG);
-						G->DrawImage(Image::FromFile(P + L"/img/" + std::to_string(level.LH.GameStyle) + L"/obj/47"
-													 + PR + L".png"),
-							-std::round(objW * Zm) / 2, -std::round(objH * Zm) / 2,
-							Zm * objW, Zm * objH);
-						G->RotateTransform(-ANG);
-						G->TranslateTransform(
-							-LX - std::round(objW * Zm) / 2, -LY - std::round(objH * Zm) /
-						2); G->DrawImage(Image::FromFile(P + L"/img/" + std::to_string(level.LH.GameStyle) + L"/obj/47"
-													 + PR + D + L".png"),
-							(float)((-objW / 2.0 + objX / 160.0) * Zm),
-							H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm),
-							Zm * objW, Zm * objH);
-							*/
-
 						DrawImageRotate(fmt::format("img/{}/obj/47{}.png", level.LH.GameStyle, PR), ANG,
 							LX + std::round(objW * Zm) / 2.0 - std::round(objW * Zm) / 2,
 							LY + std::round(objH * Zm) / 2.0 - std::round(objH * Zm) / 2, Zm * objW, Zm * objH);
@@ -2267,8 +2226,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LX = std::round((float)(-objW / 2.0 + objX / 160.0) * Zm);
 						LY = std::round((H + 1) * Zm - (float)((objH + std::round(objY) / 160.0) * Zm) + KY);
 
-						int tempVar19 = objH;
-						for(j = 0; j < tempVar19; j++) {
+						for(j = 0; j < objH; j++) {
 							if(j == objH - 1) {
 								DrawImage(fmt::format("img/{}/obj/78.png", level.LH.GameStyle),
 									(float)(-objW / 2.0 + objX / 160.0) * Zm,
@@ -2309,7 +2267,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							PR = "";
 						}
 
-						DrawImage(fmt::format("img/{}/obj/{}{}.png", level.LH.GameStyle, objID, PR),
+						DrawImage(fmt::format("img/{}/obj/70{}.png", level.LH.GameStyle, PR),
 							(float)((-objW / 2.0 + objX / 160.0) * Zm),
 							H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * objW, Zm * objH);
 
@@ -2327,7 +2285,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							PR = "";
 						}
 
-						DrawImage(fmt::format("img/{}/obj/{}{}.png", level.LH.GameStyle, objID, PR),
+						DrawImage(fmt::format("img/{}/obj/110{}.png", level.LH.GameStyle, PR),
 							(float)((-objW / 2.0 + 0.5 + objX / 160.0) * Zm),
 							H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * objW, Zm * objH);
 						break;
@@ -2359,8 +2317,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 91: {
-						int tempVar20 = objW;
-						for(j = 0; j < tempVar20; j++) {
+						for(j = 0; j < objW; j++) {
 							if(j == 0) {
 								DrawImage(fmt::format("img/{}/obj/91A.png", level.LH.GameStyle),
 									(float)((j - std::round(objW) / 2 + std::round(objX) / 160.0) * Zm),
@@ -2395,8 +2352,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 							objW = 1;
 						}
 
-						int tempVar21 = objW;
-						for(j = 0; j < tempVar21; j++) {
+						for(j = 0; j < objW; j++) {
 							DrawImage(fmt::format("img/{}/obj/36{}.png", level.LH.GameStyle, PR),
 								(float)((j - std::round(objW) / 2 + std::round(objX) / 160.0) * Zm),
 								H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm, Zm);
@@ -2410,8 +2366,7 @@ void Drawers::DrawItem(const std::unordered_set<short>& K, bool L) {
 						LX = std::round((float)((-0.5 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((0.5 + objY / 160.0) * Zm) + KY);
 
-						int tempVar22 = objW;
-						for(j = 0; j < tempVar22; j++) {
+						for(j = 0; j < objW; j++) {
 							if((objFlag / 0x4) % 2 == 0) {
 								if(j == 0) {
 									PR = "A";
@@ -2608,8 +2563,7 @@ void Drawers::ReGrdCode() {
 					break;
 				}
 
-				int tempVar = objW - 2;
-				for(j = 1; j <= tempVar; j += 2) {
+				for(j = 1; j <= objW - 2; j += 2) {
 					level.GroundNode[CX + 1 + j][CY + 1 + (j / 2) + 1] = 19;
 					switch(level.GroundNode[CX + 1 + j][CY + 1 + (j / 2)]) {
 					case 0:
@@ -2654,8 +2608,7 @@ void Drawers::ReGrdCode() {
 					break;
 				}
 
-				int tempVar2 = objW - 2;
-				for(j = 1; j <= tempVar2; j += 2) {
+				for(j = 1; j <= objW - 2; j += 2) {
 					level.GroundNode[CX + 1 + j][CY + objH - (j / 2) - 1] = 17;
 					switch(level.GroundNode[CX + 1 + j][CY + objH - (j / 2)]) {
 					case 0:
@@ -2706,8 +2659,7 @@ void Drawers::ReGrdCode() {
 					break;
 				}
 
-				int tempVar3 = objW - 2;
-				for(j = 1; j <= tempVar3; j++) {
+				for(j = 1; j <= objW - 2; j++) {
 					// GroundNode(CX + 1 + j, CY + 1 + j) = 5
 					switch(level.GroundNode[CX + 1 + j][CY + 1 + j]) {
 					case 0:
@@ -2750,8 +2702,7 @@ void Drawers::ReGrdCode() {
 					break;
 				}
 
-				int tempVar4 = objW - 2;
-				for(j = 1; j <= tempVar4; j++) {
+				for(j = 1; j <= objW - 2; j++) {
 					// GroundNode(CX + 1 + j, CY + MapObj(i).W - j) = 4
 					switch(level.GroundNode[CX + 1 + j][CY + objW - j]) {
 					case 0:
@@ -3453,11 +3404,8 @@ void Drawers::DrawGrdCode() {
 	int j = 0;
 	Point R;
 
-	int tempVar = W + 1;
-	for(i = 1; i <= tempVar; i++) {
-		int tempVar2 = H + 1;
-		for(j = 1; j <= tempVar2; j++) {
-
+	for(i = 1; i <= W + 1; i++) {
+		for(j = 1; j <= H + 1; j++) {
 			switch(level.GroundNode[i][j]) {
 			case 0:
 				// G.DrawString(GroundNode(i, j), Me.Font, Brushes.Black, (i - 1) * Zm, (H - j) * Zm)
@@ -3743,15 +3691,15 @@ void Drawers::DrawCID() {
 		case 34: //状态火花
 			if((level.MapObj[i].CFlag / 0x4) % 2 == 1) {
 				if((level.MapObj[i].CFlag / 0x40000) % 2 == 1) {
-					DrawImage(fmt::format("img/{}/cid/{}C.png", level.LH.GameStyle, objCid), LX, LY, Zm, Zm);
+					DrawImage(fmt::format("img/{}/cid/34C.png", level.LH.GameStyle), LX, LY, Zm, Zm);
 				} else {
-					DrawImage(fmt::format("img/{}/cid/{}A.png", level.LH.GameStyle, objCid), LX, LY, Zm, Zm);
+					DrawImage(fmt::format("img/{}/cid/34A.png", level.LH.GameStyle), LX, LY, Zm, Zm);
 				}
 			} else {
 				if((level.MapObj[i].CFlag / 0x40000) % 2 == 1) {
-					DrawImage(fmt::format("img/{}/cid/{}B.png", level.LH.GameStyle, objCid), LX, LY, Zm, Zm);
+					DrawImage(fmt::format("img/{}/cid/34B.png", level.LH.GameStyle), LX, LY, Zm, Zm);
 				} else {
-					DrawImage(fmt::format("img/{}/cid/{}.png", level.LH.GameStyle, objCid), LX, LY, Zm, Zm);
+					DrawImage(fmt::format("img/{}/cid/34.png", level.LH.GameStyle), LX, LY, Zm, Zm);
 				}
 			}
 			DrawImage("img/cmn/F1.png", LX, LY, Zm, Zm);
@@ -3765,7 +3713,7 @@ void Drawers::DrawCID() {
 				PR = "";
 			}
 
-			DrawImage(fmt::format("img/{}/cid/{}{}.png", level.LH.GameStyle, objCid, PR), LX, LY, Zm, Zm);
+			DrawImage(fmt::format("img/{}/cid/111{}.png", level.LH.GameStyle, PR), LX, LY, Zm, Zm);
 			DrawImage("img/cmn/F1.png", LX, LY, Zm, Zm);
 			break;
 		case 76: //加邦
@@ -3778,14 +3726,14 @@ void Drawers::DrawCID() {
 			} else {
 				PR = "";
 			}
-			DrawImage(fmt::format("img/{}/cid/{}{}.png", level.LH.GameStyle, objCid, PR), LX, LY, Zm, Zm);
+			DrawImage(fmt::format("img/{}/cid/76{}.png", level.LH.GameStyle, PR), LX, LY, Zm, Zm);
 			DrawImage("img/cmn/F1.png", LX, LY, Zm, Zm);
 			break;
 		case 33: // 1UP
 			if(level.MapHdr.Theme == 1 && level.MapHdr.Flag == 2) {
-				DrawImage(fmt::format("img/{}/cid/{}A.png", level.LH.GameStyle, objCid), LX, LY, Zm, Zm);
+				DrawImage(fmt::format("img/{}/cid/33A.png", level.LH.GameStyle), LX, LY, Zm, Zm);
 			} else {
-				DrawImage(fmt::format("img/{}/cid/{}.png", level.LH.GameStyle, objCid), LX, LY, Zm, Zm);
+				DrawImage(fmt::format("img/{}/cid/33.png", level.LH.GameStyle), LX, LY, Zm, Zm);
 			}
 
 			DrawImage("img/cmn/F1.png", LX, LY, Zm, Zm);
@@ -3823,8 +3771,7 @@ void Drawers::DrawFireBar() {
 			LY = std::round(H * Zm - (float)(objH - 0.5 + objY / 160.0) * Zm);
 			FR = level.MapObj[i].Ex / 0x38E38E0;
 
-			int tempVar = (objFlag - 0x6000000) / 0x400000 + 1;
-			for(j = 0; j <= tempVar; j++) {
+			for(j = 0; j <= (objFlag - 0x6000000) / 0x400000 + 1; j++) {
 				DrawImageRotateOpacity(fmt::format("img/{}/obj/24A.png", level.LH.GameStyle), -FR * 5, 0.5,
 					-Zm / 4 + j * Zm + LX + Zm / 2, -Zm / 4 + LY + Zm / 2, Zm, Zm / 2);
 			}
@@ -3902,11 +3849,9 @@ void Drawers::DrawCPipe() {
 	std::string CP = "";
 
 	for(i = 0; i < level.MapHdr.ClearPipCount; i++) {
-		int tempVar = level.MapCPipe[i].NodeCount;
-		for(J = 0; J < tempVar; J++) {
+		for(J = 0; J < level.MapCPipe[i].NodeCount; J++) {
 			if(J == 0) {
-				int tempVar2 = level.MapCPipe[i].Node[J].H;
-				for(K = 0; K < tempVar2; K++) {
+				for(K = 0; K < level.MapCPipe[i].Node[J].H; K++) {
 					switch(level.MapCPipe[i].Node[J].Dir) {
 					case 0: // R
 						if(K == 0) {
@@ -3961,8 +3906,7 @@ void Drawers::DrawCPipe() {
 			}
 
 			else if(J == level.MapCPipe[i].NodeCount - 1) {
-				int tempVar3 = level.MapCPipe[i].Node[J].H;
-				for(K = 0; K < tempVar3; K++) {
+				for(K = 0; K < level.MapCPipe[i].Node[J].H; K++) {
 					switch(level.MapCPipe[i].Node[J].Dir) {
 					case 0: // R
 						CP = (K == level.MapCPipe[i].Node[J].H - 1) ? "E" : "D";
@@ -4021,8 +3965,7 @@ void Drawers::DrawCPipe() {
 						break;
 					}
 				} else {
-					int tempVar4 = level.MapCPipe[i].Node[J].H;
-					for(K = 0; K < tempVar4; K++) {
+					for(K = 0; K < level.MapCPipe[i].Node[J].H; K++) {
 						switch(level.MapCPipe[i].Node[J].Dir) {
 						case 0: // R
 							DrawImage(fmt::format("img/{}/obj/93D.png", level.LH.GameStyle),

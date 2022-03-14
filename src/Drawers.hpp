@@ -13,7 +13,6 @@
 #include <unordered_set>
 #include <vector>
 
-
 class Drawers {
 public:
 	using Point = LevelParser::Point;
@@ -39,6 +38,7 @@ public:
 	int GetHeight();
 	void ClearImageCache();
 	void DrawGridlines();
+	cairo_pattern_t* GetCachedPattern(std::string path);
 	void DrawTile(int tileX, int tileY, int tileW, int tileH, int x, int y, int targetWidth, int targetHeight);
 	void DrawImage(std::string path, int x, int y, int targetWidth, int targetHeight);
 	void DrawImageOpacity(std::string path, double opacity, int x, int y, int targetWidth, int targetHeight);
