@@ -1,23 +1,24 @@
 #pragma once
 
+#include "LevelData.hpp"
 #include "LevelParser.hpp"
-#include "ObjectSpritesheet.hpp"
 
 #include <cairo.h>
 #include <cstdint>
 #include <filesystem>
 #include <fmt/core.h>
 #include <iostream>
+#include <numbers>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-class Drawers {
+class LevelDrawer {
 public:
 	using Point = LevelParser::Point;
 
-	Drawers(LevelParser& level_, int zoom)
+	LevelDrawer(LevelParser& level_, int zoom)
 		: level(level_) {
 		Zm           = zoom;
 		H            = level.MapHdr.BorT / 16;
@@ -38,13 +39,13 @@ public:
 	int GetHeight();
 	void ClearImageCache();
 	void DrawGridlines();
-	cairo_pattern_t* GetCachedPattern(std::string path);
+	cairo_pattern_t* GetCachedTile(int x, int y, int w, int h);
+	cairo_pattern_t* GetCachedPattern(int id);
 	void DrawTile(int tileX, int tileY, int tileW, int tileH, int x, int y, int targetWidth, int targetHeight);
-	void DrawImage(std::string path, int x, int y, int targetWidth, int targetHeight);
-	void DrawImageOpacity(std::string path, double opacity, int x, int y, int targetWidth, int targetHeight);
-	void DrawImageRotate(std::string path, double angle, int x, int y, int targetWidth, int targetHeight);
-	void DrawImageRotateOpacity(
-		std::string path, double angle, double opacity, int x, int y, int targetWidth, int targetHeight);
+	void DrawImage(int id, int x, int y, int targetWidth, int targetHeight);
+	void DrawImageOpacity(int id, double opacity, int x, int y, int targetWidth, int targetHeight);
+	void DrawImageRotate(int id, double angle, int x, int y, int targetWidth, int targetHeight);
+	void DrawImageRotateOpacity(int id, double angle, double opacity, int x, int y, int targetWidth, int targetHeight);
 	void DrawCrp(unsigned char EX, int X, int Y);
 	void DrawSnake(unsigned char EX, int X, int Y, int SW, int SH);
 	void DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y);
@@ -84,7 +85,8 @@ private:
 	bool noRender               = false;
 	std::vector<DrawingInstruction> drawingInstructions;
 
-	std::unordered_map<std::string, cairo_pattern_t*> patternCache;
+	std::unordered_map<int, cairo_pattern_t*> tileCache;
+	std::unordered_map<int, cairo_pattern_t*> patternCache;
 	cairo_surface_t* tilesheet   = NULL;
 	cairo_surface_t* spritesheet = NULL;
 };

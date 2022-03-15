@@ -92,8 +92,6 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 	fseek(levelPtr, 0xF1, SEEK_SET);
 	fread(&LH.GameStyle, sizeof(LH.GameStyle), 1, levelPtr);
 
-	puts("Parsed header");
-
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> wstringConverter;
 
 	std::wstring S = L"";
@@ -118,8 +116,6 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 		S += (wchar_t)K;
 	}
 	LH.Desc = wstringConverter.to_bytes(S);
-
-	fmt::print("Parsed name ({}) and description\n", LH.Name);
 
 	int32_t M = 0;
 
@@ -148,8 +144,6 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 	fread(&MapHdr.GroundCount, sizeof(MapHdr.GroundCount), 1, levelPtr);
 	fread(&MapHdr.TrackCount, sizeof(MapHdr.TrackCount), 1, levelPtr);
 	fread(&MapHdr.IceCount, sizeof(MapHdr.IceCount), 1, levelPtr);
-
-	puts("Parsed map header");
 
 	int max_x = 0;
 	int max_y = 0;
@@ -184,8 +178,6 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 		return (a.X + (max_y - a.Y - a.H * 160) * max_x) < (b.X + (max_y - b.Y - b.H * 160) * max_x);
 	});
 
-	puts("Parsed map objects");
-
 	MapSnk.resize(MapHdr.SnakeCount);
 	for(M = 0; M < MapHdr.SnakeCount; M++) {
 		fseek(levelPtr, Offset + 0x149F8 + M * 0x3C4, SEEK_SET);
@@ -201,8 +193,6 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 			fread(&MapSnk[M].Node[i].Dir, sizeof(MapSnk[M].Node[i].Dir), 1, levelPtr);
 		}
 	}
-
-	puts("Parsed snake blocks");
 
 	MapCPipe.resize(MapHdr.ClearPipCount);
 	for(M = 0; M < MapHdr.ClearPipCount; M++) {
@@ -225,8 +215,6 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 		}
 	}
 
-	puts("Parsed clear pipe");
-
 	MapCrp.resize(MapHdr.CreeperCount);
 	for(M = 0; M < MapHdr.CreeperCount; M++) {
 		fseek(levelPtr, Offset + 0x240EC + 0x1 + M * 0x54, SEEK_SET);
@@ -241,7 +229,6 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 		}
 	}
 
-	// 0x24434  0x1B8 (0x2C * 10)! Block
 	MapMoveBlk.resize(MapHdr.iBlkCount);
 	for(M = 0; M < MapHdr.iBlkCount; M++) {
 		fseek(levelPtr, Offset + 0x24434 + 0x1 + M * 0x2C, SEEK_SET);
@@ -273,8 +260,6 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 			fread(&MapTrackBlk[M].Node[i].p2, sizeof(MapTrackBlk[M].Node[i].p2), 1, levelPtr);
 		}
 	}
-
-	puts("Parsed tracks");
 
 	MapGrd.resize(MapHdr.GroundCount);
 
@@ -434,7 +419,7 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 			break;
 		}
 	}
-	//冰块0x2CC74  0x4B0 (0x4 * 300)Icicle
+
 	MapIce.resize(MapHdr.IceCount);
 	for(M = 0; M < MapHdr.IceCount; M++) {
 		fseek(levelPtr, Offset + 0x2CC74 + 0x0 + M * 0x4, SEEK_SET);
@@ -443,7 +428,7 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 		fread(&MapIce[M].ID, sizeof(MapIce[M].ID), 1, levelPtr);
 	}
 
-	puts("Done parsing");
+	fmt::print("Done parsing {}\n", LH.Name);
 
 	fclose(levelPtr);
 }

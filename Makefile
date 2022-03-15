@@ -47,7 +47,7 @@ else
 endif
 
 
-SRCS := ./src/main.cpp ./src/LevelParser.cpp ./src/Drawers.cpp ./src/Helpers.cpp ./src/ObjectSpritesheet.cpp ./src/imgui/imgui.cpp ./src/imgui/imgui_widgets.cpp ./src/imgui/imgui_tables.cpp ./src/imgui/imgui_impl_sdl.cpp ./src/imgui/imgui_impl_opengl3.cpp ./src/imgui/imgui_draw.cpp ./src/SMM2CourseDecryptor/aes.cpp ./src/SMM2CourseDecryptor/decrypt.cpp ./src/fmt/format.cpp ./src/fmt/os.cpp
+SRCS := ./src/main.cpp ./src/LevelParser.cpp ./src/LevelDrawer.cpp ./src/Helpers.cpp ./src/imgui/imgui.cpp ./src/imgui/imgui_widgets.cpp ./src/imgui/imgui_tables.cpp ./src/imgui/imgui_impl_sdl.cpp ./src/imgui/imgui_impl_opengl3.cpp ./src/imgui/imgui_draw.cpp ./src/SMM2CourseDecryptor/aes.cpp ./src/SMM2CourseDecryptor/decrypt.cpp ./src/fmt/format.cpp ./src/fmt/os.cpp
 
 ifeq ($(UNAME)$(PLATFORM),Msys)
 SRCS += src/info.rc src/icon.rc

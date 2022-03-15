@@ -126,7 +126,5 @@ bool LevelDecryptor::decrypt(const char* input, const char* output) {
 	}
 	}
 
-	puts("Done!");
-
 	return true;
 }
