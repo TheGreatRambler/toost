@@ -42,10 +42,11 @@ public:
 	cairo_pattern_t* GetCachedTile(int x, int y, int w, int h);
 	cairo_pattern_t* GetCachedPattern(int id);
 	void DrawTile(int tileX, int tileY, int tileW, int tileH, int x, int y, int targetWidth, int targetHeight);
-	void DrawImage(int id, int x, int y, int targetWidth, int targetHeight);
-	void DrawImageOpacity(int id, double opacity, int x, int y, int targetWidth, int targetHeight);
-	void DrawImageRotate(int id, double angle, int x, int y, int targetWidth, int targetHeight);
-	void DrawImageRotateOpacity(int id, double angle, double opacity, int x, int y, int targetWidth, int targetHeight);
+	void DrawImage(uint32_t id, int x, int y, int targetWidth, int targetHeight);
+	void DrawImageOpacity(uint32_t id, double opacity, int x, int y, int targetWidth, int targetHeight);
+	void DrawImageRotate(uint32_t id, double angle, int x, int y, int targetWidth, int targetHeight);
+	void DrawImageRotateOpacity(
+		uint32_t id, double angle, double opacity, int x, int y, int targetWidth, int targetHeight);
 	void DrawCrp(unsigned char EX, int X, int Y);
 	void DrawSnake(unsigned char EX, int X, int Y, int SW, int SH);
 	void DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y);
