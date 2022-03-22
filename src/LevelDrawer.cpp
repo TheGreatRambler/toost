@@ -3552,9 +3552,9 @@ void LevelDrawer::DrawTrack() {
 		} else if(trackType == 1) {
 			path = level.LH.GameStyle | LevelData::OBJ_T1;
 		} else if(trackType < 10) {
-			path = LevelData::GetIndex(level.LH.GameStyle, LevelData::OBJ_T2 + trackType - 2);
+			path = level.LH.GameStyle | (LevelData::OBJ_T2 + (trackType - 2) * 32768);
 		} else {
-			path = LevelData::GetIndex(level.LH.GameStyle, LevelData::OBJ_T10 + trackType - 10);
+			path = level.LH.GameStyle | (LevelData::OBJ_T10 + (trackType - 10) * 32768);
 		}
 
 		if(level.MapTrk[i].Type < 8) {
