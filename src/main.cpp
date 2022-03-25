@@ -287,6 +287,7 @@ LevelDrawer* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string
 LevelHandler AttemptRender(
 	std::string choice, bool log, std::string destinationOverworld, std::string destinationSubworld) {
 	uintmax_t filesize = std::filesystem::file_size(choice);
+	std::string content;
 
 	if(log) {
 		fmt::print("Level filesize is {}\n", filesize);
@@ -298,7 +299,9 @@ LevelHandler AttemptRender(
 		}
 
 		LevelParser::DecryptLevelData(choice, fmt::format("{}/temp.bcd", assetsFolder));
-		choice = fmt::format("{}/temp.bcd", assetsFolder);
+
+		std::ifstream ifs(fmt::format("{}/temp.bcd", assetsFolder), std::ios::binary);
+		content = std::string((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
 	} else {
 		// First, check if compressed
 		FILE* magicFile = fopen(choice.c_str(), "rb");
@@ -320,20 +323,13 @@ LevelHandler AttemptRender(
 			std::vector<uint8_t> data((std::istreambuf_iterator<char>(readFile)), std::istreambuf_iterator<char>());
 			readFile.close();
 
-			std::string decompressed = gzip::decompress((const char*)data.data(), data.size());
-			std::ofstream writeFile(fmt::format("{}/temp.bcd", assetsFolder), std::ios::out | std::ios::binary);
-			writeFile.write(decompressed.data(), decompressed.size());
-			writeFile.close();
-
-			choice = fmt::format("{}/temp.bcd", assetsFolder);
+			content = gzip::decompress((const char*)data.data(), data.size());
 		} else {
 			puts("File is uncompressed or an unknown format");
 		}
 	}
 
-	uintmax_t newFilesize = std::filesystem::file_size(choice);
-
-	if(newFilesize == 0x5BFC0) {
+	if(content.size() == 0x5BFC0) {
 #ifdef _WIN32
 		SetConsoleOutputCP(CP_UTF8);
 #endif
@@ -346,7 +342,7 @@ LevelHandler AttemptRender(
 
 		if(!destinationOverworld.empty()) {
 			LevelParser* overworldLevelParser = new LevelParser();
-			overworldLevelParser->LoadLevelData(choice, true);
+			overworldLevelParser->LoadLevelData(content, true);
 			auto start           = std::chrono::high_resolution_clock::now();
 			data.drawerOverworld = DrawMap(overworldLevelParser, true, log, destinationOverworld);
 			auto stop            = std::chrono::high_resolution_clock::now();
@@ -357,7 +353,7 @@ LevelHandler AttemptRender(
 
 		if(!destinationSubworld.empty()) {
 			LevelParser* subworldLevelParser = new LevelParser();
-			subworldLevelParser->LoadLevelData(choice, false);
+			subworldLevelParser->LoadLevelData(content, false);
 			auto start          = std::chrono::high_resolution_clock::now();
 			data.drawerSubworld = DrawMap(subworldLevelParser, false, log, destinationSubworld);
 			auto stop           = std::chrono::high_resolution_clock::now();
@@ -739,7 +735,7 @@ static void main_loop() {
 #endif
 		}
 
-		close_current_level = ImGui::Button("Close Level");
+		close_current_level = ImGui::Button("Close Window");
 
 		if(focused_window_index != cached_focused_window_index) {
 			auto& cwfi = cached_focused_window_info;

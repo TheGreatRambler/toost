@@ -30,147 +30,98 @@ LevelParser::LevelParser() {
 	}
 }
 
-/*
-std::string LevelParser::GetItemName(int n, int v) {
-	std::string tempGetItemName = "";
-	switch(v) {
-	case 12621:
-		tempGetItemName = ObjEng[n];
-		break;
-	case 13133:
-		tempGetItemName = ObjEng3[n];
-		break;
-	case 22349:
-		tempGetItemName = ObjEngW[n];
-		break;
-	case 21847:
-		tempGetItemName = ObjEngU[n];
-		break;
-	case 22323:
-		tempGetItemName = ObjEngD[n];
-		break;
-	default:
-		tempGetItemName = "?";
-		break;
-	}
-	return tempGetItemName;
-}
-*/
-
 bool LevelParser::DecryptLevelData(const std::string& input, const std::string& output) {
 	return LevelDecryptor::decrypt(input.c_str(), output.c_str());
 }
 
-void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
+void LevelParser::LoadLevelData(const std::string& levelData, bool overworld) {
 	isOverworld = overworld;
-	int Offset;
-	Offset      = overworld ? 0x200 : 0x2E0E0;
 	long long i = 0;
 	long long j = 0;
 
-	FILE* levelPtr = fopen(P.c_str(), "rb");
-	fread(&LH.StartY, sizeof(LH.StartY), 1, levelPtr);
-	fread(&LH.GoalY, sizeof(LH.GoalY), 1, levelPtr);
-	fread(&LH.GoalX, sizeof(LH.GoalX), 1, levelPtr);
-	fread(&LH.Timer, sizeof(LH.Timer), 1, levelPtr);
-	fread(&LH.ClearCA, sizeof(LH.ClearCA), 1, levelPtr);
-	fread(&LH.DateYY, sizeof(LH.DateYY), 1, levelPtr);
-	fread(&LH.DateMM, sizeof(LH.DateMM), 1, levelPtr);
-	fread(&LH.DateDD, sizeof(LH.DateDD), 1, levelPtr);
-	fread(&LH.DateH, sizeof(LH.DateH), 1, levelPtr);
-	fread(&LH.DateM, sizeof(LH.DateM), 1, levelPtr);
-	fread(&LH.AutoscrollSpd, sizeof(LH.AutoscrollSpd), 1, levelPtr);
-	fread(&LH.ClearCC, sizeof(LH.ClearCC), 1, levelPtr);
-	fread(&LH.ClearCRC, sizeof(LH.ClearCRC), 1, levelPtr);
-	fread(&LH.GameVer, sizeof(LH.GameVer), 1, levelPtr);
-	fread(&LH.MFlag, sizeof(LH.MFlag), 1, levelPtr);
-	fread(&LH.ClearAttempts, sizeof(LH.ClearAttempts), 1, levelPtr);
-	fread(&LH.ClearTime, sizeof(LH.ClearTime), 1, levelPtr);
-	fread(&LH.CreationID, sizeof(LH.CreationID), 1, levelPtr);
-	fread(&LH.UploadID, sizeof(LH.UploadID), 1, levelPtr);
-	fread(&LH.ClearVer, sizeof(LH.ClearVer), 1, levelPtr);
-	fseek(levelPtr, 0xF1, SEEK_SET);
-	fread(&LH.GameStyle, sizeof(LH.GameStyle), 1, levelPtr);
+	kaitai::kstream ks(levelData);
+	MM2::level_t level(&ks);
 
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> wstringConverter;
+	LH.StartY        = level.start_y();
+	LH.GoalY         = level.goal_y();
+	LH.GoalX         = level.goal_x();
+	LH.Timer         = level.timer();
+	LH.ClearCA       = level.clear_condition_magnitude();
+	LH.DateYY        = level.year();
+	LH.DateMM        = level.month();
+	LH.DateDD        = level.day();
+	LH.DateH         = level.hour();
+	LH.DateM         = level.minute();
+	LH.AutoscrollSpd = level.autoscroll_speed();
+	LH.ClearCC       = level.clear_condition_category();
+	LH.ClearCRC      = level.clear_condition();
+	LH.GameVer       = level.unk_gamever();
+	LH.MFlag         = level.unk_management_flags();
+	LH.ClearAttempts = level.clear_attempts();
+	LH.ClearTime     = level.clear_time();
+	LH.CreationID    = level.unk_creation_id();
+	LH.UploadID      = level.unk_upload_id();
+	LH.ClearVer      = level.game_version();
+	LH.GameStyle     = level.gamestyle();
 
-	std::wstring S = L"";
-	short K        = 0;
-	for(i = 1; i <= 0x42; i += 2) {
-		fseek(levelPtr, 0xF3 + i, SEEK_SET);
-		fread(&K, sizeof(K), 1, levelPtr);
-		if(K == 0) {
-			break;
-		}
-		S += (wchar_t)K;
-	}
-	LH.Name = wstringConverter.to_bytes(S);
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> stringConverter;
+	LH.Name = stringConverter.to_bytes(std::wstring((wchar_t*)level.name().data()));
+	LH.Desc = stringConverter.to_bytes(std::wstring((wchar_t*)level.description().data()));
 
-	S = L"";
-	for(i = 1; i <= 0xCA; i += 2) {
-		fseek(levelPtr, 0x135 + i, SEEK_SET);
-		fread(&K, sizeof(K), 1, levelPtr);
-		if(K == 0) {
-			break;
-		}
-		S += (wchar_t)K;
-	}
-	LH.Desc = wstringConverter.to_bytes(S);
+	MM2::level_t::map_t& map = *(overworld ? level.overworld() : level.subworld());
 
-	int32_t M = 0;
-
-	fseek(levelPtr, Offset, SEEK_SET);
-	fread(&MapHdr.Theme, sizeof(MapHdr.Theme), 1, levelPtr);
-	fread(&MapHdr.AutoscrollType, sizeof(MapHdr.AutoscrollType), 1, levelPtr);
-	fread(&MapHdr.BorFlag, sizeof(MapHdr.BorFlag), 1, levelPtr);
-	fread(&MapHdr.Ori, sizeof(MapHdr.Ori), 1, levelPtr);
-	fread(&MapHdr.LiqEHeight, sizeof(MapHdr.LiqEHeight), 1, levelPtr);
-	fread(&MapHdr.LiqMode, sizeof(MapHdr.LiqMode), 1, levelPtr);
-	fread(&MapHdr.LiqSpd, sizeof(MapHdr.LiqSpd), 1, levelPtr);
-	fread(&MapHdr.LiqSHeight, sizeof(MapHdr.LiqSHeight), 1, levelPtr);
-	fread(&MapHdr.BorR, sizeof(MapHdr.BorR), 1, levelPtr);
-	fread(&MapHdr.BorT, sizeof(MapHdr.BorT), 1, levelPtr);
-	fread(&MapHdr.BorL, sizeof(MapHdr.BorL), 1, levelPtr);
-	fread(&MapHdr.BorB, sizeof(MapHdr.BorB), 1, levelPtr);
-	fread(&MapHdr.Flag, sizeof(MapHdr.Flag), 1, levelPtr);
-	fread(&MapHdr.ObjCount, sizeof(MapHdr.ObjCount), 1, levelPtr);
-	fread(&MapHdr.SndCount, sizeof(MapHdr.SndCount), 1, levelPtr);
-	fread(&MapHdr.SnakeCount, sizeof(MapHdr.SnakeCount), 1, levelPtr);
-	fread(&MapHdr.ClearPipCount, sizeof(MapHdr.ClearPipCount), 1, levelPtr);
-	fread(&MapHdr.CreeperCount, sizeof(MapHdr.CreeperCount), 1, levelPtr);
-	fread(&MapHdr.iBlkCount, sizeof(MapHdr.iBlkCount), 1, levelPtr);
-	fread(&MapHdr.TrackBlkCount, sizeof(MapHdr.TrackBlkCount), 1, levelPtr);
-	fseek(levelPtr, Offset + 0x3C, SEEK_SET);
-	fread(&MapHdr.GroundCount, sizeof(MapHdr.GroundCount), 1, levelPtr);
-	fread(&MapHdr.TrackCount, sizeof(MapHdr.TrackCount), 1, levelPtr);
-	fread(&MapHdr.IceCount, sizeof(MapHdr.IceCount), 1, levelPtr);
+	MapHdr.Theme          = map.theme();
+	MapHdr.AutoscrollType = map.autoscroll_type();
+	MapHdr.BorFlag        = map.boundary_type();
+	MapHdr.Ori            = map.orientation();
+	MapHdr.LiqEHeight     = map.liquid_end_height();
+	MapHdr.LiqMode        = map.liquid_mode();
+	MapHdr.LiqSpd         = map.liquid_speed();
+	MapHdr.LiqSHeight     = map.liquid_start_height();
+	MapHdr.BorR           = map.boundary_right();
+	MapHdr.BorT           = map.boundary_top();
+	MapHdr.BorL           = map.boundary_left();
+	MapHdr.BorB           = map.boundary_bottom();
+	MapHdr.Flag           = map.unk_flag();
+	MapHdr.ObjCount       = map.object_count();
+	MapHdr.SndCount       = map.sound_effect_count();
+	MapHdr.SnakeCount     = map.snake_block_count();
+	MapHdr.ClearPipCount  = map.clear_pipe_count();
+	MapHdr.CreeperCount   = map.piranha_creeper_count();
+	MapHdr.iBlkCount      = map.exclamation_mark_block_count();
+	MapHdr.TrackBlkCount  = map.track_block_count();
+	MapHdr.GroundCount    = map.ground_count();
+	MapHdr.TrackCount     = map.track_count();
+	MapHdr.IceCount       = map.ice_count();
 
 	int max_x = 0;
 	int max_y = 0;
-	MapObj.resize(MapHdr.ObjCount);
-	for(M = 0; M < MapHdr.ObjCount; M++) {
-		fseek(levelPtr, Offset + 0x48 + M * 0x20, SEEK_SET);
-		fread(&MapObj[M].X, sizeof(MapObj[M].X), 1, levelPtr);
-		fread(&MapObj[M].Y, sizeof(MapObj[M].Y), 1, levelPtr);
-		fseek(levelPtr, Offset + 0x48 + 0xA + M * 0x20, SEEK_SET);
-		fread(&MapObj[M].W, sizeof(MapObj[M].W), 1, levelPtr);
-		fread(&MapObj[M].H, sizeof(MapObj[M].H), 1, levelPtr);
-		fread(&MapObj[M].Flag, sizeof(MapObj[M].Flag), 1, levelPtr);
-		fread(&MapObj[M].CFlag, sizeof(MapObj[M].CFlag), 1, levelPtr);
-		fread(&MapObj[M].Ex, sizeof(MapObj[M].Ex), 1, levelPtr);
-		fread(&MapObj[M].ID, sizeof(MapObj[M].ID), 1, levelPtr);
-		fread(&MapObj[M].CID, sizeof(MapObj[M].CID), 1, levelPtr);
-		fread(&MapObj[M].LID, sizeof(MapObj[M].LID), 1, levelPtr);
-		fread(&MapObj[M].SID, sizeof(MapObj[M].SID), 1, levelPtr);
-		MapObj[M].LinkType = 0;
+	MapObj.clear();
+	for(int i = 0; i < map.object_count(); i++) {
+		auto& obj_ref = *map.objects()->at(i);
+		LevelParser::MapObject newObject;
+		newObject.X        = obj_ref.x();
+		newObject.Y        = obj_ref.y();
+		newObject.W        = obj_ref.width();
+		newObject.H        = obj_ref.height();
+		newObject.Flag     = obj_ref.flag();
+		newObject.CFlag    = obj_ref.cflag();
+		newObject.Ex       = obj_ref.ex();
+		newObject.ID       = obj_ref.id();
+		newObject.CID      = obj_ref.cid();
+		newObject.LID      = obj_ref.lid();
+		newObject.SID      = obj_ref.sid();
+		newObject.LinkType = 0;
 
-		if(MapObj[M].X > max_x) {
-			max_x = MapObj[M].X;
+		if(newObject.X > max_x) {
+			max_x = newObject.X;
 		}
 
-		if(MapObj[M].Y > max_y) {
-			max_y = MapObj[M].Y;
+		if(newObject.Y > max_y) {
+			max_y = newObject.Y;
 		}
+
+		MapObj.push_back(newObject);
 	}
 
 	// Render objects in the order they are rendered in game, makes semisolids render correctly
@@ -178,111 +129,131 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 		return (a.X + (max_y - a.Y - a.H * 160) * max_x) < (b.X + (max_y - b.Y - b.H * 160) * max_x);
 	});
 
-	MapSnk.resize(MapHdr.SnakeCount);
-	for(M = 0; M < MapHdr.SnakeCount; M++) {
-		fseek(levelPtr, Offset + 0x149F8 + M * 0x3C4, SEEK_SET);
-		fread(&MapSnk[M].index, sizeof(MapSnk[M].index), 1, levelPtr);
-		fread(&MapSnk[M].NodeCount, sizeof(MapSnk[M].NodeCount), 1, levelPtr);
+	MapSnk.clear();
+	for(int i = 0; i < map.snake_block_count(); i++) {
+		auto& snake_ref = *map.snakes()->at(i);
+		LevelParser::MapSnakeBlock newSnake;
+		newSnake.index     = snake_ref.index();
+		newSnake.NodeCount = snake_ref.node_count();
 
-		MapSnk[M].Node.resize(MapSnk[M].NodeCount);
+		for(int j = 0; j < newSnake.NodeCount; j++) {
+			auto& snake_node_ref = *snake_ref.nodes()->at(j);
+			LevelParser::MapSnakeBlockNode newSnakeNode;
+			newSnakeNode.index = snake_node_ref.index();
+			newSnakeNode.Dir   = snake_node_ref.direction();
 
-		for(i = 0; i < MapSnk[M].NodeCount; i++) {
-			fseek(levelPtr, Offset + 0x149F8 + 0x0 + M * 0x3C4 + i * 0x8, SEEK_SET);
-			fread(&MapSnk[M].Node[i].index, sizeof(MapSnk[M].Node[i].index), 1, levelPtr);
-			fseek(levelPtr, Offset + 0x149F8 + 0x6 + M * 0x3C4 + i * 0x8, SEEK_SET);
-			fread(&MapSnk[M].Node[i].Dir, sizeof(MapSnk[M].Node[i].Dir), 1, levelPtr);
+			newSnake.Node.push_back(newSnakeNode);
 		}
+
+		MapSnk.push_back(newSnake);
 	}
 
-	MapCPipe.resize(MapHdr.ClearPipCount);
-	for(M = 0; M < MapHdr.ClearPipCount; M++) {
-		fseek(levelPtr, Offset + 0x15CCC + M * 0x124, SEEK_SET);
-		fread(&MapCPipe[M].Index, sizeof(MapCPipe[M].Index), 1, levelPtr);
-		fread(&MapCPipe[M].NodeCount, sizeof(MapCPipe[M].NodeCount), 1, levelPtr);
+	MapCPipe.clear();
+	for(int i = 0; i < map.clear_pipe_count(); i++) {
+		auto& clear_pipe_ref = *map.clear_pipes()->at(i);
+		LevelParser::MapClearPipe newClearPipe;
+		newClearPipe.Index     = clear_pipe_ref.index();
+		newClearPipe.NodeCount = clear_pipe_ref.node_count();
 
-		MapCPipe[M].Node.resize(MapCPipe[M].NodeCount);
+		for(int j = 0; j < newClearPipe.NodeCount; j++) {
+			auto& clear_pipe_node_ref = *clear_pipe_ref.nodes()->at(j);
+			LevelParser::MapClearPipeNode newClearPipeNode;
+			newClearPipeNode.type  = clear_pipe_node_ref.type();
+			newClearPipeNode.index = clear_pipe_node_ref.index();
+			newClearPipeNode.X     = clear_pipe_node_ref.x();
+			newClearPipeNode.Y     = clear_pipe_node_ref.y();
+			newClearPipeNode.W     = clear_pipe_node_ref.width();
+			newClearPipeNode.H     = clear_pipe_node_ref.height();
+			newClearPipeNode.Dir   = clear_pipe_node_ref.direction();
 
-		for(i = 0; i < MapCPipe[M].NodeCount; i++) {
-			fseek(levelPtr, Offset + 0x15CCC + 0x4 + M * 0x124 + i * 0x8, SEEK_SET);
-			fread(&MapCPipe[M].Node[i].type, sizeof(MapCPipe[M].Node[i].type), 1, levelPtr);
-			fread(&MapCPipe[M].Node[i].index, sizeof(MapCPipe[M].Node[i].index), 1, levelPtr);
-			fread(&MapCPipe[M].Node[i].X, sizeof(MapCPipe[M].Node[i].X), 1, levelPtr);
-			fread(&MapCPipe[M].Node[i].Y, sizeof(MapCPipe[M].Node[i].Y), 1, levelPtr);
-			fread(&MapCPipe[M].Node[i].W, sizeof(MapCPipe[M].Node[i].W), 1, levelPtr);
-			fread(&MapCPipe[M].Node[i].H, sizeof(MapCPipe[M].Node[i].H), 1, levelPtr);
-			fseek(levelPtr, Offset + 0x15CCC + 0xB + M * 0x124 + i * 0x8, SEEK_SET);
-			fread(&MapCPipe[M].Node[i].Dir, sizeof(MapCPipe[M].Node[i].Dir), 1, levelPtr);
+			newClearPipe.Node.push_back(newClearPipeNode);
 		}
+
+		MapCPipe.push_back(newClearPipe);
 	}
 
-	MapCrp.resize(MapHdr.CreeperCount);
-	for(M = 0; M < MapHdr.CreeperCount; M++) {
-		fseek(levelPtr, Offset + 0x240EC + 0x1 + M * 0x54, SEEK_SET);
-		fread(&MapCrp[M].index, sizeof(MapCrp[M].index), 1, levelPtr);
-		fread(&MapCrp[M].NodeCount, sizeof(MapCrp[M].NodeCount), 1, levelPtr);
+	MapCrp.clear();
+	for(int i = 0; i < map.piranha_creeper_count(); i++) {
+		auto& creeper_ref = *map.piranha_creepers()->at(i);
+		LevelParser::MapCreeper newCreeper;
+		newCreeper.index     = creeper_ref.index();
+		newCreeper.NodeCount = creeper_ref.node_count();
 
-		MapCrp[M].Node.resize(MapCrp[M].NodeCount);
-
-		for(i = 0; i < MapCrp[M].NodeCount; i++) {
-			fseek(levelPtr, Offset + 0x240EC + 0x4 + 0x1 + M * 0x54 + i * 0x4, SEEK_SET);
-			fread(&MapCrp[M].Node[i], sizeof(MapCrp[M].Node[i]), 1, levelPtr);
+		for(int j = 0; j < newCreeper.NodeCount; j++) {
+			auto& creeper_node_ref = *creeper_ref.nodes()->at(j);
+			newCreeper.Node.push_back(creeper_node_ref.direction());
 		}
+
+		MapCrp.push_back(newCreeper);
 	}
 
-	MapMoveBlk.resize(MapHdr.iBlkCount);
-	for(M = 0; M < MapHdr.iBlkCount; M++) {
-		fseek(levelPtr, Offset + 0x24434 + 0x1 + M * 0x2C, SEEK_SET);
-		fread(&MapMoveBlk[M].index, sizeof(MapMoveBlk[M].index), 1, levelPtr);
-		fread(&MapMoveBlk[M].NodeCount, sizeof(MapMoveBlk[M].NodeCount), 1, levelPtr);
+	MapMoveBlk.clear();
+	for(int i = 0; i < map.exclamation_mark_block_count(); i++) {
+		auto& exclamation_block_ref = *map.exclamation_blocks()->at(i);
+		LevelParser::MapMoveBlock newExclamationBlock;
+		newExclamationBlock.index     = exclamation_block_ref.index();
+		newExclamationBlock.NodeCount = exclamation_block_ref.node_count();
 
-		MapMoveBlk[M].Node.resize(MapMoveBlk[M].NodeCount);
+		for(int j = 0; j < newExclamationBlock.NodeCount; j++) {
+			auto& exclamation_block_node_ref = *exclamation_block_ref.nodes()->at(j);
+			LevelParser::MapMoveBlockNode newExclamationBlockNode;
+			newExclamationBlockNode.p0 = exclamation_block_node_ref.unk1();
+			newExclamationBlockNode.p1 = exclamation_block_node_ref.direction();
+			newExclamationBlockNode.p2 = exclamation_block_node_ref.unk2();
 
-		for(i = 0; i < MapMoveBlk[M].NodeCount; i++) {
-			fseek(levelPtr, Offset + 0x24434 + 0x4 + 0x0 + M * 0x2C + i * 0x4, SEEK_SET);
-			fread(&MapMoveBlk[M].Node[i].p0, sizeof(MapMoveBlk[M].Node[i].p0), 1, levelPtr);
-			fread(&MapMoveBlk[M].Node[i].p1, sizeof(MapMoveBlk[M].Node[i].p1), 1, levelPtr);
-			fread(&MapMoveBlk[M].Node[i].p2, sizeof(MapMoveBlk[M].Node[i].p2), 1, levelPtr);
+			newExclamationBlock.Node.push_back(newExclamationBlockNode);
 		}
+
+		MapMoveBlk.push_back(newExclamationBlock);
 	}
 
-	MapTrackBlk.resize(MapHdr.TrackBlkCount);
-	for(M = 0; M < MapHdr.TrackBlkCount; M++) {
-		fseek(levelPtr, Offset + 0x245EC + 0x1 + M * 0x2C, SEEK_SET);
-		fread(&MapTrackBlk[M].index, sizeof(MapTrackBlk[M].index), 1, levelPtr);
-		fread(&MapTrackBlk[M].NodeCount, sizeof(MapTrackBlk[M].NodeCount), 1, levelPtr);
+	MapTrackBlk.clear();
+	for(int i = 0; i < map.track_block_count(); i++) {
+		auto& track_block_ref = *map.track_blocks()->at(i);
+		LevelParser::MapMoveBlock newTrackBlock;
+		newTrackBlock.index     = track_block_ref.index();
+		newTrackBlock.NodeCount = track_block_ref.node_count();
 
-		MapTrackBlk[M].Node.resize(MapTrackBlk[M].NodeCount);
+		for(int j = 0; j < newTrackBlock.NodeCount; j++) {
+			auto& track_block_node_ref = *track_block_ref.nodes()->at(j);
+			LevelParser::MapMoveBlockNode newTrackBlockNode;
+			newTrackBlockNode.p0 = track_block_node_ref.unk1();
+			newTrackBlockNode.p1 = track_block_node_ref.direction();
+			newTrackBlockNode.p2 = track_block_node_ref.unk2();
 
-		for(i = 0; i < MapTrackBlk[M].NodeCount; i++) {
-			fseek(levelPtr, Offset + 0x245EC + 0x4 + 0x0 + M * 0x2C + i * 0x4, SEEK_SET);
-			fread(&MapTrackBlk[M].Node[i].p0, sizeof(MapTrackBlk[M].Node[i].p0), 1, levelPtr);
-			fread(&MapTrackBlk[M].Node[i].p1, sizeof(MapTrackBlk[M].Node[i].p1), 1, levelPtr);
-			fread(&MapTrackBlk[M].Node[i].p2, sizeof(MapTrackBlk[M].Node[i].p2), 1, levelPtr);
+			newTrackBlock.Node.push_back(newTrackBlockNode);
 		}
+
+		MapTrackBlk.push_back(newTrackBlock);
 	}
 
-	MapGrd.resize(MapHdr.GroundCount);
-
-	for(M = 0; M <= 300; M++) {
+	for(int M = 0; M <= 300; M++) {
 		for(j = 0; j <= 300; j++) {
 			GroundNode[M][j] = 0;
 		}
 	}
-	for(M = 0; M < MapHdr.GroundCount; M++) {
-		fseek(levelPtr, Offset + 0x247A4 + M * 0x4, SEEK_SET);
-		fread(&MapGrd[M].X, sizeof(MapGrd[M].X), 1, levelPtr);
-		fread(&MapGrd[M].Y, sizeof(MapGrd[M].Y), 1, levelPtr);
-		fread(&MapGrd[M].ID, sizeof(MapGrd[M].ID), 1, levelPtr);
-		fread(&MapGrd[M].BID, sizeof(MapGrd[M].BID), 1, levelPtr);
 
-		GroundNode[MapGrd[M].X + 1][MapGrd[M].Y + 1] = 1;
+	MapGrd.clear();
+	for(int i = 0; i < map.ground_count(); i++) {
+		auto& ground_ref = *map.ground()->at(i);
+		LevelParser::MapGround newGround;
+		newGround.X   = ground_ref.x();
+		newGround.Y   = ground_ref.y();
+		newGround.ID  = ground_ref.id();
+		newGround.BID = ground_ref.background_id();
+
+		GroundNode[newGround.X + 1][newGround.Y + 1] = 1;
+
+		MapGrd.push_back(newGround);
 	}
+
 	if(overworld) {
 		for(j = std::round((LH.GoalX - 5) / 10.0); j <= (LH.GoalX - 5) / 10.0 + 9; j++) {
 			for(i = 0; i < LH.GoalY; i++) {
 				GroundNode[j + 1][i + 1] = 1;
 			}
 		}
+
 		for(j = 0; j <= 6; j++) {
 			for(i = 0; i < LH.StartY; i++) {
 				GroundNode[j + 1][i + 1] = 1;
@@ -290,147 +261,147 @@ void LevelParser::LoadLevelData(const std::string& P, bool overworld) {
 		}
 	}
 
-	//轨道0x28624  0x4650 (0xC * 1500)Track
-	MapTrk.resize(MapHdr.TrackCount);
-
+	MapTrk.clear();
 	TrackNode.resize(MapHdr.BorR + 3);
 	for(int i = 0; i < MapHdr.BorR + 3; i++) {
 		TrackNode[i].resize(MapHdr.BorT + 3);
 	}
 
-	unsigned char TX = 0;
-	for(M = 0; M < MapHdr.TrackCount; M++) {
-		fseek(levelPtr, Offset + 0x28624 + 0x0 + M * 0xC, SEEK_SET);
-		fread(&MapTrk[M].UN, sizeof(MapTrk[M].UN), 1, levelPtr);
-		fread(&MapTrk[M].Flag, sizeof(MapTrk[M].Flag), 1, levelPtr);
-		fread(&TX, sizeof(TX), 1, levelPtr);
+	for(int i = 0; i < map.track_count(); i++) {
+		auto& track_ref = *map.tracks()->at(i);
+		LevelParser::MapTrack newTrack;
+		newTrack.UN   = track_ref.unk1();
+		newTrack.Flag = track_ref.flags();
 
+		int TX = track_ref.x();
 		if(TX == 255) {
-			MapTrk[M].X = 0;
+			newTrack.X = 0;
 		} else {
-			MapTrk[M].X = (unsigned char)(TX + 1);
+			newTrack.X = (unsigned char)(TX + 1);
 		}
 
-		fread(&TX, sizeof(TX), 1, levelPtr);
-
-		if(TX == 255) {
-			MapTrk[M].Y = 0;
+		int TY = track_ref.y();
+		if(TY == 255) {
+			newTrack.Y = 0;
 		} else {
-			MapTrk[M].Y = (unsigned char)(TX + 1);
+			newTrack.Y = (unsigned char)(TY + 1);
 		}
 
-		fread(&MapTrk[M].Type, sizeof(MapTrk[M].Type), 1, levelPtr);
-		fread(&MapTrk[M].LID, sizeof(MapTrk[M].LID), 1, levelPtr);
-		fread(&MapTrk[M].K0, sizeof(MapTrk[M].K0), 1, levelPtr);
-		fread(&MapTrk[M].K1, sizeof(MapTrk[M].K1), 1, levelPtr);
+		newTrack.Type = track_ref.type();
+		newTrack.LID  = track_ref.lid();
+		newTrack.K0   = track_ref.unk2();
+		newTrack.K1   = track_ref.unk3();
 
-		switch(MapTrk[M].Type) {
+		switch(newTrack.Type) {
 		case 0:
-			TrackNode[MapTrk[M].X][MapTrk[M].Y + 1] += 1;
-			TrackNode[MapTrk[M].X + 2][MapTrk[M].Y + 1] += 1;
-			MapTrk[M].F0 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x80) % 2);
-			MapTrk[M].F1 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x80) % 2);
+			TrackNode[newTrack.X][newTrack.Y + 1] += 1;
+			TrackNode[newTrack.X + 2][newTrack.Y + 1] += 1;
+			newTrack.F0 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x80) % 2);
+			newTrack.F1 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x80) % 2);
 			break;
 		case 1:
-			TrackNode[MapTrk[M].X + 1][MapTrk[M].Y + 2] += 1;
-			TrackNode[MapTrk[M].X + 1][MapTrk[M].Y] += 1;
-			MapTrk[M].F0 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x80) % 2);
-			MapTrk[M].F1 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x80) % 2);
+			TrackNode[newTrack.X + 1][newTrack.Y + 2] += 1;
+			TrackNode[newTrack.X + 1][newTrack.Y] += 1;
+			newTrack.F0 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x80) % 2);
+			newTrack.F1 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x80) % 2);
 			break;
 		case 2:
 		case 4:
 		case 5:
-			TrackNode[MapTrk[M].X][MapTrk[M].Y + 2] += 1;
-			TrackNode[MapTrk[M].X + 2][MapTrk[M].Y] += 1;
-			MapTrk[M].F0 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x80) % 2);
-			MapTrk[M].F1 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x80) % 2);
+			TrackNode[newTrack.X][newTrack.Y + 2] += 1;
+			TrackNode[newTrack.X + 2][newTrack.Y] += 1;
+			newTrack.F0 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x80) % 2);
+			newTrack.F1 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x80) % 2);
 			break;
 		case 3:
 		case 6:
 		case 7:
-			TrackNode[MapTrk[M].X + 2][MapTrk[M].Y + 2] += 1;
-			TrackNode[MapTrk[M].X][MapTrk[M].Y] += 1;
-			MapTrk[M].F0 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x80) % 2);
-			MapTrk[M].F1 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x80) % 2);
+			TrackNode[newTrack.X + 2][newTrack.Y + 2] += 1;
+			TrackNode[newTrack.X][newTrack.Y] += 1;
+			newTrack.F0 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x80) % 2);
+			newTrack.F1 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x80) % 2);
 			break;
 		case 8:
-			TrackNode[MapTrk[M].X][MapTrk[M].Y + 2] += 1;
-			TrackNode[MapTrk[M].X + 4][MapTrk[M].Y] += 1;
-			TrackNode[MapTrk[M].X + 4][MapTrk[M].Y + 4] += 1;
-			MapTrk[M].F0 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x80) % 2);
-			MapTrk[M].F1 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x80) % 2);
-			MapTrk[M].F2 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x8000) % 2);
+			TrackNode[newTrack.X][newTrack.Y + 2] += 1;
+			TrackNode[newTrack.X + 4][newTrack.Y] += 1;
+			TrackNode[newTrack.X + 4][newTrack.Y + 4] += 1;
+			newTrack.F0 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x80) % 2);
+			newTrack.F1 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x80) % 2);
+			newTrack.F2 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x8000) % 2);
 			break;
 		case 9:
-			TrackNode[MapTrk[M].X][MapTrk[M].Y] += 1;
-			TrackNode[MapTrk[M].X][MapTrk[M].Y + 4] += 1;
-			TrackNode[MapTrk[M].X + 4][MapTrk[M].Y + 2] += 1;
-			MapTrk[M].F0 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x40) % 2);
-			MapTrk[M].F1 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x2) % 2);
-			MapTrk[M].F2 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x80) % 2);
+			TrackNode[newTrack.X][newTrack.Y] += 1;
+			TrackNode[newTrack.X][newTrack.Y + 4] += 1;
+			TrackNode[newTrack.X + 4][newTrack.Y + 2] += 1;
+			newTrack.F0 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x40) % 2);
+			newTrack.F1 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x2) % 2);
+			newTrack.F2 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x80) % 2);
 			break;
 		case 10:
-			TrackNode[MapTrk[M].X][MapTrk[M].Y] += 1;
-			TrackNode[MapTrk[M].X + 2][MapTrk[M].Y + 4] += 1;
-			TrackNode[MapTrk[M].X + 4][MapTrk[M].Y] += 1;
-			MapTrk[M].F0 = (unsigned char)(1 - ((MapTrk[M].K0 + 0x10000) / 0x4000) % 2);
-			MapTrk[M].F1 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x40) % 2);
-			MapTrk[M].F2 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x80) % 2);
+			TrackNode[newTrack.X][newTrack.Y] += 1;
+			TrackNode[newTrack.X + 2][newTrack.Y + 4] += 1;
+			TrackNode[newTrack.X + 4][newTrack.Y] += 1;
+			newTrack.F0 = (unsigned char)(1 - ((newTrack.K0 + 0x10000) / 0x4000) % 2);
+			newTrack.F1 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x40) % 2);
+			newTrack.F2 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x80) % 2);
 			break;
 		case 11:
-			TrackNode[MapTrk[M].X + 2][MapTrk[M].Y] += 1;
-			TrackNode[MapTrk[M].X][MapTrk[M].Y + 4] += 1;
-			TrackNode[MapTrk[M].X + 4][MapTrk[M].Y + 4] += 1;
-			MapTrk[M].F0 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x80) % 2);
-			MapTrk[M].F1 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x2) % 2);
-			MapTrk[M].F2 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x40) % 2);
+			TrackNode[newTrack.X + 2][newTrack.Y] += 1;
+			TrackNode[newTrack.X][newTrack.Y + 4] += 1;
+			TrackNode[newTrack.X + 4][newTrack.Y + 4] += 1;
+			newTrack.F0 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x80) % 2);
+			newTrack.F1 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x2) % 2);
+			newTrack.F2 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x40) % 2);
 			break;
 		case 12:
-			TrackNode[MapTrk[M].X][MapTrk[M].Y + 2] += 1;
-			TrackNode[MapTrk[M].X + 4][MapTrk[M].Y] += 1;
-			TrackNode[MapTrk[M].X + 4][MapTrk[M].Y + 4] += 1;
-			MapTrk[M].F0 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x800) % 2);
-			MapTrk[M].F1 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x80) % 2);
-			MapTrk[M].F2 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x1000) % 2);
+			TrackNode[newTrack.X][newTrack.Y + 2] += 1;
+			TrackNode[newTrack.X + 4][newTrack.Y] += 1;
+			TrackNode[newTrack.X + 4][newTrack.Y + 4] += 1;
+			newTrack.F0 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x800) % 2);
+			newTrack.F1 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x80) % 2);
+			newTrack.F2 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x1000) % 2);
 			break;
 		case 13:
-			TrackNode[MapTrk[M].X][MapTrk[M].Y] += 1;
-			TrackNode[MapTrk[M].X][MapTrk[M].Y + 4] += 1;
-			TrackNode[MapTrk[M].X + 4][MapTrk[M].Y + 2] += 1;
-			MapTrk[M].F0 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x800) % 2);
-			MapTrk[M].F1 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x1000) % 2);
-			MapTrk[M].F2 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x80) % 2);
+			TrackNode[newTrack.X][newTrack.Y] += 1;
+			TrackNode[newTrack.X][newTrack.Y + 4] += 1;
+			TrackNode[newTrack.X + 4][newTrack.Y + 2] += 1;
+			newTrack.F0 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x800) % 2);
+			newTrack.F1 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x1000) % 2);
+			newTrack.F2 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x80) % 2);
 			break;
 		case 14:
-			TrackNode[MapTrk[M].X][MapTrk[M].Y] += 1;
-			TrackNode[MapTrk[M].X + 4][MapTrk[M].Y] += 1;
-			TrackNode[MapTrk[M].X + 2][MapTrk[M].Y + 4] += 1;
-			MapTrk[M].F0 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x1000) % 2);
-			MapTrk[M].F1 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x800) % 2);
-			MapTrk[M].F2 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x80) % 2);
+			TrackNode[newTrack.X][newTrack.Y] += 1;
+			TrackNode[newTrack.X + 4][newTrack.Y] += 1;
+			TrackNode[newTrack.X + 2][newTrack.Y + 4] += 1;
+			newTrack.F0 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x1000) % 2);
+			newTrack.F1 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x800) % 2);
+			newTrack.F2 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x80) % 2);
 			break;
 		case 15:
-			TrackNode[MapTrk[M].X + 2][MapTrk[M].Y] += 1;
-			TrackNode[MapTrk[M].X][MapTrk[M].Y + 4] += 1;
-			TrackNode[MapTrk[M].X + 4][MapTrk[M].Y + 4] += 1;
-			MapTrk[M].F0 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x80) % 2);
-			MapTrk[M].F1 = (unsigned char)(((MapTrk[M].K0 + 0x10000) / 0x1000) % 2);
-			MapTrk[M].F2 = (unsigned char)(((MapTrk[M].K1 + 0x10000) / 0x800) % 2);
+			TrackNode[newTrack.X + 2][newTrack.Y] += 1;
+			TrackNode[newTrack.X][newTrack.Y + 4] += 1;
+			TrackNode[newTrack.X + 4][newTrack.Y + 4] += 1;
+			newTrack.F0 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x80) % 2);
+			newTrack.F1 = (unsigned char)(((newTrack.K0 + 0x10000) / 0x1000) % 2);
+			newTrack.F2 = (unsigned char)(((newTrack.K1 + 0x10000) / 0x800) % 2);
 			break;
 		}
+
+		MapTrk.push_back(newTrack);
 	}
 
-	MapIce.resize(MapHdr.IceCount);
-	for(M = 0; M < MapHdr.IceCount; M++) {
-		fseek(levelPtr, Offset + 0x2CC74 + 0x0 + M * 0x4, SEEK_SET);
-		fread(&MapIce[M].X, sizeof(MapIce[M].X), 1, levelPtr);
-		fread(&MapIce[M].Y, sizeof(MapIce[M].Y), 1, levelPtr);
-		fread(&MapIce[M].ID, sizeof(MapIce[M].ID), 1, levelPtr);
+	MapIce.clear();
+	for(int i = 0; i < map.ice_count(); i++) {
+		auto& ice_ref = *map.icicles()->at(i);
+		LevelParser::MapGround newIce;
+		newIce.X  = ice_ref.x();
+		newIce.Y  = ice_ref.y();
+		newIce.ID = ice_ref.type();
+
+		MapIce.push_back(newIce);
 	}
 
 	fmt::print("Done parsing {}\n", LH.Name);
-
-	fclose(levelPtr);
 }
 
 void LevelParser::ExportToJSON(const std::string& outputPath, std::vector<DrawingInstruction>& drawingInstructions) {

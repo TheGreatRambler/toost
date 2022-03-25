@@ -480,66 +480,81 @@ void LevelDrawer::DrawCrp(unsigned char EX, int X, int Y) {
 		switch(level.MapCrp[EX - 1].Node[i]) {
 		case 1: // L
 			path = LevelData::OBJ_CMN_SL;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			XX -= 2;
 			break;
 		case 2: // R
 			path = LevelData::OBJ_CMN_SR;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			XX += 2;
 			break;
 		case 3: // D
 			path = LevelData::OBJ_CMN_SD;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			YY -= 2;
 			break;
 		case 4: // U
 			path = LevelData::OBJ_CMN_SU;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			YY += 2;
 			break;
 		case 5: // LD
 			path = LevelData::OBJ_CMN_SRD;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			YY -= 2;
 			break;
 		case 6: // DL
 			path = LevelData::OBJ_CMN_SUL;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			XX -= 2;
 			break;
 		case 7: // LU
 			path = LevelData::OBJ_CMN_SRU;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			YY += 2;
 			break;
 		case 8: // UL
 			path = LevelData::OBJ_CMN_SDL;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			XX -= 2;
 			break;
 		case 9: // RD
 			path = LevelData::OBJ_CMN_SLD;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			YY -= 2;
 			break;
 		case 10: // DR
 			path = LevelData::OBJ_CMN_SUR;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			XX += 2;
 			break;
 		case 11: // RU
 			path = LevelData::OBJ_CMN_SLU;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			YY += 2;
 			break;
 		case 12: // UR
 			path = LevelData::OBJ_CMN_SDR;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			XX += 2;
 			break;
 		case 13: // RE
 			path = LevelData::OBJ_CMN_SE;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			break;
 		case 14: // LE
 			path = LevelData::OBJ_CMN_SE;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			break;
 		case 15: // UE
 			path = LevelData::OBJ_CMN_SE;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			break;
 		case 16: // DE
 			path = LevelData::OBJ_CMN_SE;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 			break;
 		}
-		DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 	}
 }
 
@@ -611,66 +626,81 @@ void LevelDrawer::DrawSnake(unsigned char EX, int X, int Y, int SW, int SH) {
 		switch(level.MapSnk[EX - 1].Node[i].Dir) {
 		case 1: // L
 			path = LevelData::OBJ_CMN_SL;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			XX -= 1;
 			break;
 		case 2: // R
 			path = LevelData::OBJ_CMN_SR;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			XX += 1;
 			break;
 		case 3: // D
 			path = LevelData::OBJ_CMN_SD;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			YY -= 1;
 			break;
 		case 4: // U
 			path = LevelData::OBJ_CMN_SU;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			YY += 1;
 			break;
 		case 5: // LD
 			path = LevelData::OBJ_CMN_SRD;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			YY -= 1;
 			break;
 		case 6: // DL
 			path = LevelData::OBJ_CMN_SUL;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			XX -= 1;
 			break;
 		case 7: // LU
 			path = LevelData::OBJ_CMN_SRU;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			YY += 1;
 			break;
 		case 8: // UL
 			path = LevelData::OBJ_CMN_SDL;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			XX -= 1;
 			break;
 		case 9: // RD
 			path = LevelData::OBJ_CMN_SLD;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			YY -= 1;
 			break;
 		case 10: // DR
 			path = LevelData::OBJ_CMN_SUR;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			XX += 1;
 			break;
 		case 11: // RU
 			path = LevelData::OBJ_CMN_SLU;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			YY += 1;
 			break;
 		case 12: // UR
 			path = LevelData::OBJ_CMN_SDR;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			XX += 1;
 			break;
 		case 13: // RE
 			path = LevelData::OBJ_CMN_SE;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			break;
 		case 14: // LE
 			path = LevelData::OBJ_CMN_SE;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			break;
 		case 15: // UE
 			path = LevelData::OBJ_CMN_SE;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			break;
 		case 16: // DE
 			path = LevelData::OBJ_CMN_SE;
+			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 			break;
 		}
-		DrawImage(path, XX * Zm, (H - YY) * Zm, Zm, Zm);
 	}
 	// Err:;
 }
@@ -720,66 +750,81 @@ void LevelDrawer::DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y
 			switch(level.MapTrackBlk[EX - 1].Node[i].p1) {
 			case 1: // L
 				path = LevelData::OBJ_CMN_SL;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX -= 2;
 				break;
 			case 2: // R
 				path = LevelData::OBJ_CMN_SR;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX += 2;
 				break;
 			case 3: // D
 				path = LevelData::OBJ_CMN_SD;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY -= 2;
 				break;
 			case 4: // U
 				path = LevelData::OBJ_CMN_SU;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY += 2;
 				break;
 			case 5: // LD
 				path = LevelData::OBJ_CMN_SRD;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY -= 2;
 				break;
 			case 6: // DL
 				path = LevelData::OBJ_CMN_SUL;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX -= 2;
 				break;
 			case 7: // LU
 				path = LevelData::OBJ_CMN_SRU;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY += 2;
 				break;
 			case 8: // UL
 				path = LevelData::OBJ_CMN_SDL;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX -= 2;
 				break;
 			case 9: // RD
 				path = LevelData::OBJ_CMN_SLD;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY -= 2;
 				break;
 			case 10: // DR
 				path = LevelData::OBJ_CMN_SUR;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX += 2;
 				break;
 			case 11: // RU
 				path = LevelData::OBJ_CMN_SLU;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY += 2;
 				break;
 			case 12: // UR
 				path = LevelData::OBJ_CMN_SDR;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX += 2;
 				break;
 			case 13: // RE
 				path = LevelData::OBJ_CMN_SE;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			case 14: // LE
 				path = LevelData::OBJ_CMN_SE;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			case 15: // UE
 				path = LevelData::OBJ_CMN_SE;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			case 16: // DE
 				path = LevelData::OBJ_CMN_SE;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			}
-			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 		}
 	} break;
 	case 119: {
@@ -819,66 +864,81 @@ void LevelDrawer::DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y
 			switch(level.MapMoveBlk[EX - 1].Node[i].p1) {
 			case 1: // L
 				path = LevelData::OBJ_CMN_SL;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX -= 2;
 				break;
 			case 2: // R
 				path = LevelData::OBJ_CMN_SR;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX += 2;
 				break;
 			case 3: // D
 				path = LevelData::OBJ_CMN_SD;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY -= 2;
 				break;
 			case 4: // U
 				path = LevelData::OBJ_CMN_SU;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY += 2;
 				break;
 			case 5: // LD
 				path = LevelData::OBJ_CMN_SRD;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY -= 2;
 				break;
 			case 6: // DL
 				path = LevelData::OBJ_CMN_SUL;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX -= 2;
 				break;
 			case 7: // LU
 				path = LevelData::OBJ_CMN_SRU;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY += 2;
 				break;
 			case 8: // UL
 				path = LevelData::OBJ_CMN_SDL;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX -= 2;
 				break;
 			case 9: // RD
 				path = LevelData::OBJ_CMN_SLD;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY -= 2;
 				break;
 			case 10: // DR
 				path = LevelData::OBJ_CMN_SUR;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX += 2;
 				break;
 			case 11: // RU
 				path = LevelData::OBJ_CMN_SLU;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				YY += 2;
 				break;
 			case 12: // UR
 				path = LevelData::OBJ_CMN_SDR;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				XX += 2;
 				break;
 			case 13: // RE
 				path = LevelData::OBJ_CMN_SE;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			case 14: // LE
 				path = LevelData::OBJ_CMN_SE;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			case 15: // UE
 				path = LevelData::OBJ_CMN_SE;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			case 16: // DE
 				path = LevelData::OBJ_CMN_SE;
+				DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 				break;
 			}
-			DrawImage(path, XX * Zm, (H - YY) * Zm, Zm * 2, Zm * 2);
 		}
 	} break;
 	}

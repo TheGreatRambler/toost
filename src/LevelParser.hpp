@@ -2,6 +2,7 @@
 
 #define RAPIDJSON_HAS_STDSTRING 1
 
+#include <MM2/level.h>
 #include <SMM2CourseDecryptor/decrypt.h>
 #include <array>
 #include <cmath>
@@ -17,7 +18,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 
 struct DrawingInstruction {
 	std::string path;
@@ -215,96 +215,10 @@ public:
 	bool isOverworld;
 
 	LevelParser();
-	// std::string GetItemName(int n, int v);
 	static bool DecryptLevelData(const std::string& input, const std::string& output);
-	void LoadLevelData(const std::string& P, bool overworld);
+	void LoadLevelData(const std::string& levelData, bool overworld);
 	void ExportToJSON(const std::string& outputPath, std::vector<DrawingInstruction>& drawingInstructions);
 };
-
-/*
-static const char* ObjEng3[] = { "Baby Chestnut", "Turtle Slowly", "Eat Flower", "Brother Hammer", "Soft Brick",
-"? Brick", "Hard Brick", "Ground", "Gold Coin", "Water Pipe", "Spring", "Elevating Platform", "Dong Dong", "Fort",
-"Mushroom Platform", "Bombman", "Half Collision Platform", "Bridge", "P Switch", "POW", "Mushroom", "Bamboo Wheel",
-"Cloud Brick", "Musical Note", "Fire Rod", "Thorn Tortoise", "End Brick", "End Flag", "Helmet Turtle",
-"Hidden Brick", "Ball game", "Ball Game Cloud", "Cannonball Assassin", "1UP Mushroom", "Flame Flower",
-"Invincible Star", "Lava Table", "Starting Brick", "Starting Arrow", "Mage", "Spiked turtle", "Ghost",
-"Clown Spaceship", "Thorn", "Super Leaf", "Shoe Chestnut", "Cracked Tortoise", "Cannon", "Squid", "Castle Bridge",
-"Jumping Machine", "Jumping Mouse", "Flower Maomao", "Conveyor Belt", "Airbrush", "Door", "Bubble Fish",
-"Black Flower", "Wrencher", "Track", "Flame Bubble", "Wow", "Kuba", "Ice Brick", "Tree Vine", "Ding Ding Bee",
-"Arrow", "One-way Board", "Circular Saw", "Player", "10/30/50 Gold Coins", "Half Collision Platform",
-"Slowly Turtle Car", "Cinobio", "Gabon/Iron Ball", "Stone", "Tornado", "Ben Ben", "Cactus", "P Brick",
-"Sprint Brick", "Frog Pack", "Circle", "Mace", "Snake", "Mobile Brick", "Uka", "Steep Slope", "Slight Slope",
-"Reel Camera", "Middle Flag", "Seesaw", "Red Coin", "Transparent Water Pipe", "Ramp Conveyor", "Key", "Ant Soldier",
-"Transport Box", "Little Kuba", "Switch", "Dotted Brick", "Water Marker", "Mole", "Fishbone", "Sun/Moon",
-"Swing Arm", "Tree", "Long swallows flowers", "Flashing Brick", "Sound", "Spiked Brick", "Mechanical Kuba",
-"Wooden Box", "Mushroom Jumping Bed", "Spiked Pufferfish", "Cinobic", "Super Hammer", "Dou Dou", "Ice Cone",
-"! Brick", "Remy", "Morton", "Larry", "Windy", "Egy", "Roy", "Rodwig", "Castle Box", "Propeller Box",
-"Paper Chestnut Baby", "Paper Cannonball Assassin", "Red POW Box", "Switch Jumping on Bed" };
-static const char*
-ObjEngW[] = { "Li Bangbang", "Slowly Turtle", "Swallowing Flowers", "Hammer Brothers", "Soft Bricks",
-"? Bricks", "Hard Bricks", "Grounds", "Gold Coin", "Water Pipe", "Spring", "Elevating Platform", "Dong Dong",
-"Fort", "Mushroom Platform", "Bombman", "Half Collision Platform", "Bridge", "P Switch", "POW", "Mushroom",
-"Bamboo Wheel", "Cloud Brick", "Musical Note", "Fire Rod", "Thorn Tortoise", "End Brick", "End Flag",
-"Helmet Turtle", "Hidden Brick", "Ball game", "Ball Game Cloud", "Cannonball Assassin", "1UP Mushroom",
-"Flame Flower", "Invincible Star", "Lava Table", "Starting Brick", "Starting Arrow", "Mage", "Spiked turtle",
-"Ghost", "Clown Spaceship", "Thorn", "Cape Feather", "Yoshi", "Cracked Tortoise", "Cannon", "Squid",
-"Castle Bridge", "Jumping Machine", "Jerboa", "Flower Maomao", "Conveyor Belt", "Airbrush", "Door", "Bubble Fish",
-"Black Flower", "Wrencher", "Track", "Flame Bubble", "Wow", "Kuba", "Ice Brick", "Tree Vine", "Ding Ding Bee",
-"Arrow", "One-way Board", "Circular Saw", "Player", "10/30/50 Gold Coins", "Half Collision Platform",
-"Slowly Turtle Car", "Cinobio", "Gabon/Iron Ball", "Stone", "Tornado", "Boom", "Cactus", "P Brick", "Sprint Brick",
-"Power Balloon", "Circle", "Mace", "Snake", "Mobile Brick", "Uka", "Steep Slope", "Slight Slope", "Reel Camera",
-"Middle Flag", "Seesaw", "Red Coin", "Transparent Water Pipe", "Ramp Conveyor", "Key", "Ant Soldier",
-"Transport Box", "Little Kuba", "Switch", "Dotted Brick", "Water Marker", "Mole", "Fishbone", "Sun/Moon",
-"Swing Arm", "Tree", "Long swallows flowers", "Flashing Brick", "Sound", "Spiked Brick", "Mechanical Kuba",
-"Wooden Box", "Mushroom Jumping Bed", "Spiked Pufferfish", "Cinobic", "Super Hammer", "Dou Dou", "Ice Cone",
-"! Brick", "Remy", "Morton", "Larry", "Windy", "Egy", "Roy", "Rodwig", "Castle Box", "Propeller Box",
-"Paper Chestnut Baby", "Paper Cannonball Assassin", "Red POW Box", "Switch Jumping on Bed" };
-static const char*
-ObjEngU[] = { "Baby Chestnut", "Turtle Slowly", "Eat Flower", "Brother Hammer", "Soft Brick",
-"? Brick", "Hard Brick", "Ground", "Gold Coin", "Water Pipe", "Spring", "Elevating Platform", "Dong Dong", "Fort",
-"Mushroom Platform", "Bombman", "Half Collision Platform", "Bridge", "P Switch", "POW", "Mushroom", "Bamboo Wheel",
-"Cloud Brick", "Musical Note", "Fire Rod", "Thorn Tortoise", "End Brick", "End Flag", "Helmet Turtle",
-"Hidden Brick", "Ball game", "Ball Game Cloud", "Cannonball Assassin", "1UP Mushroom", "Flame Flower",
-"Invincible Star", "Lava Table", "Starting Brick", "Starting Arrow", "Mage", "Spiked turtle", "Ghost",
-"Clown Spaceship", "Thorn", "Propeller Mushroom", "Yoshi", "Cracked Tortoise", "Cannon", "Squid", "Castle Bridge",
-"Jumping Machine", "Jerboa", "Flower Maomao", "Conveyor Belt", "Airbrush", "Door", "Bubble Fish", "Black Flower",
-"Wrencher", "Track", "Flame Bubble", "Wow", "Kuba", "Ice Brick", "Tree Vine", "Ding Ding Bee", "Arrow",
-"One-way Board", "Circular Saw", "Player", "10/30/50 Gold Coins", "Half Collision Platform", "Slowly Turtle Car",
-"Cinobio", "Gabon/Iron Ball", "Stone", "Tornado", "Ben Ben", "Cactus", "P Brick", "Sprint Brick",
-"Super Oak Chestnut", "Circle", "Mace", "Snake", "Mobile Brick", "Uka", "Steep Slope", "Slight Slope",
-"Reel Camera", "Middle Flag", "Seesaw", "Red Coin", "Transparent Water Pipe", "Ramp Conveyor", "Key", "Ant Soldier",
-"Transport Box", "Little Kuba", "Switch", "Dotted Brick", "Water Marker", "Mole", "Fishbone", "Sun/Moon",
-"Swing Arm", "Tree", "Long swallows flowers", "Flashing Brick", "Sound", "Spiked Brick", "Mechanical Kuba",
-"Wooden Box", "Mushroom Jumping Bed", "Spiked Pufferfish", "Cinobic", "Super Hammer", "Dou Dou", "Ice Cone",
-"! Brick", "Remy", "Morton", "Larry", "Windy", "Egy", "Roy", "Rodwig", "Castle Box", "Propeller Box",
-"Paper Chestnut Baby", "Paper Cannonball Assassin", "Red POW Box", "Switch Jumping on Bed" };
-static const char*
-ObjEngD[] = { "Chestnut", "turtle slowly", "devouring flowers", "hammer brothers", "soft bricks",
-"? bricks", "hard bricks", "ground", "gold coins", "Water Pipe", "Spring", "Elevating Platform", "Dong Dong",
-"Fort", "Mushroom Platform", "Bomberman", "Half Collision Platform", "Bridge", "P Switch", "POW", "mushroom",
-"Bamboo Wheel", "Cloud Brick", "Music Note", "Fire Rod", "Spike Turtle", "End Brick", "End Flag", "Helmet Turtle",
-"Hidden Brick", "Ball Game", "Ball Gaim Cloud", "Cannonball Assassin", "1UP Mushroom", "Flame Flower",
-"Invincible Star", "Lava Table", "Starting Brick", "Starting Arrow", "Magic", "Spiked Turtle", "Ghost",
-"Joker Spaceship", "Thorn", "Super Bell", "Shoes/Yoshi", "Cracked Tortoise", "Cannon", "Squid", "Castle Bridge",
-"Jumping Machine", "Jumping Rat", "Hua Mao Mao", "Conveyor Belt", "Airbrush", "Door", "Bubble Fish", "Black Flower",
-"Wrench Boy", "Track", "Flame Bubble", "Wow", "Kuba", "Ice Brick", "Tree Vine", "Ding Ding Bee", "Arrow",
-"One Way Board", "Circular Saw", "Player", "10/30/50 Gold Coins", "Semi-Collision Platform", "Slow Turtle Car",
-"Chino Bio", "Gabon/Iron Ball", "Stone", "Tornado", "Boom", "Cactus", "P Brick", "Sprint Brick", "Boomerang Flower",
-"Circle", "Mace", "Snake", "Mobile Brick", "Uka", "Steep Slope", "Slight Slope", "Reel Camera", "Middle Flag",
-"Seesaw", "Red Coin", "Transparent Water Pipe", "Ramp Conveyor", "Key", "Ant Soldier", "Transport Box",
-"Little Kuba", "Switch", "Dotted Brick", "Water Marker", "Mole", "Fishbone", "Sun/Moon", "Swing Arm", "Tree",
-"Long swallows flowers", "Flashing Brick", "Sound", "Spiked Brick", "Mechanical Kuba", "Wooden Box",
-"Mushroom Jumping Bed", "Spiked Pufferfish", "Cinobic", "Super Hammer", "Dou Dou", "Ice Cone", "! Brick", "Remy",
-"Morton", "Larry", "Windy", "Egy", "Roy", "Rodwig", "Castle Box", "Propeller Box", "Paper Chestnut Baby",
-"Paper Cannonball Assassin", "Red POW Box", "Switch Jumping on Bed" };
-static
-const char* Badges[]
-= { "", "Gold ribbon", "Silver ribbon", "Copper ribbon", "Gold medal", "Silver medal", "Bronze medal" };
-static
-const char* BadgesType[] = { "Craftsman Points", "Endurance Challenge (Easy)", "Endurance Challenge (Normal)",
-"Endurance Challenge (Difficult)", "Endurance Challenge (Extremely Difficult)", "Multiplayer Battle",
-"Number of Passes", "Number of Passes First", "Number of Points in the int16_test Time", "Artisan Points (week)" };
-*/
 
 extern const char* ObjEng[];
 
