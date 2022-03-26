@@ -298,10 +298,9 @@ LevelHandler AttemptRender(
 			puts("File is encrypted");
 		}
 
-		LevelParser::DecryptLevelData(choice, fmt::format("{}/temp.bcd", assetsFolder));
-
-		std::ifstream ifs(fmt::format("{}/temp.bcd", assetsFolder), std::ios::binary);
-		content = std::string((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+		std::ifstream ifs(choice, std::ios::binary);
+		std::string input((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+		LevelParser::DecryptLevelData(input, content);
 	} else {
 		// First, check if compressed
 		FILE* magicFile = fopen(choice.c_str(), "rb");
@@ -1054,11 +1053,8 @@ int main(int argc, char** argv) {
 
 	// Decide GL+GLSL versions
 #if defined(__EMSCRIPTEN__)
-	// For the browser using Emscripten, we are going to use WebGL1 with GL ES2. See the Makefile. for requirement
-	// details. It is very likely the generated file won't work in many browsers. Firefox is the only sure bet, but I
-	// have successfully run this code on Chrome for Android for example.
+	// WebGL1 + GL ES2
 	const char* glsl_version = "#version 100";
-	// const char* glsl_version = "#version 300 es";
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
@@ -1104,9 +1100,7 @@ int main(int argc, char** argv) {
 	}
 
 	SDL_GL_MakeCurrent(window, gl_context);
-	// SDL_GL_SetSwapInterval(1); // Enable vsync
 
-	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();

@@ -215,7 +215,7 @@ public:
 	bool isOverworld;
 
 	LevelParser();
-	static bool DecryptLevelData(const std::string& input, const std::string& output);
+	static bool DecryptLevelData(std::string& input, std::string& output);
 	void LoadLevelData(const std::string& levelData, bool overworld);
 	void ExportToJSON(const std::string& outputPath, std::vector<DrawingInstruction>& drawingInstructions);
 };

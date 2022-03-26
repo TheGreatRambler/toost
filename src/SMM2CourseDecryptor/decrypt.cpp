@@ -31,100 +31,28 @@ void LevelDecryptor::gen_key(uint32_t* key_table, uint32_t* out_key, uint32_t* r
 	}
 }
 
-bool LevelDecryptor::decrypt(const char* input, const char* output) {
-	FILE* in  = fopen(input, "rb");
-	FILE* out = fopen(output, "wb");
-
-	fseek(in, 0, SEEK_END);
-	size_t sz = ftell(in);
-	rewind(in);
+bool LevelDecryptor::decrypt(std::string& input, std::string& output) {
+	std::size_t sz = input.size();
 
 	struct AES_ctx ctx;
 
 	uint32_t rand_state[STATE_SIZE];
 	uint32_t key_state[STATE_SIZE];
 
-	switch(sz) // CMAC calculation isn't handled yet, will implement eventually
-	{
-	case 0x1C000: // Thumbnail image data
-	{
-		uint8_t* buf = (uint8_t*)malloc(0x1C000);
-
-		fread(buf, 1, 0x1C000, in);
-		fclose(in);
-
-		uint8_t* end = buf + sz - 0x30;
-
-		rand_init(
-			rand_state, *(uint32_t*)&end[0x10], *(uint32_t*)&end[0x14], *(uint32_t*)&end[0x18], *(uint32_t*)&end[0x1C]);
-		gen_key(thumb_key_table, key_state, rand_state);
-
-		AES_init_ctx_iv(&ctx, (uint8_t*)key_state, end);
-		AES_CBC_decrypt_buffer(&ctx, buf, sz - 0x30);
-
-		fwrite(buf, 1, sz - 0x30, out);
-		fclose(out);
-
-		free(buf);
-
-		break;
-	}
-
-	case 0x5C000: // Course data
-	{
-		uint8_t* buf = (uint8_t*)malloc(0x5C000);
-
-		fread(buf, 1, 0x5C000, in);
-		fclose(in);
-
-		uint8_t* end = buf + sz - 0x30;
+	if(sz == 0x5C000) {
+		uint8_t* end = (uint8_t*)input.data() + 0x5BFD0;
 
 		rand_init(
 			rand_state, *(uint32_t*)&end[0x10], *(uint32_t*)&end[0x14], *(uint32_t*)&end[0x18], *(uint32_t*)&end[0x1C]);
 		gen_key(course_key_table, key_state, rand_state);
 
 		AES_init_ctx_iv(&ctx, (uint8_t*)key_state, end);
-		AES_CBC_decrypt_buffer(&ctx, buf + 0x10, sz - 0x40);
+		AES_CBC_decrypt_buffer(&ctx, (uint8_t*)input.data() + 0x10, 0x5BFC0);
 
-		fwrite(buf + 0x10, 1, sz - 0x40, out);
-		fclose(out);
-
-		free(buf);
-
-		break;
-	}
-
-	case 0x68000: // Replay data
-	{
-		uint8_t* buf = (uint8_t*)malloc(0x68000);
-
-		fread(buf, 1, 0x68000, in);
-		fclose(in);
-
-		uint8_t* end = buf + sz - 0x30;
-
-		rand_init(
-			rand_state, *(uint32_t*)&end[0x10], *(uint32_t*)&end[0x14], *(uint32_t*)&end[0x18], *(uint32_t*)&end[0x1C]);
-		gen_key(replay_key_table, key_state, rand_state);
-
-		AES_init_ctx_iv(&ctx, (uint8_t*)key_state, end);
-		AES_CBC_decrypt_buffer(&ctx, buf, sz - 0x30);
-
-		fwrite(buf, 1, sz - 0x30, out);
-		fclose(out);
-
-		free(buf);
-
-		break;
-	}
-
-	default: {
-		puts("Error: Unsupported file!");
-		fclose(in);
-		fclose(out);
+		output.resize(0x5BFC0);
+		memcpy(output.data(), input.data() + 0x10, 0x5BFC0);
+		return true;
+	} else {
 		return false;
 	}
-	}
-
-	return true;
 }

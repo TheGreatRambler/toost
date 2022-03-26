@@ -30,8 +30,8 @@ LevelParser::LevelParser() {
 	}
 }
 
-bool LevelParser::DecryptLevelData(const std::string& input, const std::string& output) {
-	return LevelDecryptor::decrypt(input.c_str(), output.c_str());
+bool LevelParser::DecryptLevelData(std::string& input, std::string& output) {
+	return LevelDecryptor::decrypt(input, output);
 }
 
 void LevelParser::LoadLevelData(const std::string& levelData, bool overworld) {

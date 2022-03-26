@@ -37,12 +37,11 @@ ifeq ($(PLATFORM),web)
 	LDFLAGS += -s CASE_INSENSITIVE_FS=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=10000000 -s ASYNCIFY -s FETCH=1 -s FORCE_FILESYSTEM=1 -o bin/index.html --shell-file shell_minimal.html $(PRELOADED_FILES) $(EMS) -L./third_party/cairo-1.16.0/src/.libs -lcairo -L./third_party/pixman-0.40.0/pixman/.libs -lpixman-1
 else
 	CPPFLAGS += $(shell pkg-config --cflags sdl2 glew glfw3 zlib cairo freetype2 libcurl) -Wno-cast-function-type
-	LDFLAGS := -lpthread -lopengl32 $(shell pkg-config --libs --static sdl2 glew glfw3 zlib cairo freetype2 libcurl) -lunistring -liconv -lbrotlicommon -mconsole -fPIC -static -static-libgcc -static-libstdc++
 
 	ifeq ($(UNAME),Msys)
-		LDFLAGS += -lmingw32 -lws2_32 -lwsock32
+		LDFLAGS += $(shell pkg-config --libs --static sdl2 glew glfw3 zlib cairo freetype2 libcurl) -lpthread -lmingw32 -lopengl32 -lws2_32 -lwsock32 -mconsole -lunistring -liconv -lbrotlicommon -fPIC -static -static-libgcc -static-libstdc++
 	else
-		LDFLAGS += -ldl
+		LDFLAGS += $(shell pkg-config --libs sdl2 glew glfw3 zlib cairo freetype2 libcurl) -ldl -lpthread
 	endif
 endif
 
