@@ -1680,11 +1680,12 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						} else {
 							path = level.LH.GameStyle | LevelData::OBJ_42;
 						}
-						LX = std::round((float)((-objW / 2.0 + (std::round(objW) / 2) / 2.0 + objX / 160.0) * Zm));
-						LY = (H + objH - 2) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY;
+						LX = std::round((float)((-1 + (std::round(objW) / 2) / 2.0 + objX / 160.0) * Zm));
+						LY = (H + objH / 2.0 - 0.5) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY;
 
-						DrawImage(path, (float)((-objW / 2.0 + objX / 160.0) * Zm),
-							(H + objH - 2) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * 2, Zm * 2);
+						DrawImage(path, (float)((-1 + objX / 160.0) * Zm),
+							(H + objH / 2.0 - 0.5) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * 2,
+							Zm * 2);
 
 						break;
 					}

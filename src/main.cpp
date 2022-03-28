@@ -262,7 +262,11 @@ LevelDrawer* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string
 		cairo_paint(cr);
 		cairo_pattern_destroy(pattern);
 
+		auto start = std::chrono::high_resolution_clock::now();
 		cairo_surface_write_to_png(surface, destination.c_str());
+		auto stop = std::chrono::high_resolution_clock::now();
+		fmt::print("Cairo PNG writing took {} milliseconds\n",
+			std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
 
 		if(started_level_windows) {
 			LevelWindow newLevelWindow;
@@ -941,9 +945,8 @@ int main(int argc, char** argv) {
 			download_level_id = result["code"].as<std::string>();
 			level_downloading_routine();
 			for(int i = 0; i < 1000; i++) {
-// Give 20 seconds
 #ifndef __EMSCRIPTEN__
-				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+				std::this_thread::sleep_for(std::chrono::milliseconds(5));
 #endif
 				if(download_level_flag == 2) {
 					fmt::print("Level ID {} could not be downloaded\n", download_level_destination);
