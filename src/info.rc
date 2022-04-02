@@ -8,12 +8,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "TheGreatRambler"
       VALUE "FileDescription", "A Super Mario Maker 2 level viewer, based on JiXiaomai's SMM2LevelViewer"
-      VALUE "FileVersion", "2.0.1"
+      VALUE "FileVersion", "2.0.2"
       VALUE "InternalName", "toost"
       VALUE "LegalCopyright", "TheGreatRambler"
       VALUE "OriginalFilename", "toost.exe"
       VALUE "ProductName", "Toost"
-      VALUE "ProductVersion", "2.0.1"
+      VALUE "ProductVersion", "2.0.2"
     END
   END
   BLOCK "VarFileInfo"
