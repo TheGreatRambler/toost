@@ -21,19 +21,6 @@ bool Helpers::LoadTextureFromSurface(cairo_surface_t* surface, GLuint* out_textu
 	if(image_data == NULL)
 		return false;
 
-	/*
-	cairo_pattern_t* pattern = cairo_pattern_create_for_surface(surface);
-	cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
-	int new_width                = image_width * scale;
-	int new_height               = image_width * scale;
-	cairo_surface_t* new_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, new_width, new_height);
-	cairo_t* cr                  = cairo_create(new_surface);
-	cairo_scale(cr, scale, scale);
-	cairo_set_source(cr, pattern);
-	cairo_paint(cr);
-	cairo_pattern_destroy(pattern);
-	*/
-
 	int image_data_pixels = image_width * image_height;
 	// Need to convert from cairo ARGB to OpenGL RGBA
 	uint32_t* fixed_image_data = (uint32_t*)malloc(image_data_pixels * 4);

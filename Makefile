@@ -14,7 +14,7 @@ else
 endif
 
 CFLAGS := -std=gnu11
-CXXFLAGS := -std=gnu++20 -I./src
+CXXFLAGS := -std=gnu++2a -I./src
 CPPFLAGS := -Wall -Wextra -Wno-missing-field-initializers -Wno-deprecated-enum-enum-conversion
 
 ifeq ($(BUILD),release)
@@ -23,9 +23,9 @@ ifeq ($(BUILD),release)
 else
 	# "Debug" build - no optimization, and debugging symbols
 	ifeq ($(PLATFORM),web)
-	CPPFLAGS += -O0 -g
+	CPPFLAGS += -O0 -g -DIS_DEBUG=1
 	else
-	CPPFLAGS += -Og -g -ggdb
+	CPPFLAGS += -Og -g -ggdb -DIS_DEBUG=1
 	endif
 endif
 
@@ -41,7 +41,7 @@ else
 	ifeq ($(UNAME),Msys)
 		LDFLAGS += $(shell pkg-config --libs --static sdl2 glew glfw3 zlib cairo freetype2 libcurl) -lpthread -lmingw32 -lopengl32 -lws2_32 -lwsock32 -mconsole -lunistring -liconv -lbrotlicommon -fPIC -static -static-libgcc -static-libstdc++
 	else
-		LDFLAGS += $(shell pkg-config --libs sdl2 glew glfw3 zlib cairo freetype2 libcurl) -ldl -lpthread
+		LDFLAGS += $(shell pkg-config --libs sdl2 glew glfw3 zlib cairo freetype2 libcurl) -ldl -lpthread -lstdc++fs
 	endif
 endif
 

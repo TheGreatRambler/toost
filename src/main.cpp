@@ -617,7 +617,7 @@ static void main_loop() {
 		} else {
 			for(std::size_t i = 0; i < download_id.size(); i++) {
 				download_id[i] = std::toupper(download_id.at(i));
-				if(!charset.contains(download_id.at(i))) {
+				if(!charset.count(download_id.at(i))) {
 					id_valid = false;
 					break;
 				}
@@ -923,6 +923,8 @@ int main(int argc, char** argv) {
 
 #ifdef __EMSCRIPTEN__
 	assetsFolder = "";
+#elif defined(__linux__) and !defined(IS_DEBUG)
+	assetsFolder = "/usr/share/toost";
 #else
 	assetsFolder = Helpers::GetExecutableDirectory().parent_path().parent_path().string();
 	std::replace(assetsFolder.begin(), assetsFolder.end(), '\\', '/');

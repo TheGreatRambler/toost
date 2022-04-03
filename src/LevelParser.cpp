@@ -64,9 +64,9 @@ void LevelParser::LoadLevelData(const std::string& levelData, bool overworld) {
 	LH.ClearVer      = level.game_version();
 	LH.GameStyle     = level.gamestyle();
 
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> stringConverter;
-	LH.Name = stringConverter.to_bytes(std::wstring((wchar_t*)level.name().data()));
-	LH.Desc = stringConverter.to_bytes(std::wstring((wchar_t*)level.description().data()));
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> stringConverter;
+	LH.Name = stringConverter.to_bytes(std::u16string((char16_t*)level.name().data()));
+	LH.Desc = stringConverter.to_bytes(std::u16string((char16_t*)level.description().data()));
 
 	MM2::level_t::map_t& map = *(overworld ? level.overworld() : level.subworld());
 

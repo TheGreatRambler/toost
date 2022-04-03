@@ -1,6 +1,5 @@
 #pragma once
 
-#include <bit>
 #include <cairo.h>
 #include <filesystem>
 #include <fmt/core.h>

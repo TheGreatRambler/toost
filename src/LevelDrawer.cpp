@@ -242,7 +242,7 @@ cairo_pattern_t* LevelDrawer::GetCachedTile(int x, int y, int w, int h) {
 		index += 2;
 	}
 
-	if(tileCache.contains(index)) {
+	if(tileCache.count(index)) {
 		return tileCache[index];
 	} else {
 		cairo_surface_t* subsurface
@@ -256,7 +256,7 @@ cairo_pattern_t* LevelDrawer::GetCachedTile(int x, int y, int w, int h) {
 }
 
 cairo_pattern_t* LevelDrawer::GetCachedPattern(int id) {
-	if(patternCache.contains(id)) {
+	if(patternCache.count(id)) {
 		return patternCache[id];
 	} else {
 		const auto sprite = LevelData::ObjectLocation.at(id);
