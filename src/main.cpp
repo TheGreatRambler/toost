@@ -431,62 +431,69 @@ std::string download_level_id;
 std::string download_level_destination;
 
 void level_downloading_routine() {
-	std::string request_url = fmt::format("https://tgrcode.com/mm2/level_data/{}", download_level_id);
-	fmt::print("Downloading level data from {}\n", request_url);
-#ifdef __EMSCRIPTEN__
-	emscripten_fetch_attr_t attr;
-	emscripten_fetch_attr_init(&attr);
-	strcpy(attr.requestMethod, "GET");
-	attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
-	attr.onsuccess  = +[](emscripten_fetch_t* fetch) {
-        puts("Downloading complete");
-        download_level_destination = fmt::format("{}/{}.bcd", assetsFolder, download_level_id);
-        std::filesystem::remove(download_level_destination);
-        auto destination_file = std::fstream(download_level_destination, std::ios::out | std::ios::binary);
-        destination_file.write((char*)&fetch->data[0], fetch->numBytes);
-        destination_file.close();
-        download_level_flag = 1;
-        download_level_id   = "";
-	};
-	attr.onerror = +[](emscripten_fetch_t* fetch) {
-		fmt::print("Request failed, http status code {}\n", fetch->status);
-		download_level_destination = download_level_id;
-		download_level_flag        = 2;
+	if(std::filesystem::exists(fmt::format("{}/{}.bcd", assetsFolder, download_level_id))) {
+		puts("Using cached level data");
+		download_level_destination = fmt::format("{}/{}.bcd", assetsFolder, download_level_id);
+		download_level_flag        = 1;
 		download_level_id          = "";
-	};
-	emscripten_fetch(&attr, request_url.c_str());
-	return;
-#else
-	curl_easy_setopt(curl_handle, CURLOPT_URL, request_url.c_str());
-	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
-	curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 0L);
-	curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
-	auto callback = +[](void* ptr, size_t size, size_t nmemb, void* stream) {
-		std::size_t written = fwrite(ptr, size, nmemb, (FILE*)stream);
-		return written;
-	};
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, callback);
-	download_level_destination = fmt::format("{}/{}.bcd", assetsFolder, download_level_id);
-	std::filesystem::remove(download_level_destination);
-	FILE* dest = fopen(download_level_destination.c_str(), "wb");
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, dest);
-	CURLcode ret = curl_easy_perform(curl_handle);
-	if(ret != CURLE_OK) {
-		fmt::print("CURL error: {}\n", curl_easy_strerror(ret));
-	}
-	fclose(dest);
-	long http_code = 0;
-	curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
-	if(http_code == 200) {
-		puts("Downloading complete");
-		download_level_id   = "";
-		download_level_flag = 1;
 	} else {
-		fmt::print("Request failed, http status code {}\n", http_code);
-		download_level_destination = download_level_id;
-		download_level_flag        = 2;
-	}
+		std::string request_url = fmt::format("https://tgrcode.com/mm2/level_data/{}", download_level_id);
+		fmt::print("Downloading level data from {}\n", request_url);
+#ifdef __EMSCRIPTEN__
+		emscripten_fetch_attr_t attr;
+		emscripten_fetch_attr_init(&attr);
+		strcpy(attr.requestMethod, "GET");
+		attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+		attr.onsuccess  = +[](emscripten_fetch_t* fetch) {
+            puts("Downloading complete");
+            download_level_destination = fmt::format("{}/{}.bcd", assetsFolder, download_level_id);
+            std::filesystem::remove(download_level_destination);
+            auto destination_file = std::fstream(download_level_destination, std::ios::out | std::ios::binary);
+            destination_file.write((char*)&fetch->data[0], fetch->numBytes);
+            destination_file.close();
+            download_level_flag = 1;
+            download_level_id   = "";
+		};
+		attr.onerror = +[](emscripten_fetch_t* fetch) {
+			fmt::print("Request failed, http status code {}\n", fetch->status);
+			download_level_destination = download_level_id;
+			download_level_flag        = 2;
+			download_level_id          = "";
+		};
+		emscripten_fetch(&attr, request_url.c_str());
+		return;
+#else
+		curl_easy_setopt(curl_handle, CURLOPT_URL, request_url.c_str());
+		curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
+		curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 0L);
+		curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
+		auto callback = +[](void* ptr, size_t size, size_t nmemb, void* stream) {
+			std::size_t written = fwrite(ptr, size, nmemb, (FILE*)stream);
+			return written;
+		};
+		curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, callback);
+		download_level_destination = fmt::format("{}/{}.bcd", assetsFolder, download_level_id);
+		std::filesystem::remove(download_level_destination);
+		FILE* dest = fopen(download_level_destination.c_str(), "wb");
+		curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, dest);
+		CURLcode ret = curl_easy_perform(curl_handle);
+		if(ret != CURLE_OK) {
+			fmt::print("CURL error: {}\n", curl_easy_strerror(ret));
+		}
+		fclose(dest);
+		long http_code = 0;
+		curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
+		if(http_code == 200) {
+			puts("Downloading complete");
+			download_level_id   = "";
+			download_level_flag = 1;
+		} else {
+			fmt::print("Request failed, http status code {}\n", http_code);
+			download_level_destination = download_level_id;
+			download_level_flag        = 2;
+		}
 #endif
+	}
 }
 
 void level_downloading_thread() {
@@ -544,15 +551,9 @@ static void main_loop() {
 	int h;
 	SDL_GetWindowSize(window, &w, &h);
 
-	// ImGui::SetNextWindowPos(ImVec2(0, 0));
-	// ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-	// ImGui::Begin("background_image", NULL, ImVec2(0, 0), 0.0f,
-	//	ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar
-	//		| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoBringToFrontOnFocus);
-
 	auto background_draw_list = ImGui::GetBackgroundDrawList();
-	// int frame_offset_x        = frame_counter % background_image_width;
-	// int frame_offset_y        = frame_counter % background_image_height;
+	// int frame_offset_x        = (int)(frame_counter / 5.0) % background_image_width;
+	// int frame_offset_y        = (int)(frame_counter / 5.0) % background_image_height;
 	int frame_offset_x = 0;
 	int frame_offset_y = 0;
 	for(int x = -background_image_width + frame_offset_x; x < w + background_image_width; x += background_image_width) {
@@ -604,14 +605,16 @@ static void main_loop() {
 			fmt::format("{}/{}subworld.png", assetsFolder, std::filesystem::path(choice).stem().string()));
 	}
 
-	static char input_string[12] = { 0 };
+	static char input_string[15] = { 0 };
 	ImGui::Text("Download By Level ID");
 	ImGui::InputText("##2", input_string, sizeof(input_string));
 	if(ImGui::Button("Download Level")) {
 		std::string download_id                 = std::string(input_string);
 		static std::unordered_set<char> charset = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'B', 'C', 'D',
 			'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y' };
-		bool id_valid                           = true;
+		download_id.erase(std::remove(download_id.begin(), download_id.end(), '-'), download_id.end());
+		download_id.erase(std::remove(download_id.begin(), download_id.end(), ' '), download_id.end());
+		bool id_valid = true;
 		if(download_id.size() != 9) {
 			id_valid = false;
 		} else {
@@ -693,10 +696,10 @@ static void main_loop() {
 				selected_level_info.name.c_str(), selected_level_info.name.size());
 #else
 			auto selection = pfd::save_file(
-				"Choose image destination", selected_level_info.name, { "PNG Image", ".png" }, pfd::opt::none)
+				"Choose image destination", selected_level_info.name + ".png", { "PNG Image", ".png" }, pfd::opt::none)
 								 .result();
 			if(!selection.empty()) {
-				puts("Location chosen");
+				fmt::print("Copying image to {}\n", selection);
 				if(std::filesystem::exists(selection)) {
 					std::filesystem::remove(selection);
 				}
@@ -746,7 +749,6 @@ static void main_loop() {
 			cwfi.clear();
 			cached_focused_window_index = focused_window_index;
 
-			fmt::print("Caching level data for {}\n", opened_level_windows[focused_window_index].name);
 			LevelParser& level = *opened_level_windows[focused_window_index].parser;
 			cwfi.reserve(50);
 			cwfi.push_back(std::string("Name: ") + level.LH.Name);
@@ -925,6 +927,9 @@ int main(int argc, char** argv) {
 	assetsFolder = "";
 #elif defined(__linux__) and !defined(IS_DEBUG)
 	assetsFolder = "/usr/share/toost";
+#elif defined(__APPLE__) and !defined(IS_DEBUG)
+	assetsFolder = Helpers::GetExecutableDirectory().parent_path().parent_path().append("share").string();
+	std::replace(assetsFolder.begin(), assetsFolder.end(), '\\', '/');
 #else
 	assetsFolder = Helpers::GetExecutableDirectory().parent_path().parent_path().string();
 	std::replace(assetsFolder.begin(), assetsFolder.end(), '\\', '/');
@@ -1094,9 +1099,9 @@ int main(int argc, char** argv) {
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
 	SDL_WindowFlags window_flags
-		= (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+		= (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_MAXIMIZED);
 	window     = SDL_CreateWindow("Toost | Super Mario Maker 2 Level Viewer", SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED, 1366, 768, window_flags);
+        SDL_WINDOWPOS_CENTERED, 640, 360, window_flags);
 	gl_context = SDL_GL_CreateContext(window);
 
 	if(!gl_context) {
@@ -1138,14 +1143,12 @@ int main(int argc, char** argv) {
 
 #ifdef __EMSCRIPTEN__
 	EM_ASM({ Module.showLoading = false; });
-#endif
-
-#ifdef __EMSCRIPTEN__
 	emscripten_set_main_loop(main_loop, 0, true);
 #else
 	// Main loop
 	while(!done) {
 		main_loop();
+		std::this_thread::sleep_for(std::chrono::milliseconds(16));
 	}
 
 	// Cleanup

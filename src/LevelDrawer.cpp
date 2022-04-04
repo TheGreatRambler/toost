@@ -2575,7 +2575,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 					bool W = ((objFlag / 2) % 2 == 1);
 					path   = 0;
 					if(P && W) {
-						path = LevelData::OBJ_CID_B;
+						path = level.LH.GameStyle | LevelData::OBJ_CID_B;
 					} else {
 						if(P) {
 							path = level.LH.GameStyle | LevelData::OBJ_CID_P;

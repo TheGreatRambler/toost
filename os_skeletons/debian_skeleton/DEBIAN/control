@@ -5,7 +5,7 @@ Section: custom
 Priority: optional
 Architecture: all
 Essential: no
-Installed-Size: 18067
+Installed-Size: 14700
 Maintainer: TheGreatRambler
 Description: A Mario Maker 2 level viewer
 Depends: libcurl4 (= 7.64.0-4+deb10u2),
