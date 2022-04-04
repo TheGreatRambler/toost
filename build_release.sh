@@ -20,16 +20,16 @@ else
 		;;
 	  darwin*)
 		make BUILD=release -j8
-		strip -s bin/toost
-		cp -r os_skeletons/mac_skeleton/ toost_mac.app
-		mkdir toost_mac.app/Contents/MacOS
-		cp bin/toost toost_mac.app/Contents/MacOS
-		mkdir toost_mac.app/Contents/share
-		cp -r fonts toost_mac.app/Contents/share
-		cp -r img toost_mac.app/Contents/share
-		dylibbundler -od -b -x toost_mac.app/Contents/MacOS/switas -d toost_mac.app/Contents/libs/
-		zip -9r toost_mac.zip toost_mac.app
-		rm -rf toost_mac.app
+		strip bin/toost
+		cp -r os_skeletons/mac_skeleton/ toost.app
+		mkdir toost.app/Contents/MacOS
+		cp bin/toost toost.app/Contents/MacOS
+		mkdir toost.app/Contents/share
+		cp -r fonts toost.app/Contents/share
+		cp -r img toost.app/Contents/share
+		dylibbundler -od -b -x toost.app/Contents/MacOS/toost -d toost.app/Contents/libs/
+		zip -9r toost_mac.zip toost.app
+		rm -rf toost.app
 		;;
 	  msys*|mingw*)
 		make BUILD=release -j8

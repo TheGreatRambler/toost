@@ -1,5 +1,3 @@
-UNAME := $(shell uname -o)
-
 TARGET_EXEC ?= toost
 
 BUILD_DIR ?= ./bin
@@ -38,17 +36,24 @@ ifeq ($(PLATFORM),web)
 else
 	CPPFLAGS += $(shell pkg-config --cflags sdl2 glew glfw3 zlib cairo freetype2 libcurl) -Wno-cast-function-type
 
-	ifeq ($(UNAME),Msys)
+	ifeq ($(OS),Windows_NT)
 		LDFLAGS += $(shell pkg-config --libs --static sdl2 glew glfw3 zlib cairo freetype2 libcurl) -lpthread -lmingw32 -lopengl32 -lws2_32 -lwsock32 -mconsole -lunistring -liconv -lbrotlicommon -fPIC -static -static-libgcc -static-libstdc++
 	else
-		LDFLAGS += $(shell pkg-config --libs sdl2 glew glfw3 zlib cairo freetype2 libcurl) -ldl -lpthread -lstdc++fs
+		LDFLAGS += $(shell pkg-config --libs sdl2 glew glfw3 zlib cairo freetype2 libcurl) -ldl -lpthread
+		UNAME_S := $(shell uname -s)
+		ifeq ($(UNAME_S),Linux)
+			LDFLAGS += -lstdc++fs
+		endif
+		ifeq ($(UNAME_S),Darwin)
+			LDFLAGS += -framework OpenGL
+		endif 
 	endif
 endif
 
 
 SRCS := ./src/main.cpp ./src/LevelParser.cpp ./src/LevelDrawer.cpp ./src/Helpers.cpp ./src/kaitai/kaitaistream.cpp ./src/MM2/level.cpp ./src/imgui/imgui.cpp ./src/imgui/imgui_widgets.cpp ./src/imgui/imgui_tables.cpp ./src/imgui/imgui_impl_sdl.cpp ./src/imgui/imgui_impl_opengl3.cpp ./src/imgui/imgui_draw.cpp ./src/SMM2CourseDecryptor/aes.cpp ./src/SMM2CourseDecryptor/decrypt.cpp ./src/fmt/format.cpp ./src/fmt/os.cpp
 
-ifeq ($(UNAME)$(PLATFORM),Msys)
+ifeq ($(OS),Windows_NT)
 SRCS += src/info.rc src/icon.rc
 endif
 
@@ -81,7 +86,7 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 	$(MKDIR_P) $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-ifeq ($(UNAME),Msys)
+ifeq ($(OS),Windows_NT)
 # Windows RES file
 $(BUILD_DIR)/%.rc.o: %.rc
 	$(MKDIR_P) $(dir $@)
