@@ -828,6 +828,10 @@ void LevelDrawer::DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y
 		}
 	} break;
 	case 119: {
+		if(EX > level.MapMoveBlk.size()) {
+			return;
+		}
+
 		switch(level.MapMoveBlk[EX - 1].Node[0].p1) {
 		case 1:
 		case 5:
