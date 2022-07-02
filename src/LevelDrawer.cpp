@@ -712,6 +712,10 @@ void LevelDrawer::DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y
 	YY     = std::round((Y + 80) / 160.0 + 1);
 	int i  = 0;
 
+	if(EX > level.MapMoveBlk.size()) {
+		return;
+	}
+
 	switch(ID) {
 	case 85: {
 		switch(level.MapTrackBlk[EX - 1].Node[0].p1) {
@@ -828,10 +832,6 @@ void LevelDrawer::DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y
 		}
 	} break;
 	case 119: {
-		if(EX > level.MapMoveBlk.size()) {
-			return;
-		}
-
 		switch(level.MapMoveBlk[EX - 1].Node[0].p1) {
 		case 1:
 		case 5:
