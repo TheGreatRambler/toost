@@ -3768,7 +3768,7 @@ void LevelDrawer::DrawCID() {
 			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
 			break;
 		case 33: // 1UP
-			if(level.MapHdr.Theme == 1 && level.MapHdr.Flag == 2) {
+			if(level.MapHdr.Theme == 0 && level.MapHdr.Flag == 2) {
 				path = level.LH.GameStyle | LevelData::OBJ_33A;
 			} else {
 				path = level.LH.GameStyle | LevelData::OBJ_33;
