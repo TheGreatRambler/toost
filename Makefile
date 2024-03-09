@@ -13,7 +13,7 @@ endif
 
 CFLAGS := -std=gnu11
 CXXFLAGS := -std=gnu++2a -I./src
-CPPFLAGS := -Wall -Wextra -Wno-missing-field-initializers -Wno-deprecated-enum-enum-conversion
+CPPFLAGS := -Wall -Wextra -Wno-missing-field-initializers -Wno-deprecated-enum-enum-conversion -Wno-narrowing
 
 ifeq ($(BUILD),release)
 	# "Release" build - optimization, and no debug symbols

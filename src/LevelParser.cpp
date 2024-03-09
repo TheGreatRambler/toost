@@ -149,8 +149,13 @@ void LevelParser::LoadLevelData(const std::string& levelData, bool overworld) {
 	}
 
 	MapCPipe.clear();
-	for(int i = 0; i < map.clear_pipe_count(); i++) {
+	for (size_t i = 0; i < map.clear_pipes()->size(); i++) {
 		auto& clear_pipe_ref = *map.clear_pipes()->at(i);
+		if (clear_pipe_ref.unk() == 0) {
+			// empty slot
+			continue;
+		}
+
 		LevelParser::MapClearPipe newClearPipe;
 		newClearPipe.Index     = clear_pipe_ref.index();
 		newClearPipe.NodeCount = clear_pipe_ref.node_count();
