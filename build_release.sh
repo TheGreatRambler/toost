@@ -28,8 +28,8 @@ else
 		cp -r fonts toost.app/Contents/share
 		cp -r img toost.app/Contents/share
 		dylibbundler -od -b -x toost.app/Contents/MacOS/toost -d toost.app/Contents/libs/
-		zip -9r toost_mac.zip toost.app
-		rm -rf toost.app
+		#zip -9r toost_mac.zip toost.app
+		#rm -rf toost.app
 		;;
 	  msys*|mingw*)
 		make BUILD=release -j8

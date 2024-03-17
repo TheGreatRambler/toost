@@ -140,11 +140,11 @@ LevelDrawer* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string
 	}
 
 	// 3D平台
-	//半碰撞
-	//蘑菇平台
-	//桥
-	//蘑菇跳台
-	//开关跳台
+	// 半碰撞
+	// 蘑菇平台
+	// 桥
+	// 蘑菇跳台
+	// 开关跳台
 	drawer->DrawItem({ 132 }, false);
 	drawer->DrawItem({ 16 }, false);
 	drawer->DrawItem({ 14 }, false);
@@ -152,17 +152,17 @@ LevelDrawer* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string
 	drawer->DrawItem({ 113 }, false);
 	drawer->DrawItem({ 71 }, false);
 
-	//箭头 单向板 中间旗 藤蔓
+	// 箭头 单向板 中间旗 藤蔓
 
 	drawer->DrawItem({ 66, 67, 106 }, false);
 	drawer->DrawItem({ 64 }, false);
 	drawer->DrawItem({ 90 }, false);
 
-	//树 长长吞食花
+	// 树 长长吞食花
 	drawer->DrawItem({ 106, 107 }, false);
 
-	//地面 传送带 开关 开关砖 P砖 冰锥
-	//斜坡单独
+	// 地面 传送带 开关 开关砖 P砖 冰锥
+	// 斜坡单独
 	drawer->ReGrdCode();
 	drawer->DrawGrd();
 	// DrawSlope()
@@ -171,28 +171,28 @@ LevelDrawer* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string
 	drawer->DrawItem({ 53, 94, 99, 100, 79 }, false);
 	drawer->DrawIce();
 
-	//无LINKE
-	//管道 门 蛇 传送箱
+	// 无LINKE
+	// 管道 门 蛇 传送箱
 	drawer->DrawItem({ 9, 55, 84, 97 }, false);
-	//机动砖 轨道砖
+	// 机动砖 轨道砖
 	drawer->DrawItem({ 85, 119 }, false);
-	//夹子
+	// 夹子
 	drawer->DrawItem({ 105 }, false);
-	//轨道
+	// 轨道
 	drawer->DrawTrack();
-	//软砖 问号 硬砖 竹轮 云 音符 隐藏 刺 冰块 闪烁砖
+	// 软砖 问号 硬砖 竹轮 云 音符 隐藏 刺 冰块 闪烁砖
 	drawer->DrawItem({ 4, 5, 6, 21, 22, 23, 29, 43, 63, 110, 108 }, false);
 
-	//跷跷板 熔岩台 升降台
+	// 跷跷板 熔岩台 升降台
 	drawer->DrawItem({ 91, 36, 11 }, false);
 
-	//狼牙棒
+	// 狼牙棒
 	drawer->DrawItem({ 83 }, false);
 
-	//齿轮 甜甜圈
+	// 齿轮 甜甜圈
 	drawer->DrawItem({ 68, 82 }, false);
 
-	//道具
+	// 道具
 	drawer->DrawItem({ 0, 1, 2, 3, 8, 10, 12, 13, 15, 18, 19, 20, 25, 28, 30, 31, 32, 33, 34, 35, 39 }, false);
 	drawer->DrawItem({ 40, 41, 42, 44, 45, 46, 47, 48, 52, 56, 57, 58, 60, 61, 62, 70, 74, 76, 77, 78, 81, 92, 95, 98,
 						 102, 103, 104 },
@@ -200,31 +200,31 @@ LevelDrawer* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string
 	drawer->DrawItem(
 		{ 111, 120, 121, 122, 123, 124, 125, 126, 112, 127, 128, 129, 130, 131, 72, 50, 51, 65, 80, 114, 116 }, false);
 	drawer->DrawItem({ 96, 117, 86 }, false);
-	//喷枪 火棍
+	// 喷枪 火棍
 	drawer->DrawItem({ 24, 54 }, false);
 
 	// DrawFireBar(False)
 	// DrawFire(False)
-	//夹子
+	// 夹子
 	drawer->DrawItem({ 105 }, false);
-	//轨道
+	// 轨道
 	drawer->DrawTrack();
-	//夹子
+	// 夹子
 	drawer->DrawItem({ 105 }, true);
-	//卷轴相机
-	// DrawItem("/89/", False)
+	// 卷轴相机
+	//  DrawItem("/89/", False)
 
 	// LINK
-	//软砖 问号 硬砖 竹轮 云 音符 隐藏 刺 冰块
+	// 软砖 问号 硬砖 竹轮 云 音符 隐藏 刺 冰块
 	drawer->DrawItem({ 4, 5, 6, 21, 22, 23, 29, 43, 63 }, true);
 
-	//跷跷板 熔岩台 升降台
+	// 跷跷板 熔岩台 升降台
 	drawer->DrawItem({ 91, 36, 11 }, true);
 
-	//齿轮 甜甜圈
+	// 齿轮 甜甜圈
 	drawer->DrawItem({ 68, 82 }, true);
 
-	//道具
+	// 道具
 	drawer->DrawItem({ 0, 1, 2, 3, 8, 10, 12, 13, 15, 18, 19, 20, 25, 28, 30, 31, 32, 33, 34, 35, 39 }, true);
 	drawer->DrawItem({ 40, 41, 42, 44, 45, 46, 47, 48, 52, 56, 57, 58, 60, 61, 62, 70, 74, 76, 77, 78, 81, 92, 95, 98,
 						 102, 103, 104 },
@@ -235,12 +235,12 @@ LevelDrawer* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string
 
 	drawer->DrawCID();
 
-	//喷枪 火棍
+	// 喷枪 火棍
 	drawer->DrawItem({ 24, 54 }, true);
 	drawer->DrawFireBar();
 	drawer->DrawFire();
 
-	//透明管
+	// 透明管
 	drawer->DrawCPipe();
 
 	if(!render_objects_over_pipes) {
@@ -299,12 +299,20 @@ LevelHandler AttemptRender(
 
 	if(filesize == 0x5C000) {
 		if(log) {
-			puts("File is encrypted");
+			puts("File is likely encrypted");
 		}
 
 		std::ifstream ifs(choice, std::ios::binary);
 		std::string input((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
 		LevelParser::DecryptLevelData(input, content);
+	} else if(filesize == 0x5BFC0) {
+		if(log) {
+			puts("File is likely unencrypted");
+		}
+
+		std::ifstream ifs(choice, std::ios::binary);
+		std::string input((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+		content = input;
 	} else {
 		// First, check if compressed
 		FILE* magicFile = fopen(choice.c_str(), "rb");
@@ -328,7 +336,7 @@ LevelHandler AttemptRender(
 
 			content = gzip::decompress((const char*)data.data(), data.size());
 		} else {
-			puts("File is uncompressed or an unknown format");
+			puts("File is an unknown format");
 		}
 	}
 
@@ -1101,7 +1109,7 @@ int main(int argc, char** argv) {
 	SDL_WindowFlags window_flags
 		= (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_MAXIMIZED);
 	window     = SDL_CreateWindow("Toost | Super Mario Maker 2 Level Viewer", SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED, 640, 360, window_flags);
+			SDL_WINDOWPOS_CENTERED, 640, 360, window_flags);
 	gl_context = SDL_GL_CreateContext(window);
 
 	if(!gl_context) {
