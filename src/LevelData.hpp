@@ -1,6 +1,7 @@
 #include <cmath>
 #include <string>
 #include <unordered_map>
+#include <cstdint>
 
 namespace LevelData {
 	struct Sprite {
