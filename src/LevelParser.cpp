@@ -455,7 +455,7 @@ void LevelParser::ExportToJSON(const std::string& outputPath, std::vector<Drawin
 	writer.Key("clear_condition_magnitude");
 	writer.Int(LH.ClearCA);
 	writer.Key("clear_condition");
-	writer.String(fmt::format(levelMappings->NumToClearCondition.at(LH.ClearCRC), LH.ClearCA));
+	writer.String(fmt::format(fmt::runtime(levelMappings->NumToClearCondition.at(LH.ClearCRC)), LH.ClearCA));
 	writer.Key("clear_condition_category");
 	writer.String(levelMappings->NumToClearConditionCategory.at(LH.ClearCC));
 	writer.Key("clear_condition_category_raw");

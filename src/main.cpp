@@ -775,7 +775,7 @@ static void main_loop() {
 			cwfi.push_back(fmt::format("Goal X: {}", level.LH.GoalX / 10.0));
 			cwfi.push_back(std::string("Goal Y: ") + std::to_string(level.LH.GoalY));
 			std::string clear_condition
-				= fmt::format(levelMappings->NumToClearCondition.at(level.LH.ClearCRC), level.LH.ClearCA);
+				= fmt::format(fmt::runtime(levelMappings->NumToClearCondition.at(level.LH.ClearCRC)), level.LH.ClearCA);
 			cwfi.push_back(std::string("Clear Condition: ") + clear_condition);
 			cwfi.push_back(std::string("Clear Condition Category: ")
 						   + levelMappings->NumToClearConditionCategory.at(level.LH.ClearCC));
@@ -1064,7 +1064,7 @@ int main(int argc, char** argv) {
 	// (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows
 	// systems, depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL
 	// is recommended!)
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
 		printf("Error: %s\n", SDL_GetError());
 		return -1;
 	}

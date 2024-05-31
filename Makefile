@@ -51,7 +51,7 @@ else
 endif
 
 
-SRCS := ./src/main.cpp ./src/LevelParser.cpp ./src/LevelDrawer.cpp ./src/Helpers.cpp ./src/kaitai/kaitaistream.cpp ./src/MM2/level.cpp ./src/imgui/imgui.cpp ./src/imgui/imgui_widgets.cpp ./src/imgui/imgui_tables.cpp ./src/imgui/imgui_impl_sdl.cpp ./src/imgui/imgui_impl_opengl3.cpp ./src/imgui/imgui_draw.cpp ./src/SMM2CourseDecryptor/aes.cpp ./src/SMM2CourseDecryptor/decrypt.cpp ./src/fmt/format.cpp ./src/fmt/os.cpp
+SRCS := ./src/main.cpp ./src/LevelParser.cpp ./src/LevelDrawer.cpp ./src/Helpers.cpp ./src/kaitai/kaitaistream.cpp ./src/MM2/level.cpp ./src/imgui/imgui.cpp ./src/imgui/imgui_widgets.cpp ./src/imgui/imgui_tables.cpp ./src/imgui/imgui_impl_sdl.cpp ./src/imgui/imgui_impl_opengl3.cpp ./src/imgui/imgui_draw.cpp ./src/SMM2CourseDecryptor/aes.cpp ./src/SMM2CourseDecryptor/decrypt.cpp ./src/fmt/format.cc ./src/fmt/fmt.cc ./src/fmt/os.cc
 
 ifeq ($(OS)$(PLATFORM),Windows_NT)
 SRCS += src/info.rc src/icon.rc
@@ -83,6 +83,10 @@ $(BUILD_DIR)/%.c.o: %.c
 
 # c++ source
 $(BUILD_DIR)/%.cpp.o: %.cpp
+	$(MKDIR_P) $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.cc.o: %.cc
 	$(MKDIR_P) $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
