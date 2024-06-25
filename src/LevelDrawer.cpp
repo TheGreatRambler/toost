@@ -3711,12 +3711,11 @@ void LevelDrawer::DrawCID() {
 	int LY        = 0;
 	uint32_t path = 0;
 
-	std::string P = assetFolder;
-
 	for(int i = 0; i < level.MapHdr.ObjCount; i++) {
-		int objCid = level.MapObj[i].CID;
-		int objX   = level.MapObj[i].X;
-		int objY   = level.MapObj[i].Y;
+		int objFlag = level.MapObj[i].CFlag;
+		int objCid  = level.MapObj[i].CID;
+		int objX    = level.MapObj[i].X;
+		int objY    = level.MapObj[i].Y;
 
 		LX = std::round((float)((-0.5 + objX / 160.0) * Zm));
 		LY = std::round(H * Zm - (float)((0.5 + objY / 160.0) * Zm));
@@ -3787,6 +3786,23 @@ void LevelDrawer::DrawCID() {
 			DrawImage(path, LX, LY, Zm, Zm);
 			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
 			break;
+		}
+
+		bool P = ((objFlag / 0x8000) % 2 == 1);
+		bool W = ((objFlag / 2) % 2 == 1);
+		path  = 0;
+		if(P && W) {
+			path = level.LH.GameStyle | LevelData::OBJ_CID_B;
+		} else {
+			if(P) {
+				path = level.LH.GameStyle | LevelData::OBJ_CID_P;
+			} else if(W) {
+				path = level.LH.GameStyle | LevelData::OBJ_CID_W;
+			}
+		}
+
+		if(path) {
+			DrawImage(path, LX, LY, Zm / 2, Zm / 2);
 		}
 	}
 }
