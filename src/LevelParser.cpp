@@ -1,5 +1,8 @@
 ﻿#include "LevelParser.hpp"
 
+// For std::sort
+#include <algorithm>
+
 LevelParser::LevelParser() {
 	TileLoc.resize(152);
 	for(int i = 0; i < 152; i++) {
