@@ -775,7 +775,7 @@ static void main_loop() {
 			cwfi.push_back(fmt::format("Goal X: {}", level.LH.GoalX / 10.0));
 			cwfi.push_back(std::string("Goal Y: ") + std::to_string(level.LH.GoalY));
 			std::string clear_condition
-				= fmt::format(fmt::runtime(levelMappings->NumToClearCondition.at(level.LH.ClearCRC)), level.LH.ClearCA);
+				= fmt::format(levelMappings->NumToClearCondition.at(level.LH.ClearCRC), level.LH.ClearCA);
 			cwfi.push_back(std::string("Clear Condition: ") + clear_condition);
 			cwfi.push_back(std::string("Clear Condition Category: ")
 						   + levelMappings->NumToClearConditionCategory.at(level.LH.ClearCC));

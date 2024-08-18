@@ -991,19 +991,19 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 				}
 			} else {
 				switch(level.ObjLinkType[objLid + 1]) {
-				case 9: //管道L
+				case 9: // 管道L
 					KY = ((std::min(objW, objH) - 1) / 2) * Zm;
 					break;
-				case 105: //夹子L
+				case 105: // 夹子L
 					KY = std::round(-Zm / 4.0);
 					break;
-				case 59: //轨道
+				case 59: // 轨道
 					KY = ((std::min(objW, objH) - 1) / 2) * Zm;
 					break;
 				case 31:
 					KY = 0; // 3 * Zm
 					break;
-				case 106: //树
+				case 106: // 树
 					KY = 0;
 					break;
 				case 0:
@@ -1014,7 +1014,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 				if((objLid + 1 == 0 && !L) || (objLid + 1 > 0 && L) || objID == 9) {
 					switch(objID) {
 					case 14: {
-						//蘑菇平台
+						// 蘑菇平台
 						if((objFlag / 0x40000) % 2 == 1) {
 							tileY = 3;
 						} else if((objFlag / 0x80000) % 2 == 1) {
@@ -1060,7 +1060,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 16: {
-						//半碰撞地形
+						// 半碰撞地形
 						if((objFlag / 0x40000) % 2 == 1) {
 							tileY = 10;
 						} else if((objFlag / 0x80000) % 2 == 1) {
@@ -1179,7 +1179,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 					case 66:
 					case 67:
 					case 90: {
-						//箭头 单向板 中间旗
+						// 箭头 单向板 中间旗
 						switch(objFlag) {
 						case 0x6000040:
 							path = LevelData::GetIndex(level.LH.GameStyle, objID);
@@ -1214,7 +1214,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 							H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm), Zm * objW, Zm * objH);
 						break;
 					}
-					case 83: //狼牙棒
+					case 83: // 狼牙棒
 					{
 						switch(objFlag) {
 						case 0x6000040:
@@ -1292,7 +1292,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 108: {
-						//闪烁砖
+						// 闪烁砖
 						if((objFlag / 0x4) % 2 == 1) {
 							path = level.LH.GameStyle | LevelData::OBJ_108A;
 						} else {
@@ -1308,7 +1308,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 
 						break;
 					}
-					case 106: //树
+					case 106: // 树
 					{
 						LX = std::round((float)((-0.5 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((objH + 0.5 + objY / 160.0) * Zm) + KY);
@@ -1328,7 +1328,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 					}
 					case 85:
 					case 119: {
-						//机动砖 轨道砖
+						// 机动砖 轨道砖
 						if((objFlag / 0x4) % 2 == 1) {
 							path = level.LH.GameStyle | LevelData::OBJ_85A;
 						} else {
@@ -1350,7 +1350,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 94: {
-						//斜传送带
+						// 斜传送带
 						Point C1;
 						Point C2;
 						if((objFlag / 0x400000) % 2 == 0) {
@@ -1361,7 +1361,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 							C2 = Point(10, 22);
 						}
 						if((objFlag / 0x200000) % 0x2 == 0) {
-							//左斜
+							// 左斜
 							LX = std::round((float)((-1 + objW / 2.0 + objX / 160.0) * Zm));
 							LY = std::round((H - 0.5 - objH / 2) * Zm - (float)((-0.5 + objY / 160.0) * Zm));
 
@@ -1377,7 +1377,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 							}
 
 						} else {
-							//右斜
+							// 右斜
 							LX = std::round((float)((-1 + objW / 2.0 + objX / 160.0) * Zm));
 							LY = std::round((H - 0.5 - objH / 2) * Zm - (float)((-0.5 + objY / 160.0) * Zm));
 
@@ -1409,7 +1409,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 53: {
-						//传送带
+						// 传送带
 						LX = std::round((float)((-0.5 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((0.5 + objY / 160.0) * Zm));
 						Point C1;
@@ -1521,7 +1521,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 55: {
-						//门
+						// 门
 						if((objFlag / 0x40000) % 2 == 1) {
 							path = level.LH.GameStyle | LevelData::OBJ_55A;
 						} else if((objFlag / 0x80000) % 2 == 1) {
@@ -1541,7 +1541,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 97: {
-						//传送箱
+						// 传送箱
 						if((objFlag / 0x4) % 2 == 1) {
 							path = level.LH.GameStyle | LevelData::OBJ_97A;
 						} else {
@@ -1657,7 +1657,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 74: {
-						//加邦
+						// 加邦
 						if((objFlag / 0x4) % 2 == 1) {
 							if(level.MapHdr.Theme == 6) {
 								path = level.LH.GameStyle | LevelData::OBJ_74B;
@@ -1678,7 +1678,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 42: {
-						//飞机
+						// 飞机
 						if((objFlag / 0x4 % 2 == 1) || (objFlag / 0x40000 % 2 == 1)) {
 							path = level.LH.GameStyle | LevelData::OBJ_42A;
 						} else {
@@ -1694,7 +1694,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 34: {
-						//火花
+						// 火花
 						if((objFlag / 0x4) % 2 == 1) {
 							if((objFlag / 0x40000) % 2 == 1) {
 								path = level.LH.GameStyle | LevelData::OBJ_34C;
@@ -1746,7 +1746,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 44: {
-						//大蘑菇
+						// 大蘑菇
 
 						if((objFlag / 0x40000) % 2 == 1) {
 							path = level.LH.GameStyle | LevelData::OBJ_44A;
@@ -1764,7 +1764,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 12: {
-						//咚咚
+						// 咚咚
 						LX = std::round((float)((-0.5 + objX / 160.0) * Zm));
 						LY = (H + objH / 2.0 - 0.5) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY;
 
@@ -1800,7 +1800,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 41: {
-						//幽灵
+						// 幽灵
 						LX = std::round((float)((-objW / 2.0 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY);
 						switch(level.LH.GameStyle) {
@@ -1830,7 +1830,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 					case 28:
 					case 25:
 					case 18: {
-						//钢盔 刺龟 P
+						// 钢盔 刺龟 P
 						LX = std::round((float)((-objW / 2.0 + (std::round(objW) / 2) / 2.0 + objX / 160.0) * Zm));
 						LY = std::round(
 							(H + (std::round(objH) / 2) / 2.0) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY);
@@ -1866,12 +1866,12 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 40: {
-						//小刺龟
+						// 小刺龟
 						LX = std::round((float)((-objW / 2.0 + objX / 160.0) * Zm));
 						LY = (H + objW) * Zm - (float)((objH * 2.0 - 0.5 + objY / 160.0) * Zm) + KY;
 						if((objFlag / 0x4) % 2 == 1) {
 							switch((objFlag / 0x1000000) % 8) {
-								//方向6上 4下 0左 2右
+								// 方向6上 4下 0左 2右
 							case 0x0: // L
 								DrawImage(level.LH.GameStyle | LevelData::OBJ_40B0, LX, LY, Zm * objW, Zm * objH);
 								break;
@@ -1887,7 +1887,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 							}
 						} else {
 							switch((objFlag / 0x1000000) % 8) {
-								//方向6上 4下 0左 2右
+								// 方向6上 4下 0左 2右
 							case 0x0: // L
 								DrawImage(level.LH.GameStyle | LevelData::OBJ_40A0, LX, LY, Zm * objW, Zm * objH);
 								break;
@@ -1908,7 +1908,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 2: {
-						//绿花
+						// 绿花
 						if((objFlag / 0x4) % 2 == 1) {
 							switch((objFlag / 0x1000000) % 0x8) {
 							case 0x0:
@@ -1942,7 +1942,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						}
 
 						switch((objFlag / 0x1000000) % 0x8) {
-							//方向6上 4下 0左 2右
+							// 方向6上 4下 0左 2右
 						case 0x0: // L
 							LX = std::round((float)((objH / 2.0 - 1 + objX / 160.0) * Zm));
 							LY = (H + objW + (std::round(objW) / 2) / 2.0) * Zm
@@ -2064,7 +2064,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 					case 46:
 					case 52:
 					case 58: {
-						//慢慢龟，碎碎龟，花花，扳手
+						// 慢慢龟，碎碎龟，花花，扳手
 						path = LevelData::GetIndex(
 							level.LH.GameStyle, objID, (objFlag / 0x4) % 2 == 1 ? LevelData::A_ : LevelData::NONE);
 
@@ -2079,7 +2079,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 30: {
-						//裁判
+						// 裁判
 						LX = std::round((float)((-objW / 2.0 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((objH - 1 + objY / 160.0) * Zm) + KY);
 
@@ -2088,7 +2088,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 31: {
-						//裁判云
+						// 裁判云
 						level.ObjLinkType[objLid + 1] = 31;
 						LX                            = std::round((float)((-objW / 2.0 - 0.5 + objX / 160.0) * Zm));
 						LY                            = std::round(H * Zm - (float)((0.5 + objY / 160.0) * Zm));
@@ -2097,7 +2097,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 
 						break;
 					}
-					case 45: //鞋 耀西
+					case 45: // 鞋 耀西
 					{
 						switch(level.LH.GameStyle) {
 						case 21847:
@@ -2129,7 +2129,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 62: {
-						//库巴
+						// 库巴
 						LX = std::round((float)((-objW / 2.0 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY);
 						switch(level.LH.GameStyle) {
@@ -2146,7 +2146,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 3: {
-						//德莱文
+						// 德莱文
 						switch(level.LH.GameStyle) {
 						case 22323:
 							if((objFlag / 0x4) % 2 == 1) {
@@ -2211,7 +2211,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 39: {
-						//魔法师
+						// 魔法师
 						LX = std::round((float)((2.0 - objW / 2.0 - objW + objX / 160.0) * Zm));
 						LY = std::round((H + 1) * Zm - (float)((objH * 2.0 - 0.5 + objY / 160.0) * Zm) + KY);
 
@@ -2323,7 +2323,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 61: {
-						//汪汪
+						// 汪汪
 						LX = std::round((float)((-0.5 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((0.5 + objY / 160.0) * Zm) + KY);
 						if((objFlag / 0x4) % 2 == 0) {
@@ -2335,7 +2335,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 78: {
-						//仙人掌
+						// 仙人掌
 						LX = std::round((float)(-objW / 2.0 + objX / 160.0) * Zm);
 						LY = std::round((H + 1) * Zm - (float)((objH + std::round(objY) / 160.0) * Zm) + KY);
 
@@ -2386,7 +2386,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 110: {
-						//刺方块
+						// 刺方块
 						if((objFlag / 0x40000) % 2 == 1) {
 							path = level.LH.GameStyle | LevelData::OBJ_110A;
 						} else if((objFlag / 0x80000) % 2 == 1) {
@@ -2409,7 +2409,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 103: {
-						//骨鱼
+						// 骨鱼
 						LX = std::round((float)((-objW + 0.5 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY);
 
@@ -2463,7 +2463,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 11: {
-						//升降台
+						// 升降台
 						LX = std::round((float)((-0.5 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((0.5 + objY / 160.0) * Zm) + KY);
 
@@ -2513,7 +2513,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 54: {
-						//喷枪
+						// 喷枪
 						LX = std::round((float)((-0.5 + objX / 160.0) * Zm));
 						LY = std::round(H * Zm - (float)((0.5 + objY / 160.0) * Zm) + KY);
 						switch((objFlag) % 0x100) {
@@ -2547,7 +2547,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 24: {
-						//火棍
+						// 火棍
 						LX = std::round((float)(-objW / 2.0 + objX / 160.0) * Zm);
 						LY = std::round(H * Zm - (float)(objH - 0.5 + objY / 160.0) * Zm);
 						DrawImage(level.LH.GameStyle | LevelData::OBJ_24, LX, LY, Zm, Zm);
@@ -2555,7 +2555,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 105: {
-						//夹子
+						// 夹子
 						if((objFlag) % 0x400 >= 0x100) {
 							KY                            = Zm * 3;
 							level.ObjLinkType[objLid + 1] = 105;
@@ -2619,11 +2619,11 @@ void LevelDrawer::ReGrdCode() {
 
 		switch(level.MapObj[i].ID) {
 		case 87:
-			//缓坡
+			// 缓坡
 			CX = std::round((-0.5 + objX / 160.0));
 			CY = std::round((-0.5 + objY / 160.0));
 			if((objFlag / 0x100000) % 0x2 == 0) {
-				//左斜
+				// 左斜
 				switch(level.GroundNode[CX + 1][CY + 1]) {
 				case 0:
 					level.GroundNode[CX + 1][CY + 1] = 23;
@@ -2668,7 +2668,7 @@ void LevelDrawer::ReGrdCode() {
 					level.GroundNode[CX + 2.0 + j][CY + 1 + (j / 2)] = 16;
 				}
 			} else {
-				//右斜
+				// 右斜
 				switch(level.GroundNode[CX + 1][CY + objH]) {
 				case 0:
 					level.GroundNode[CX + 1][CY + objH] = 21;
@@ -2715,11 +2715,11 @@ void LevelDrawer::ReGrdCode() {
 			}
 			break;
 		case 88:
-			//陡坡
+			// 陡坡
 			CX = std::round((-0.5 + objX / 160.0));
 			CY = std::round((-0.5 + objY / 160.0));
 			if((objFlag / 0x100000) % 0x2 == 0) {
-				//左斜
+				// 左斜
 				switch(level.GroundNode[CX + 1][CY + 1]) {
 				case 0:
 					level.GroundNode[CX + 1][CY + 1] = 9;
@@ -2762,7 +2762,7 @@ void LevelDrawer::ReGrdCode() {
 					}
 				}
 			} else {
-				//右斜
+				// 右斜
 				switch(level.GroundNode[CX + 1][CY + objH]) {
 				case 0:
 					level.GroundNode[CX + 1][CY + objH] = 7;
@@ -2882,7 +2882,7 @@ void LevelDrawer::DrawGrd() {
 	// std::shared_ptr<Image> K;
 	// K = GetTile(0, 12, 1, 1); //Image.FromFile(PT & "\img\" & LH.GameStyle.ToString & "\obj\7 )
 	if(NowIO) {
-		//终点
+		// 终点
 		switch(level.LH.GameStyle) {
 		case 12621: // 1
 			if(level.MapHdr.Theme == 2) {
@@ -3477,7 +3477,7 @@ LevelParser::Point LevelDrawer::GetCorCode(int x, int y) {
 }
 
 void LevelDrawer::DrawGrdCode() {
-	//绘制地形
+	// 绘制地形
 	int i = 0;
 	int j = 0;
 	Point R;
@@ -3711,28 +3711,27 @@ void LevelDrawer::DrawCID() {
 	int LY        = 0;
 	uint32_t path = 0;
 
-	std::string P = assetFolder;
-
 	for(int i = 0; i < level.MapHdr.ObjCount; i++) {
-		int objCid = level.MapObj[i].CID;
-		int objX   = level.MapObj[i].X;
-		int objY   = level.MapObj[i].Y;
+		int objFlag = level.MapObj[i].CFlag;
+		int objCid  = level.MapObj[i].CID;
+		int objX    = level.MapObj[i].X;
+		int objY    = level.MapObj[i].Y;
 
 		LX = std::round((float)((-0.5 + objX / 160.0) * Zm));
 		LY = std::round(H * Zm - (float)((0.5 + objY / 160.0) * Zm));
 		switch(objCid) {
-		case -1: //无
+		case -1: // 无
 
 			break;
 		case 44:
 		case 81:
-		case 116: //状态
+		case 116: // 状态
 			path = LevelData::GetIndex(level.LH.GameStyle, objCid,
 				(level.MapObj[i].CFlag / 0x40000) % 2 == 1 ? LevelData::A_ : LevelData::NONE, LevelData::CID);
 			DrawImage(path, LX, LY, Zm, Zm);
 			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
 			break;
-		case 34: //状态火花
+		case 34: // 状态火花
 			if((level.MapObj[i].CFlag / 0x4) % 2 == 1) {
 				if((level.MapObj[i].CFlag / 0x40000) % 2 == 1) {
 					path = level.LH.GameStyle | LevelData::OBJ_34C;
@@ -3750,7 +3749,7 @@ void LevelDrawer::DrawCID() {
 			DrawImage(path, LX, LY, Zm, Zm);
 			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
 			break;
-		case 111: //机械库巴
+		case 111: // 机械库巴
 			if((level.MapObj[i].CFlag / 0x40000) % 2 == 1) {
 				path = level.LH.GameStyle | LevelData::OBJ_111B;
 			} else if((level.MapObj[i].CFlag / 0x80000) % 2 == 1) {
@@ -3762,7 +3761,7 @@ void LevelDrawer::DrawCID() {
 			DrawImage(path, LX, LY, Zm, Zm);
 			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
 			break;
-		case 76: //加邦
+		case 76: // 加邦
 			path = level.LH.GameStyle | LevelData::OBJ_76;
 			DrawImage(path, LX, LY, Zm, Zm);
 			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
@@ -3787,6 +3786,23 @@ void LevelDrawer::DrawCID() {
 			DrawImage(path, LX, LY, Zm, Zm);
 			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
 			break;
+		}
+
+		bool P = ((objFlag / 0x8000) % 2 == 1);
+		bool W = ((objFlag / 2) % 2 == 1);
+		path   = 0;
+		if(P && W) {
+			path = level.LH.GameStyle | LevelData::OBJ_CID_B;
+		} else {
+			if(P) {
+				path = level.LH.GameStyle | LevelData::OBJ_CID_P;
+			} else if(W) {
+				path = level.LH.GameStyle | LevelData::OBJ_CID_W;
+			}
+		}
+
+		if(path) {
+			DrawImage(path, LX, LY, Zm / 2, Zm / 2);
 		}
 	}
 }

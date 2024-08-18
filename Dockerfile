@@ -9,7 +9,7 @@ RUN mkdir third_party && \
     rm pixman-0.40.0.tar.gz
 
 RUN apt update && \
-    apt install -y pkg-config libpng-dev libsdl2-dev libglew-dev libglfw3-dev libcairo-dev libfreetype-dev libcurl4-openssl-dev && \
+    apt install -y pkg-config libfmt-dev libpng-dev libsdl2-dev libglew-dev libglfw3-dev libcairo-dev libfreetype-dev libcurl4-openssl-dev && \
     rm -rf /var/lib/apt/lists/*
 
 RUN cd third_party/pixman-0.40.0 && \

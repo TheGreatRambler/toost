@@ -18,7 +18,6 @@ IncludeBlocks: Preserve
 NamespaceIndentation: All
 PointerAlignment: Left
 SortIncludes: "true"
-AlwaysBreakAfterDefinitionReturnType: None
 SpaceBeforeAssignmentOperators: "true"
 SpaceBeforeParens: Never
 SpaceInEmptyParentheses: "false"

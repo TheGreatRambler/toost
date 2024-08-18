@@ -6,7 +6,6 @@ imgui.ini
 temp.bcd
 test*
 tilesheetFiles.txt
-third_party
 node_modules
 package*.json
 img/12621
@@ -24,3 +23,6 @@ img/cid
 /*.zip
 *.deb
 *.app
+
+third_party/cairo-*
+third_party/pixman-*
