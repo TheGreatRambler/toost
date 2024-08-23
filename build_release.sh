@@ -3,6 +3,7 @@ if [[ "$1" == "web" ]];
 then
 	make PLATFORM=web BUILD=release -j8
 	rm -rf bin/src
+	rm -rf bin/third_party
 	zip -9r toost_web.zip bin
 else
 	case $(uname | tr '[:upper:]' '[:lower:]') in
