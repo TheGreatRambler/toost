@@ -3788,6 +3788,29 @@ void LevelDrawer::DrawCID() {
 			DrawImage(path, LX, LY, Zm, Zm);
 			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
 			break;
+		case 45: /* Yoshi & Shoe Goomba */ {
+			int variant;
+			switch(level.LH.GameStyle) {
+			case 21847 /* NSMBU */:
+			case 22349 /* SMW   */:
+				// Yoshi color -- unlike other objects handled by the top level
+				// default case, this is at 0x4000 instead of 0x4.
+				variant = (level.MapObj[i].CFlag & 0x4000) == 0x4000;
+				break;
+			default /* SMB1, SMB3 */:
+				// Regular vs. stiletto shoe
+				variant = (level.MapObj[i].CFlag & 0x4   ) == 0x4;
+				break;
+			}
+			if(variant) {
+				path = LevelData::GetIndex(level.LH.GameStyle, objCid, LevelData::A_, LevelData::CID);
+			} else {
+				path = LevelData::GetIndex(level.LH.GameStyle, objCid, LevelData::NONE, LevelData::CID);
+			}
+			DrawImage(path, LX, LY, Zm, Zm);
+			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
+			break;
+		}
 		default:
 			if((level.MapObj[i].CFlag / 0x4) % 2 == 1) {
 				path = LevelData::GetIndex(level.LH.GameStyle, objCid, LevelData::A_, LevelData::CID);
