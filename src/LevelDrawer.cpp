@@ -1,4 +1,5 @@
 #include "LevelDrawer.hpp"
+#include <iostream>
 
 void LevelDrawer::Setup() {
 	level.TileLoc[4][0]   = Point(1, 0);
@@ -440,6 +441,11 @@ void LevelDrawer::DrawImageRotateOpacity(
 }
 
 void LevelDrawer::DrawCrp(unsigned char EX, int X, int Y) {
+	if (EX > level.MapCrp.size()) {
+		std::cout << "warning: out of bounds creeper draw EX=" << (int)EX << std::endl;
+		return;
+	}
+
 	int XX = std::round(X / 160.0 + 1);
 	int YY = std::round((Y + 80) / 160.0 + 1);
 	int i  = 0;
@@ -559,6 +565,11 @@ void LevelDrawer::DrawCrp(unsigned char EX, int X, int Y) {
 }
 
 void LevelDrawer::DrawSnake(unsigned char EX, int X, int Y, int SW, int SH) {
+	if (EX > level.MapSnk.size()) {
+		std::cout << "warning: out of bounds snake draw EX=" << (int)EX << std::endl;
+		return;
+	}
+
 	int XX = 0;
 	int YY = 0;
 
@@ -566,6 +577,7 @@ void LevelDrawer::DrawSnake(unsigned char EX, int X, int Y, int SW, int SH) {
 	if(EX < 0x10) {
 		XX = std::round((X + SW * 80) / 160.0);
 		EX = (unsigned char)(EX % 0x10);
+
 		switch(level.MapSnk[EX - 1].Node[0].Dir) {
 		case 1:
 		case 5:
@@ -712,7 +724,7 @@ void LevelDrawer::DrawMoveBlock(unsigned char ID, unsigned char EX, int X, int Y
 	YY     = std::round((Y + 80) / 160.0 + 1);
 	int i  = 0;
 
-	if(EX > level.MapMoveBlk.size()) {
+	if(EX > level.MapMoveBlk.size() || EX > level.MapTrackBlk.size()) {
 		return;
 	}
 
