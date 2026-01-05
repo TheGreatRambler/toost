@@ -3811,7 +3811,9 @@ void LevelDrawer::DrawCID() {
 			break;
 		}
 
+		// contained object has parachute
 		bool P = ((objFlag / 0x8000) % 2 == 1);
+		// contained object has wings
 		bool W = ((objFlag / 2) % 2 == 1);
 		path   = 0;
 		if(P && W) {
@@ -3826,6 +3828,13 @@ void LevelDrawer::DrawCID() {
 
 		if(path) {
 			DrawImage(path, LX, LY, Zm / 2, Zm / 2);
+		}
+
+		if ((objFlag & 0x4000) == 0x4000) {
+			// contained object is big, draw mushroom sprite overlay
+			// draw it to the right of the parachute/wings one so it doesn't
+			// conflict
+			DrawImage(level.LH.GameStyle | LevelData::OBJ_CID_M, LX + Zm / 2, LY, Zm / 2, Zm / 2);
 		}
 	}
 }
