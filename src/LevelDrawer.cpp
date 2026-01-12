@@ -1684,9 +1684,11 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						} else {
 							path = level.LH.GameStyle | LevelData::OBJ_42;
 						}
+						if (objH != 2 && level.CObjLinkType[objLid + 1] == 13 /* bullet bill blaster */) {
+							KY = (std::round(objH - 2) / 2.0 - 0.5) * Zm;
+						}
 						LX = std::round((float)((-1 + (std::round(objW) / 2) / 2.0 + objX / 160.0) * Zm));
 						LY = (H + objH / 2.0 - 0.5) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY;
-
 						DrawImage(path, (float)((-1 + objX / 160.0) * Zm),
 							(H + objH / 2.0 - 0.5) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * 2,
 							Zm * 2);
@@ -2189,6 +2191,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 13: {
+						level.CObjLinkType[objLid + 1] = 13;
 						if((objFlag / 0x4) % 2 == 1) {
 							path = level.LH.GameStyle | LevelData::OBJ_13B;
 						} else {
