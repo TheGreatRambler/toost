@@ -180,16 +180,16 @@ void LevelDrawer::DrawGridlines() {
 			cairo_line_to(cr, W * Zm, i * Zm);
 			cairo_stroke(cr);
 
-			if(i % 13 == 0) {
+			if(i % 14 == 0) {
 				cairo_move_to(cr, 0, (H - i) * Zm + 1);
 				cairo_line_to(cr, W * Zm, (H - i) * Zm + 1);
 				cairo_stroke(cr);
 			}
 
-			if((H - i) % 10 == 0) {
+			if((H - i) % 10 == 9) {
 				cairo_set_source_rgb(cr, 0, 0, 0);
 				cairo_move_to(cr, 3, (i - 0.25) * Zm);
-				cairo_show_text(cr, std::to_string(H - i).c_str());
+				cairo_show_text(cr, std::to_string(H - i + 1).c_str());
 			}
 		}
 
