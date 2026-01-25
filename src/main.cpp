@@ -171,6 +171,10 @@ LevelDrawer* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string
 	drawer->DrawItem({ 53, 94, 99, 100, 79 }, false);
 	drawer->DrawIce();
 
+	// 狼牙棒
+	// 2026-01-24: render skewers before pipes so they don't get obscured.
+	drawer->DrawItem({ 83 }, false);
+
 	// 无LINKE
 	// 管道 门 蛇 传送箱
 	drawer->DrawItem({ 9, 55, 84, 97 }, false);
@@ -185,9 +189,6 @@ LevelDrawer* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string
 
 	// 跷跷板 熔岩台 升降台
 	drawer->DrawItem({ 91, 36, 11 }, false);
-
-	// 狼牙棒
-	drawer->DrawItem({ 83 }, false);
 
 	// 齿轮 甜甜圈
 	drawer->DrawItem({ 68, 82 }, false);
