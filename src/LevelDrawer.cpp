@@ -3802,6 +3802,23 @@ void LevelDrawer::DrawCID() {
 			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
 			break;
 		}
+		case 74: /* Spike/Spikeball & Snowball */ {
+			if((objFlag / 0x4) % 2 == 1) { /* Spikeball/Snowball */
+				if(level.MapHdr.Theme == 6) {
+					// Snowball
+					path = level.LH.GameStyle | LevelData::OBJ_74B;
+				} else {
+					// Spikeball
+					path = level.LH.GameStyle | LevelData::OBJ_74A;
+				}
+			} else {
+				// Spike
+				path = level.LH.GameStyle | LevelData::OBJ_74;
+			}
+			DrawImage(path, LX, LY, Zm, Zm);
+			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
+			break;
+		}
 		default:
 			if((level.MapObj[i].CFlag / 0x4) % 2 == 1) {
 				path = LevelData::GetIndex(level.LH.GameStyle, objCid, LevelData::A_, LevelData::CID);
