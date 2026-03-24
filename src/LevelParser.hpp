@@ -200,6 +200,8 @@ public:
 	std::vector<MapMoveBlock> MapTrackBlk;
 	std::vector<MapCreeper> MapCrp;
 	std::vector<uint8_t> ObjLinkType = std::vector<uint8_t>(60000);
+	// secondary link type map for contained objects, e.g. blasters inside clown cars
+	std::vector<uint8_t> CObjLinkType = std::vector<uint8_t>(60000);
 	//地图文件头H48
 	// std::vector<MapHeader> MH = std::vector<MapHeader>(3);
 	MapHeader MapHdr;

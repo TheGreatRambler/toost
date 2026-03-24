@@ -181,16 +181,16 @@ void LevelDrawer::DrawGridlines() {
 			cairo_line_to(cr, W * Zm, i * Zm);
 			cairo_stroke(cr);
 
-			if(i % 13 == 0) {
+			if(i % 14 == 0) {
 				cairo_move_to(cr, 0, (H - i) * Zm + 1);
 				cairo_line_to(cr, W * Zm, (H - i) * Zm + 1);
 				cairo_stroke(cr);
 			}
 
-			if((H - i) % 10 == 0) {
+			if((H - i) % 10 == 9) {
 				cairo_set_source_rgb(cr, 0, 0, 0);
 				cairo_move_to(cr, 3, (i - 0.25) * Zm);
-				cairo_show_text(cr, std::to_string(H - i).c_str());
+				cairo_show_text(cr, std::to_string(H - i + 1).c_str());
 			}
 		}
 
@@ -1696,9 +1696,11 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						} else {
 							path = level.LH.GameStyle | LevelData::OBJ_42;
 						}
+						if (objH != 2 && level.CObjLinkType[objLid + 1] == 13 /* bullet bill blaster */) {
+							KY = (std::round(objH - 2) / 2.0 - 0.5) * Zm;
+						}
 						LX = std::round((float)((-1 + (std::round(objW) / 2) / 2.0 + objX / 160.0) * Zm));
 						LY = (H + objH / 2.0 - 0.5) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY;
-
 						DrawImage(path, (float)((-1 + objX / 160.0) * Zm),
 							(H + objH / 2.0 - 0.5) * Zm - (float)((objH - 0.5 + objY / 160.0) * Zm) + KY, Zm * 2,
 							Zm * 2);
@@ -2201,6 +2203,7 @@ void LevelDrawer::DrawItem(const std::unordered_set<short>& K, bool L) {
 						break;
 					}
 					case 13: {
+						level.CObjLinkType[objLid + 1] = 13;
 						if((objFlag / 0x4) % 2 == 1) {
 							path = level.LH.GameStyle | LevelData::OBJ_13B;
 						} else {
@@ -3788,6 +3791,46 @@ void LevelDrawer::DrawCID() {
 			DrawImage(path, LX, LY, Zm, Zm);
 			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
 			break;
+		case 45: /* Yoshi & Shoe Goomba */ {
+			int variant;
+			switch(level.LH.GameStyle) {
+			case 21847 /* NSMBU */:
+			case 22349 /* SMW   */:
+				// Yoshi color -- unlike other objects handled by the top level
+				// default case, this is at 0x4000 instead of 0x4.
+				variant = (level.MapObj[i].CFlag & 0x4000) == 0x4000;
+				break;
+			default /* SMB1, SMB3 */:
+				// Regular vs. stiletto shoe
+				variant = (level.MapObj[i].CFlag & 0x4   ) == 0x4;
+				break;
+			}
+			if(variant) {
+				path = LevelData::GetIndex(level.LH.GameStyle, objCid, LevelData::A_, LevelData::CID);
+			} else {
+				path = LevelData::GetIndex(level.LH.GameStyle, objCid, LevelData::NONE, LevelData::CID);
+			}
+			DrawImage(path, LX, LY, Zm, Zm);
+			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
+			break;
+		}
+		case 74: /* Spike/Spikeball & Snowball */ {
+			if((objFlag / 0x4) % 2 == 1) { /* Spikeball/Snowball */
+				if(level.MapHdr.Theme == 6) {
+					// Snowball
+					path = level.LH.GameStyle | LevelData::OBJ_74B;
+				} else {
+					// Spikeball
+					path = level.LH.GameStyle | LevelData::OBJ_74A;
+				}
+			} else {
+				// Spike
+				path = level.LH.GameStyle | LevelData::OBJ_74;
+			}
+			DrawImage(path, LX, LY, Zm, Zm);
+			DrawImage(LevelData::OBJ_CMN_F1, LX, LY, Zm, Zm);
+			break;
+		}
 		default:
 			if((level.MapObj[i].CFlag / 0x4) % 2 == 1) {
 				path = LevelData::GetIndex(level.LH.GameStyle, objCid, LevelData::A_, LevelData::CID);
@@ -3800,7 +3843,9 @@ void LevelDrawer::DrawCID() {
 			break;
 		}
 
+		// contained object has parachute
 		bool P = ((objFlag / 0x8000) % 2 == 1);
+		// contained object has wings
 		bool W = ((objFlag / 2) % 2 == 1);
 		path   = 0;
 		if(P && W) {
@@ -3815,6 +3860,13 @@ void LevelDrawer::DrawCID() {
 
 		if(path) {
 			DrawImage(path, LX, LY, Zm / 2, Zm / 2);
+		}
+
+		if ((objFlag & 0x4000) == 0x4000) {
+			// contained object is big, draw mushroom sprite overlay
+			// draw it to the right of the parachute/wings one so it doesn't
+			// conflict
+			DrawImage(level.LH.GameStyle | LevelData::OBJ_CID_M, LX + Zm / 2, LY, Zm / 2, Zm / 2);
 		}
 	}
 }
