@@ -508,6 +508,8 @@ void LevelParser::ExportToJSON(const std::string& outputPath, std::vector<Drawin
 	writer.Int(MapHdr.CreeperCount);
 	writer.Key("exclamation_mark_block_count");
 	writer.Int(MapHdr.iBlkCount);
+	writer.Key("track_block_count");
+	writer.Int(MapHdr.TrackBlkCount);
 	writer.Key("track_count");
 	writer.Int(MapHdr.TrackCount);
 	writer.Key("ground_count");
@@ -675,6 +677,105 @@ void LevelParser::ExportToJSON(const std::string& outputPath, std::vector<Drawin
 		writer.EndArray();
 		writer.EndObject();
 	}
+	writer.EndArray();
+
+	writer.Key("exclamation_blocks");
+	writer.StartArray();
+
+	for(auto& block : MapMoveBlk) {
+
+		writer.StartObject();
+
+		writer.Key("index");
+		writer.Int(block.index);
+
+		writer.Key("node_count");
+		writer.Int(block.NodeCount);
+
+		writer.Key("nodes");
+		writer.StartArray();
+
+		for(auto& node : block.Node) {
+
+			writer.StartObject();
+
+			writer.Key("p0");
+			writer.Int(node.p0);
+
+			writer.Key("direction");
+			writer.Int(node.p1);
+
+			writer.Key("p2");
+			writer.Int(node.p2);
+
+			writer.EndObject();
+		}
+
+		writer.EndArray();
+
+		writer.EndObject();
+	}
+
+	writer.EndArray();
+
+	writer.Key("track_blocks");
+	writer.StartArray();
+
+	for(auto& block : MapTrackBlk) {
+
+		writer.StartObject();
+
+		writer.Key("index");
+		writer.Int(block.index);
+
+		writer.Key("node_count");
+		writer.Int(block.NodeCount);
+
+		writer.Key("nodes");
+		writer.StartArray();
+
+		for(auto& node : block.Node) {
+
+			writer.StartObject();
+
+			writer.Key("p0");
+			writer.Int(node.p0);
+
+			writer.Key("direction");
+			writer.Int(node.p1);
+
+			writer.Key("p2");
+			writer.Int(node.p2);
+
+			writer.EndObject();
+		}
+
+		writer.EndArray();
+
+		writer.EndObject();
+	}
+
+	writer.EndArray();
+
+	writer.Key("icicles");
+	writer.StartArray();
+
+	for(auto& ice : MapIce) {
+
+		writer.StartObject();
+
+		writer.Key("x");
+		writer.Int(ice.X);
+
+		writer.Key("y");
+		writer.Int(ice.Y);
+
+		writer.Key("type");
+		writer.Int(ice.ID);
+
+		writer.EndObject();
+	}
+
 	writer.EndArray();
 
 	writer.Key("drawing_instructions");
