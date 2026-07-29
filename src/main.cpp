@@ -2,6 +2,7 @@
 #include "Helpers.hpp"
 #include "LevelDrawer.hpp"
 #include "LevelParser.hpp"
+#include "Base64.hpp"
 
 #define CURL_STATICLIB
 
@@ -22,9 +23,13 @@
 #include <imgui/imgui_impl_sdl.h>
 #include <iostream>
 #include <iterator>
+#include <algorithm>
+#include <cctype>
+#include <sstream>
 #include <mutex>
 #include <stdio.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #ifdef _WIN32
@@ -287,6 +292,44 @@ LevelDrawer* DrawMap(LevelParser* level, bool isOverworld, bool log, std::string
 	cairo_surface_destroy(surface);
 
 	return drawer;
+}
+
+LevelHandler AttemptRenderContent(
+    std::string content,
+    bool log,
+    std::string destinationOverworld,
+    std::string destinationSubworld)
+{
+    if(content.size() != 0x5BFC0) {
+        puts("File is not a level");
+        return LevelHandler();
+    }
+
+    LevelHandler data;
+
+    if(!destinationOverworld.empty()) {
+        LevelParser* overworldLevelParser = new LevelParser();
+
+        overworldLevelParser->LoadLevelData(content, true);
+
+        data.drawerOverworld =
+            DrawMap(overworldLevelParser, true, log, destinationOverworld);
+
+        data.overworld = overworldLevelParser;
+    }
+
+    if(!destinationSubworld.empty()) {
+        LevelParser* subworldLevelParser = new LevelParser();
+
+        subworldLevelParser->LoadLevelData(content, false);
+
+        data.drawerSubworld =
+            DrawMap(subworldLevelParser, false, log, destinationSubworld);
+
+        data.subworld = subworldLevelParser;
+    }
+
+    return data;
 }
 
 LevelHandler AttemptRender(
@@ -921,7 +964,8 @@ int main(int argc, char** argv) {
 		("r,removeGrid", "Remove grid from render")
 		("e,objectsOverPipes", "Render objects over pipes rather than under them")
 		("d,debug", "Enable debug logging")
-		("h,help", "Print help menu");
+		("h,help", "Print help menu")
+		("hfBlob", "Path to HuggingFace SMM2 blob file", cxxopts::value<std::string>());
 	// clang-format on
 	options.allow_unrecognised_options();
 
@@ -952,6 +996,49 @@ int main(int argc, char** argv) {
 	std::string font_path = fmt::format("{}/fonts/NotoSansJP-Bold.otf", assetsFolder);
 	FT_Init_FreeType(&freetype_library);
 	FT_New_Face(freetype_library, font_path.c_str(), 0, &main_font);
+
+	if(result.count("hfBlob")) {
+
+		std::ifstream blob(result["hfBlob"].as<std::string>());
+		std::string encoded(
+			(std::istreambuf_iterator<char>(blob)),
+			std::istreambuf_iterator<char>()
+		);
+
+		std::string compressed = Base64::Decode(encoded);
+
+		std::string content = gzip::decompress(
+			compressed.data(),
+			compressed.size()
+		);
+
+		fmt::print("Compressed size: {}\n", compressed.size());
+		fmt::print("Decompressed size: {}\n", content.size());
+
+		std::vector<DrawingInstruction> emptyInstructions;
+
+		if(result.count("overworldJson")) {
+			LevelParser overworld;
+			overworld.LoadLevelData(content, true);
+
+			overworld.ExportToJSON(
+				result["overworldJson"].as<std::string>(),
+				emptyInstructions
+			);
+		}
+
+		if(result.count("subworldJson")) {
+			LevelParser subworld;
+			subworld.LoadLevelData(content, false);
+
+			subworld.ExportToJSON(
+				result["subworldJson"].as<std::string>(),
+				emptyInstructions
+			);
+		}
+
+		return 0;
+	}
 
 	if(result.count("path") || result.count("code")) {
 		std::string path;
